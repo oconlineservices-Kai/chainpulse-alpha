@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("NEON_DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  walletAddress    String?   @unique @map("wallet_address")
+  premiumStatus    String    @default("free") @map("premium_status")
+  premiumExpiresAt DateTime? @map("premium_expires_at")
+  credits          Int       @default(0)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @map("updated_at")
+
+  transactions    Transaction[]
+  alphaPurchases  AlphaPurchase[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id                     String   @id @default(uuid())
+  userId                 String   @map("user_id")
+  provider               String
+  transactionType        String   @map("transaction_type")
+  providerPaymentId      String   @map("provider_payment_id")
+  providerSubscriptionId String?  @map("provider_subscription_id")
+  amount                 Decimal  @db.Decimal(10, 2)
+  currency               String   @default("USD")
+  status                 String
+  creditsAdded           Int      @default(0) @map("credits_added")
+  metadata               Json?
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  user           User           @relation(fields: [userId], references: [id])
+  alphaPurchases AlphaPurchase[]
+
+  @@index([userId])
+  @@index([providerPaymentId])
+  @@map("transactions")
+}
+
+model AlphaPurchase {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  transactionId String?  @map("transaction_id")
+  signalId      String   @map("signal_id")
+  creditsUsed   Int      @default(1) @map("credits_used")
+  purchasedAt   DateTime @default(now()) @map("purchased_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([userId])
+  @@index([signalId])
+  @@map("alpha_purchases")
+}
+
+model Signal {
+  id                String    @id @default(uuid())
+  tokenSymbol       String    @map("token_symbol")
+  tokenName         String?   @map("token_name")
+  sentimentScore    Int?      @map("sentiment_score")
+  whaleConfidence   Int?      @map("whale_confidence")
+  correlationScore  Int?      @map("correlation_score")
+  isDiamondSignal   Boolean   @default(false) @map("is_diamond_signal")
+  twitterMentions   Int?      @map("twitter_mentions")
+  whaleWallets      String[]  @map("whale_wallets")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  expiresAt         DateTime? @map("expires_at")
+
+  @@index([tokenSymbol])
+  @@index([createdAt])
+  @@index([isDiamondSignal])
+  @@map("signals")
+}
