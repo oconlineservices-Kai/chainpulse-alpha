@@ -62,6 +62,7 @@ async function handleSubscriptionPayment(resource: any) {
       userId: user.id,
       provider: 'paypal',
       transactionType: 'subscription',
+      providerPaymentId: subscriptionId,
       providerSubscriptionId: subscriptionId,
       amount,
       currency: 'USD',
