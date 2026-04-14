@@ -1,9 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { handlers } from '@/lib/auth'
 
-export async function GET(req: NextRequest) {
-  return NextResponse.json({ status: 'Auth endpoint - configure NextAuth' })
-}
+export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
-  return NextResponse.json({ status: 'Auth endpoint - configure NextAuth' })
-}
+export const { GET, POST } = handlers

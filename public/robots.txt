@@ -1,0 +1,19 @@
+# ChainPulse Alpha - AI-Powered Crypto Signals
+# https://chainpulsealpha.com
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://chainpulsealpha.com/sitemap.xml
+
+# Crawl-delay for bots
+Crawl-delay: 10
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard/
+
+# Allow specific API endpoints that are public
+Allow: /api/auth/
