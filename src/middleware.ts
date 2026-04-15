@@ -8,6 +8,7 @@ export default auth((req) => {
 
   const isApiAuthRoute = nextUrl.pathname.startsWith('/api/auth')
   const isApiHealthRoute = nextUrl.pathname === '/api/health'
+  const isApiPaymentRoute = nextUrl.pathname.startsWith('/api/payment')
   const isPublicRoute = [
     '/',
     '/login',
@@ -26,8 +27,8 @@ export default auth((req) => {
   const isAdminRoute = nextUrl.pathname.startsWith('/admin')
   const isDashboardRoute = nextUrl.pathname.startsWith('/dashboard')
 
-  // Allow API auth routes and health check
-  if (isApiAuthRoute || isApiHealthRoute) {
+  // Allow API auth routes, health check, and payment routes
+  if (isApiAuthRoute || isApiHealthRoute || isApiPaymentRoute) {
     return NextResponse.next()
   }
 

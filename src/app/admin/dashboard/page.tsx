@@ -48,7 +48,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pt-16 lg:pt-20">
       {/* Header */}
       <header className="border-b border-border bg-background-card">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
