@@ -42,7 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.email.split('@')[0],
-          isAdmin: user.email === process.env.ADMIN_EMAIL
+          isAdmin: user.email === process.env.ADMIN_EMAIL,
+          premiumStatus: user.premiumStatus ?? 'free'
         }
       }
     })
@@ -52,6 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id
         token.isAdmin = user.isAdmin
+        token.premiumStatus = (user as any).premiumStatus ?? 'free'
       }
       return token
     },
@@ -59,6 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id as string
         session.user.isAdmin = token.isAdmin as boolean
+        ;(session.user as any).premiumStatus = token.premiumStatus as string
       }
       return session
     }

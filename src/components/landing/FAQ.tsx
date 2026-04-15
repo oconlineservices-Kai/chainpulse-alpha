@@ -1,57 +1,98 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, ChevronUp, HelpCircle } from 'lucide-react'
+import { ChevronDown, HelpCircle, ArrowRight } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
-import { cn } from '@/lib/utils'
 
 const faqs = [
   {
     question: 'What are Diamond Signals?',
-    answer: 'Diamond Signals are our highest-confidence alerts that occur when whale wallet accumulation strongly correlates with positive Twitter sentiment for the same token. These signals have historically shown the best risk/reward ratios, with confidence scores exceeding 85%.'
+    answer:
+      'Diamond Signals are our highest-confidence alerts triggered when whale accumulation and positive social sentiment line up around the same asset.',
+    href: '/contact',
+    linkLabel: 'Ask for a Diamond Signals walkthrough',
   },
   {
     question: 'How accurate are the alerts?',
-    answer: 'Our Diamond Signals maintain an 82.4% success rate based on historical performance. While no signal is guaranteed (crypto is inherently risky), our AI combines multiple data points to identify high-probability setups. We focus on quality over quantity - you\'ll receive fewer signals, but each one is thoroughly vetted.'
+    answer:
+      'We prioritize fewer, higher-confidence alerts. Historical hit rate messaging should be treated as informational, not a guarantee of future performance.',
+    href: '/pricing',
+    linkLabel: 'See what is included in Premium alerts',
   },
   {
     question: 'Which blockchains do you support?',
-    answer: 'We currently support Ethereum, BSC (Binance Smart Chain), and Solana, covering the majority of DeFi and memecoin activity. We\'re actively adding Base, Arbitrum, and Polygon based on user demand and trading volume. Each chain is monitored 24/7 for whale movements and social sentiment.'
+    answer:
+      'ChainPulse currently focuses on the highest-signal ecosystems and expands based on demand, liquidity, and observed whale activity.',
+    href: '/contact',
+    linkLabel: 'Request coverage for another chain',
   },
   {
     question: 'Do I need trading experience?',
-    answer: 'Not at all! Our dashboard is designed to be intuitive for beginners while providing the depth experienced traders need. Each signal includes a simple Buy/Skip recommendation with clear reasoning, risk assessment, and suggested position sizing. We also provide educational content to help you understand the signals.'
+    answer:
+      'No. The product is designed to be readable for beginners while still useful for advanced traders who want faster signal context.',
+    href: '/pricing',
+    linkLabel: 'Compare Free vs Premium access',
   },
   {
     question: 'Can I cancel my subscription anytime?',
-    answer: 'Absolutely. You can cancel your subscription at any time with one click in your dashboard. There are no cancellation fees, and you\'ll continue to have access to your paid features until the end of your billing period. We also offer a 7-day money-back guarantee for new subscribers.'
+    answer:
+      'Yes. You can cancel anytime and keep access through the end of the active billing period.',
+    href: '/terms',
+    linkLabel: 'Read billing and cancellation terms',
   },
   {
     question: 'How quickly do I receive alerts?',
-    answer: 'Premium users receive real-time alerts instantly via email, Telegram, and push notifications. Free users have a 15-minute delay to ensure our premium subscribers get first access to time-sensitive opportunities. Diamond Signals are typically valid for several hours, so even with the delay, free users can still benefit.'
+    answer:
+      'Premium delivery is intended to be immediate. Free access includes a delay so paying users receive the first actionable signal window.',
+    href: '/pricing',
+    linkLabel: 'View alert delivery differences',
   },
   {
     question: 'What makes ChainPulse different from other crypto tools?',
-    answer: 'Unlike tools that focus on just technical analysis or social sentiment, ChainPulse Alpha combines whale wallet tracking, Twitter sentiment analysis, and AI correlation in real-time. We don\'t just tell you what\'s trending - we tell you when smart money is actually moving, creating a unique edge in the market.'
+    answer:
+      'Instead of relying on a single signal source, ChainPulse combines wallet activity, sentiment inputs, and AI scoring into one trading workflow.',
+    href: '/#features',
+    linkLabel: 'Explore core product features',
   },
   {
     question: 'Is my data secure?',
-    answer: 'Yes, we take security seriously. We use 256-bit encryption, are SOC 2 compliant, and never store your private keys or trading credentials. We only collect the minimum data necessary to provide our service, and you can delete your account and all associated data at any time.'
-  }
+    answer:
+      'The app is built to minimize sensitive data exposure and avoid storing anything unnecessary for product access and billing workflows.',
+    href: '/privacy',
+    linkLabel: 'Read the privacy policy',
+  },
 ]
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
-  
+
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
   }
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  }
+
   return (
-    <section className="py-24">
+    <section id="faq" className="py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, '\\u003c') }}
+      />
+
       <div className="container mx-auto px-4 max-w-4xl">
-        {/* Section Header */}
         <FadeIn>
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-500/20 text-secondary-400 text-sm mb-6">
@@ -62,15 +103,14 @@ export default function FAQ() {
               Frequently Asked Questions
             </h2>
             <p className="text-text-secondary">
-              Everything you need to know about ChainPulse Alpha
+              Quick answers, plus helpful next steps for deeper information.
             </p>
           </div>
         </FadeIn>
-        
-        {/* FAQ Items */}
+
         <div className="space-y-4">
           {faqs.map((faq, index) => (
-            <FadeIn key={index} delay={index * 0.1}>
+            <FadeIn key={faq.question} delay={index * 0.08}>
               <motion.div
                 className="glass-card overflow-hidden hover:border-primary-500/30 transition-colors"
                 whileHover={{ y: -2 }}
@@ -78,6 +118,7 @@ export default function FAQ() {
                 <button
                   onClick={() => toggleFAQ(index)}
                   className="w-full px-6 py-5 flex items-center justify-between text-left group"
+                  aria-expanded={openIndex === index}
                 >
                   <span className="font-semibold pr-4 group-hover:text-primary-400 transition-colors">
                     {faq.question}
@@ -90,7 +131,7 @@ export default function FAQ() {
                     <ChevronDown className="w-5 h-5 text-text-muted group-hover:text-primary-400 transition-colors" />
                   </motion.div>
                 </button>
-                
+
                 <AnimatePresence>
                   {openIndex === index && (
                     <motion.div
@@ -102,9 +143,14 @@ export default function FAQ() {
                     >
                       <div className="px-6 pb-5">
                         <div className="w-full h-px bg-border mb-4" />
-                        <p className="text-text-secondary leading-relaxed">
-                          {faq.answer}
-                        </p>
+                        <p className="text-text-secondary leading-relaxed mb-4">{faq.answer}</p>
+                        <Link
+                          href={faq.href}
+                          className="inline-flex items-center gap-2 text-primary-400 hover:text-primary-300 text-sm font-medium"
+                        >
+                          {faq.linkLabel}
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
                       </div>
                     </motion.div>
                   )}
@@ -113,30 +159,26 @@ export default function FAQ() {
             </FadeIn>
           ))}
         </div>
-        
-        {/* Contact CTA */}
+
         <FadeIn delay={0.8}>
           <div className="text-center mt-16">
             <div className="glass-card p-8 max-w-md mx-auto">
               <h3 className="text-lg font-semibold mb-4">Still have questions?</h3>
               <p className="text-text-secondary mb-6">
-                Our support team is here to help you succeed.
+                Reach out directly if you need onboarding help, product clarification, or billing support.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <motion.button
-                  className="button-secondary text-sm"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
+                <Link href="/contact" className="button-secondary text-sm">
                   Contact Support
-                </motion.button>
-                <motion.button
+                </Link>
+                <a
+                  href="https://discord.gg/chainpulsealpha"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="button-ghost text-sm"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   Join Discord
-                </motion.button>
+                </a>
               </div>
             </div>
           </div>

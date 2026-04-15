@@ -12,7 +12,7 @@ const plans = [
   {
     id: 'free',
     name: 'Free',
-    price: '₹0',
+    price: '$0',
     period: '',
     description: 'Perfect for getting started',
     icon: Unlock,
@@ -35,7 +35,7 @@ const plans = [
   {
     id: 'premium',
     name: 'Premium',
-    price: '₹4,099',
+    price: '$49',
     period: '/mo',
     description: 'For serious traders',
     icon: Crown,
@@ -60,7 +60,7 @@ const plans = [
   {
     id: 'payper',
     name: 'Pay-Per-Alpha',
-    price: '₹83',
+    price: '$1',
     period: '',
     description: 'Unlock single signals',
     icon: Sparkles,
@@ -184,7 +184,7 @@ export default function PricingPage() {
                   <div className="flex items-baseline justify-center gap-1 mb-2">
                     <span className="text-4xl font-bold">
                       {billingPeriod === 'yearly' && plan.id === 'premium' 
-                        ? '₹3,267' 
+                        ? '$39' 
                         : plan.price
                       }
                     </span>
@@ -197,7 +197,7 @@ export default function PricingPage() {
                   
                   {billingPeriod === 'yearly' && plan.id === 'premium' && (
                     <div className="text-sm text-success-400">
-                      ₹49,188/year (save ₹10,020)
+                      $588/year (save $120)
                     </div>
                   )}
                   
@@ -233,7 +233,7 @@ export default function PricingPage() {
                 {/* CTA Button */}
                 {plan.id === 'premium' ? (
                   <PaymentButton
-                    amount={billingPeriod === 'yearly' ? 39204 : 4099}
+                    amount={billingPeriod === 'yearly' ? 588 : 49}
                     plan={billingPeriod === 'yearly' ? 'Premium Yearly' : 'Premium Monthly'}
                     buttonText={plan.cta}
                     className={cn(
@@ -242,7 +242,7 @@ export default function PricingPage() {
                   />
                 ) : plan.id === 'payper' ? (
                   <PaymentButton
-                    amount={83}
+                    amount={1}
                     plan="Pay Per Alpha"
                     buttonText={plan.cta}
                     className={cn(

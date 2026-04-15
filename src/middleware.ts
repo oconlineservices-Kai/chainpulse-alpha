@@ -16,6 +16,8 @@ export default auth((req) => {
     '/forgot-password',
     '/reset-password',
     '/pricing',
+    '/features',
+    '/signals',
     '/payment/success',
     '/payment/failed',
     '/privacy',
@@ -51,5 +53,14 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|public/).*)']
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files (fonts, images, etc)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|fonts/|images/|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.webp|robots\\.txt|manifest\\.json).*)'
+  ]
 }

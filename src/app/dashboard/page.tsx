@@ -10,12 +10,18 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
 import { fetchTopCoins, mockSignals, Signal } from '@/lib/api/crypto'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { Crown, Zap } from 'lucide-react'
 
 export default function DashboardPage() {
+  const { data: session } = useSession()
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null)
   const [signals, setSignals] = useState<Signal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // Check if user is premium (extend as needed based on your session shape)
+  const isPremium = (session?.user as any)?.premiumStatus === 'premium'
 
   // Fetch real crypto data from CoinGecko
   useEffect(() => {
@@ -88,6 +94,26 @@ export default function DashboardPage() {
 
       <ErrorBoundary>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Upgrade Banner for free users */}
+          {!isPremium && (
+            <div className="mb-6 p-4 rounded-xl border border-primary-500/30 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">You're on the Free plan</p>
+                  <p className="text-xs text-text-muted">Unlock real-time Diamond Signals, Telegram alerts, and full dashboard access.</p>
+                </div>
+              </div>
+              <Link
+                href="/pricing"
+                className="button-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+              >
+                <Zap className="w-4 h-4" />
+                Upgrade to Premium
+              </Link>
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm flex items-center gap-2">
               <span>⚠️</span>

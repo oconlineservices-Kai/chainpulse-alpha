@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 
 interface PaymentButtonProps {
   amount: number
@@ -24,8 +25,15 @@ export default function PaymentButton({
   className = ''
 }: PaymentButtonProps) {
   const [loading, setLoading] = useState(false)
+  const { data: session, status } = useSession()
 
   const handlePayment = async () => {
+    // Redirect to login if not authenticated
+    if (status !== 'authenticated' || !session) {
+      window.location.href = `/login?callbackUrl=${encodeURIComponent('/pricing')}`
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -72,10 +80,9 @@ export default function PaymentButton({
           })
 
           if (verifyRes.ok) {
-            alert('Payment successful! Welcome to Premium.')
-            window.location.reload()
+            window.location.href = '/payment/success'
           } else {
-            alert('Payment verification failed. Please contact support.')
+            window.location.href = '/payment/failed'
           }
         },
         prefill: {

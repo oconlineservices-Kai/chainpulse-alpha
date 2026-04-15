@@ -36,8 +36,9 @@ export default function PremiumNavigationSimple() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
             <Link href="/" className="text-gray-300 hover:text-white transition">Home</Link>
-            <Link href="/#features" className="text-gray-300 hover:text-white transition">Features</Link>
-            <Link href="/#pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
+            <Link href="/features" className="text-gray-300 hover:text-white transition">Features</Link>
+            <Link href="/signals" className="text-gray-300 hover:text-white transition">Signals</Link>
+            <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
             <Link href="/contact" className="text-gray-300 hover:text-white transition">Contact</Link>
             <Link href="/login" className="text-gray-300 hover:text-white transition flex items-center gap-2">
               <LogIn className="w-4 h-4" /> Login
@@ -64,8 +65,9 @@ export default function PremiumNavigationSimple() {
           <div className="lg:hidden bg-black/95 backdrop-blur-lg border-t border-gray-800">
             <div className="px-4 py-6 space-y-4">
               <Link href="/" className="block text-gray-300 hover:text-white py-2">Home</Link>
-              <Link href="/#features" className="block text-gray-300 hover:text-white py-2">Features</Link>
-              <Link href="/#pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
+              <Link href="/features" className="block text-gray-300 hover:text-white py-2">Features</Link>
+              <Link href="/signals" className="block text-gray-300 hover:text-white py-2">Signals</Link>
+              <Link href="/pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
               <Link href="/contact" className="block text-gray-300 hover:text-white py-2">Contact</Link>
               <div className="pt-4 border-t border-gray-800 space-y-3">
                 <Link href="/login" className="block text-gray-300 hover:text-white py-2 flex items-center gap-2">

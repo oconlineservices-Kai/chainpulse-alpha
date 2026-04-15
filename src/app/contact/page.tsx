@@ -1,10 +1,10 @@
 import { Metadata } from 'next'
-import { Mail, Clock, MessageCircle, HelpCircle } from 'lucide-react'
+import { MessageCircle, HelpCircle, Send } from 'lucide-react'
 import FadeIn from '@/components/animations/FadeIn'
 
 export const metadata: Metadata = {
   title: 'Contact Us | ChainPulse Alpha',
-  description: 'Get in touch with ChainPulse Alpha. Email support, social media, or check our FAQ for quick answers.',
+  description: 'Get in touch with ChainPulse Alpha. Check our FAQ or send us a message.',
   openGraph: {
     title: 'Contact Us | ChainPulse Alpha',
     description: 'Contact ChainPulse Alpha support team.',
@@ -20,12 +20,7 @@ export default function ContactPage() {
     mainEntity: {
       '@type': 'Organization',
       name: 'ChainPulse Alpha',
-      email: 'support@chainpulsealpha.com',
       url: 'https://chainpulsealpha.com',
-      sameAs: [
-        'https://twitter.com/chainpulsealpha',
-        'https://github.com/chainpulsealpha',
-      ],
     },
   }
 
@@ -50,92 +45,92 @@ export default function ContactPage() {
                   Contact Us
                 </h1>
                 <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-                  Questions? Feedback? We&apos;d love to hear from you.
+                  Check our FAQ or send us a message directly.
                 </p>
               </div>
             </FadeIn>
           </div>
         </section>
 
-        {/* Contact Methods */}
+        {/* Message Form */}
         <section className="pb-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-3 gap-6">
-              
-              {/* Email */}
-              <FadeIn delay={0.1}>
-                <div className="bg-[#12121a] rounded-2xl p-8 border border-slate-800 hover:border-indigo-500/50 transition-colors group">
-                  <div className="w-14 h-14 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-indigo-500/20 transition-colors">
-                    <Mail className="w-7 h-7 text-indigo-400" />
+          <div className="max-w-2xl mx-auto">
+            <FadeIn delay={0.1}>
+              <div className="bg-[#12121a] rounded-2xl p-8 border border-slate-800">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <Send className="w-8 h-8 text-indigo-400" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">Email Support</h3>
-                  <p className="text-slate-400 mb-4">
-                    For general inquiries and support requests
+                  <h2 className="text-2xl font-bold text-white mb-2">Send Us a Message</h2>
+                  <p className="text-slate-400">
+                    Have a question or feedback? We&apos;ll get back to you within 24 hours.
                   </p>
-                  <a 
-                    href="mailto:support@chainpulsealpha.com"
-                    className="text-indigo-400 hover:text-indigo-300 font-medium"
-                  >
-                    support@chainpulsealpha.com
-                  </a>
-                  <div className="flex items-center gap-2 mt-4 text-sm text-slate-500">
-                    <Clock className="w-4 h-4" />
-                    <span>Response: 24-48 hours</span>
-                  </div>
                 </div>
-              </FadeIn>
-
-              {/* Twitter */}
-              <FadeIn delay={0.2}>
-                <div className="bg-[#12121a] rounded-2xl p-8 border border-slate-800 hover:border-cyan-500/50 transition-colors group">
-                  <div className="w-14 h-14 bg-cyan-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-cyan-500/20 transition-colors">
-                    <svg className="w-7 h-7 text-cyan-400" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                
+                <form className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-slate-300 mb-2">
+                        Your Name
+                      </label>
+                      <input
+                        type="text"
+                        id="name"
+                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        placeholder="you@example.com"
+                      />
+                    </div>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">Twitter/X</h3>
-                  <p className="text-slate-400 mb-4">
-                    Follow us for updates and quick questions
+                  
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-slate-300 mb-2">
+                      Subject
+                    </label>
+                    <input
+                      type="text"
+                      id="subject"
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="How can we help?"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-slate-300 mb-2">
+                      Message
+                    </label>
+                    <textarea
+                      id="message"
+                      rows={5}
+                      className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                      placeholder="Tell us what you need help with..."
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                  >
+                    <Send className="w-5 h-5" />
+                    Send Message
+                  </button>
+                  
+                  <p className="text-center text-sm text-slate-500 mt-4">
+                    We&apos;ll respond within 24 hours. For urgent matters, check our FAQ below.
                   </p>
-                  <a 
-                    href="https://twitter.com/chainpulsealpha"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:text-cyan-300 font-medium"
-                  >
-                    @chainpulsealpha
-                  </a>
-                  <div className="flex items-center gap-2 mt-4 text-sm text-slate-500">
-                    <Clock className="w-4 h-4" />
-                    <span>Response: Same day</span>
-                  </div>
-                </div>
-              </FadeIn>
-
-              {/* GitHub */}
-              <FadeIn delay={0.3}>
-                <div className="bg-[#12121a] rounded-2xl p-8 border border-slate-800 hover:border-purple-500/50 transition-colors group">
-                  <div className="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors">
-                    <svg className="w-7 h-7 text-purple-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3">GitHub</h3>
-                  <p className="text-slate-400 mb-4">
-                    For technical issues and feature requests
-                  </p>
-                  <a 
-                    href="https://github.com/chainpulsealpha"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-purple-400 hover:text-purple-300 font-medium"
-                  >
-                    github.com/chainpulsealpha
-                  </a>
-                  <div className="flex items-center gap-2 mt-4 text-sm text-slate-500">
-                    <Clock className="w-4 h-4" />
-                    <span>Response: 2-3 days</span>
-                  </div>
-                </div>
-              </FadeIn>
-
-            </div>
+                </form>
+              </div>
+            </FadeIn>
           </div>
         </section>
 
@@ -231,15 +226,8 @@ export default function ContactPage() {
             <FadeIn delay={0.8}>
               <div className="mt-12 text-center">
                 <p className="text-slate-400 mb-4">
-                  Still have questions?
+                  Still have questions? Use the form above to reach us directly.
                 </p>
-                <a 
-                  href="mailto:support@chainpulsealpha.com"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg font-medium transition-all"
-                >
-                  <Mail className="w-5 h-5" />
-                  Email Support Team
-                </a>
               </div>
             </FadeIn>
 
