@@ -2,59 +2,69 @@
 
 import { useState, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
-import { LogOut } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { LogOut, Crown, Zap, Lock, RefreshCw } from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
 import AlphaFeed from '@/components/dashboard/AlphaFeed'
 import SignalDetail from '@/components/dashboard/SignalDetail'
 import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
 import { fetchTopCoins, mockSignals, Signal } from '@/lib/api/crypto'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
-import { Crown, Zap } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { data: session, status, update } = useSession({
+    required: true,
+    onUnauthenticated() {
+      window.location.href = '/login?callbackUrl=/dashboard'
+    },
+  })
+
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null)
   const [signals, setSignals] = useState<Signal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // Check if user is premium (extend as needed based on your session shape)
+
+  // Pull premiumStatus from session — refreshed after payment via JWT callback
   const isPremium = (session?.user as any)?.premiumStatus === 'premium'
 
-  // Fetch real crypto data from CoinGecko
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const data = await fetchTopCoins(20)
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const data = await fetchTopCoins(20)
+
+      // Apply free-tier restriction: free users see only 5 signals with 15min delay indicator
+      if (!isPremium) {
+        setSignals(data.slice(0, 5).map(s => ({
+          ...s,
+          status: (s.correlationScore >= 85 ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
+        })))
+      } else {
         setSignals(data)
-      } catch (err) {
-        console.error('Failed to fetch crypto data:', err)
-        setError('Live market data temporarily unavailable. Showing fallback signals.')
-        // Fallback to mock data if API fails
-        setSignals(mockSignals)
-      } finally {
-        setIsLoading(false)
       }
+    } catch (err) {
+      console.error('Failed to fetch crypto data:', err)
+      setError('Live market data temporarily unavailable. Showing fallback signals.')
+      setSignals(isPremium ? mockSignals : mockSignals.slice(0, 5))
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    fetchData()
-
-    // Auto-refresh every 60 seconds
-    const interval = setInterval(fetchData, 60000)
-    return () => clearInterval(interval)
-  }, [])
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchData()
+      const interval = setInterval(fetchData, 60000)
+      return () => clearInterval(interval)
+    }
+  }, [status, isPremium])
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/' })
   }
 
-  if (isLoading) {
+  if (status === 'loading' || isLoading) {
     return (
-      // pt-20 on mobile, pt-24 on lg — clears the fixed global nav (h-16 / h-20)
       <div className="min-h-screen bg-background pt-20 lg:pt-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <DashboardSkeleton />
@@ -64,23 +74,33 @@ export default function DashboardPage() {
   }
 
   return (
-    // pt-20 / pt-24 clears the fixed global nav bar so content doesn't hide behind it
     <div className="min-h-screen bg-background pt-20 lg:pt-24">
-      {/* Dashboard sub-header — sits below the global fixed nav */}
+      {/* Dashboard sub-header */}
       <header className="border-b border-border bg-background-card">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-text-secondary">Live Alpha Feed</span>
+            <span className="text-sm font-medium text-text-secondary">
+              {isPremium ? '⚡ Premium — Live Alpha Feed' : 'Alpha Feed (Free Tier)'}
+            </span>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <Link
-              href="/admin/dashboard"
+              href="/signals"
               className="text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
-              Admin
+              All Signals
             </Link>
+            {/* Admin link only for admins */}
+            {(session?.user as any)?.isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Admin
+              </Link>
+            )}
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 text-sm text-text-secondary hover:text-danger-400 transition-colors"
@@ -94,14 +114,36 @@ export default function DashboardPage() {
 
       <ErrorBoundary>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Upgrade Banner for free users */}
+          {/* Premium User Banner */}
+          {isPremium && (
+            <div className="mb-6 p-4 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">Premium Access Active</p>
+                  <p className="text-xs text-text-muted">Real-time signals, Diamond tier, full whale analysis. No restrictions.</p>
+                </div>
+              </div>
+              <button
+                onClick={fetchData}
+                className="flex items-center gap-2 text-xs text-yellow-400 hover:text-yellow-300"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Refresh
+              </button>
+            </div>
+          )}
+
+          {/* Free User Upgrade Banner */}
           {!isPremium && (
             <div className="mb-6 p-4 rounded-xl border border-primary-500/30 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-text-primary">You're on the Free plan</p>
-                  <p className="text-xs text-text-muted">Unlock real-time Diamond Signals, Telegram alerts, and full dashboard access.</p>
+                  <p className="text-xs text-text-muted">
+                    Seeing 5 of {signals.length > 5 ? '20+' : 'many'} signals. Diamond signals locked. Upgrade for real-time access.
+                  </p>
                 </div>
               </div>
               <Link
@@ -114,22 +156,33 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* Free tier: show locked signals teaser */}
+          {!isPremium && (
+            <div className="mb-6 p-4 rounded-xl border border-dashed border-border text-center">
+              <Lock className="w-6 h-6 text-text-muted mx-auto mb-2" />
+              <p className="text-sm text-text-muted">
+                <strong className="text-text-secondary">15+ more signals</strong> including Diamond tier are locked.{' '}
+                <Link href="/pricing" className="text-primary-400 hover:text-primary-300">Upgrade →</Link>
+              </p>
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm flex items-center gap-2">
               <span>⚠️</span>
               <span>{error}</span>
             </div>
           )}
-          
+
           {/* Main Alpha Feed */}
           <AlphaFeed signals={signals} onSelectSignal={setSelectedSignal} />
-          
+
           {/* Signal Detail Modal */}
           <AnimatePresence>
             {selectedSignal && (
-              <SignalDetail 
-                signal={selectedSignal} 
-                onClose={() => setSelectedSignal(null)} 
+              <SignalDetail
+                signal={selectedSignal}
+                onClose={() => setSelectedSignal(null)}
               />
             )}
           </AnimatePresence>

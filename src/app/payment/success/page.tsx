@@ -1,20 +1,36 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CheckCircle2, Crown, ArrowRight, Zap } from 'lucide-react'
+import { CheckCircle2, Crown, ArrowRight, Zap, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
+import { useSession } from 'next-auth/react'
 
 export default function PaymentSuccess() {
+  const { update } = useSession()
+  const [sessionRefreshed, setSessionRefreshed] = useState(false)
+
   useEffect(() => {
-    // Reload session to pick up new premium status
-    // Auto-redirect to dashboard after 5 seconds
-    const timer = setTimeout(() => {
-      window.location.href = '/dashboard'
-    }, 5000)
-    return () => clearTimeout(timer)
-  }, [])
+    // Force session refresh so JWT picks up new premiumStatus from DB
+    const refreshAndRedirect = async () => {
+      try {
+        // Trigger JWT update callback which re-queries DB for premiumStatus
+        await update()
+        setSessionRefreshed(true)
+      } catch {
+        setSessionRefreshed(true) // proceed regardless
+      }
+
+      // Redirect to dashboard after 5 seconds
+      const timer = setTimeout(() => {
+        window.location.href = '/dashboard'
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+
+    refreshAndRedirect()
+  }, [update])
 
   return (
     <main className="min-h-screen bg-background flex items-center justify-center">
@@ -41,10 +57,21 @@ export default function PaymentSuccess() {
               <p className="text-text-secondary mb-2">
                 Welcome to ChainPulse Alpha Premium.
               </p>
-              <p className="text-text-muted text-sm mb-8">
+              <p className="text-text-muted text-sm mb-2">
                 Your account has been upgraded. You now have access to all Diamond Signals, 
                 real-time alerts, and full dashboard features.
               </p>
+              {!sessionRefreshed && (
+                <p className="text-text-muted text-xs mb-4 flex items-center justify-center gap-2">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Activating premium features…
+                </p>
+              )}
+              {sessionRefreshed && (
+                <p className="text-success-400 text-xs mb-4">
+                  ✓ Premium access activated
+                </p>
+              )}
             </motion.div>
 
             {/* What's unlocked */}

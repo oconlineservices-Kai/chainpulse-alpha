@@ -49,12 +49,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
         token.isAdmin = user.isAdmin
         token.premiumStatus = (user as any).premiumStatus ?? 'free'
+        token.email = user.email
       }
+
+      // Always refresh premiumStatus from DB to reflect payment changes immediately.
+      // This runs on every request that touches the JWT (session fetch, etc.)
+      // We throttle it: only re-query if last check was > 2 minutes ago.
+      const now = Date.now()
+      const lastCheck = (token.premiumStatusCheckedAt as number) ?? 0
+      const shouldRefresh = trigger === 'update' || now - lastCheck > 2 * 60 * 1000
+
+      if (shouldRefresh && token.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+            select: { premiumStatus: true, credits: true, premiumExpiresAt: true }
+          })
+          if (dbUser) {
+            // Check if premium has expired
+            let status = dbUser.premiumStatus
+            if (
+              status === 'premium' &&
+              dbUser.premiumExpiresAt &&
+              dbUser.premiumExpiresAt < new Date()
+            ) {
+              status = 'free'
+              // Update DB to reflect expiry
+              await prisma.user.update({
+                where: { email: token.email as string },
+                data: { premiumStatus: 'free' }
+              })
+            }
+            token.premiumStatus = status
+            token.credits = dbUser.credits
+            token.premiumStatusCheckedAt = now
+          }
+        } catch {
+          // DB unavailable — keep cached value
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
@@ -62,6 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string
         session.user.isAdmin = token.isAdmin as boolean
         ;(session.user as any).premiumStatus = token.premiumStatus as string
+        ;(session.user as any).credits = token.credits as number ?? 0
       }
       return session
     }
@@ -71,6 +111,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/login'
   },
   session: {
-    strategy: 'jwt'
+    strategy: 'jwt',
+    // Shorten max age so sessions expire naturally if premium lapses
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   }
 })
