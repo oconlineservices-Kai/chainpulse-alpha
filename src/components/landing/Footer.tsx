@@ -19,23 +19,9 @@ const footerLinks = {
     { label: 'Privacy Policy', href: '/privacy' },
     { label: 'Terms of Service', href: '/terms' },
   ],
-  social: [
-    { 
-      label: 'Twitter', 
-      href: 'https://twitter.com/chainpulsealpha', 
-      icon: () => <span className="text-xl">𝕏</span>
-    },
-    { 
-      label: 'GitHub', 
-      href: 'https://github.com/chainpulsealpha', 
-      icon: () => <span className="text-xl">𝔾</span>
-    },
-    { 
-      label: 'Discord', 
-      href: 'https://discord.gg/chainpulsealpha', 
-      icon: MessageCircle 
-    },
-  ]
+  // Social links removed - accounts don't exist yet
+  // Will be added when actual accounts are created
+  social: []
 }
 
 const trustBadges = [
@@ -92,21 +78,7 @@ export default function Footer() {
               <p className="text-text-secondary text-sm leading-relaxed">
                 AI-powered crypto signals that combine whale tracking with Twitter sentiment for high-confidence alpha.
               </p>
-              <div className="flex items-center gap-4">
-                {footerLinks.social.map((social) => (
-                  <motion.a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-text-muted hover:text-primary-400 transition-colors"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <social.icon />
-                  </motion.a>
-                ))}
-              </div>
+              {/* Social links removed - will be added when accounts exist */}
             </div>
           </FadeIn>
 

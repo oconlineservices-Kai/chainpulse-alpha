@@ -42,7 +42,7 @@ const mockSignals = [
 export default function DashboardPreview() {
   return (
     <motion.div
-      className="relative max-w-4xl mx-auto mt-16"
+      className="relative max-w-4xl mx-auto mt-16 px-0 overflow-hidden"
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, delay: 0.6 }}
@@ -74,12 +74,12 @@ export default function DashboardPreview() {
 
         {/* Dashboard Header */}
         <div className="px-6 py-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-text-primary mb-1">Alpha Feed</h1>
-              <p className="text-sm text-text-secondary">Live crypto signals powered by AI</p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-text-primary mb-1 truncate">Alpha Feed</h1>
+              <p className="text-xs sm:text-sm text-text-secondary truncate">Live crypto signals powered by AI</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
               <div className="text-right">
                 <div className="text-sm text-text-muted mb-0.5">Portfolio Value</div>
                 <div className="text-lg font-bold text-success-400">$47,329</div>
@@ -163,7 +163,7 @@ export default function DashboardPreview() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4">
+                  <div className="hidden sm:flex items-center gap-4">
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 mb-0.5">
                         <div className="w-3 h-3 text-twitter font-bold text-xs">𝕏</div>

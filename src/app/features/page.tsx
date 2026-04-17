@@ -160,7 +160,7 @@ export default function FeaturesPage() {
 
         {/* Stats */}
         <FadeIn delay={0.1}>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 xs:gap-6 mb-16">
             {stats.map((stat) => (
               <div key={stat.label} className="glass-card p-6 text-center">
                 <div className="text-3xl font-bold gradient-text mb-1">{stat.value}</div>
@@ -178,18 +178,18 @@ export default function FeaturesPage() {
                 className="glass-card p-8 rounded-2xl border border-border hover:border-primary-500/30 transition-all duration-300"
                 whileHover={{ y: -4 }}
               >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} p-0.5 flex-shrink-0`}>
+                <div className="flex items-start gap-3 sm:gap-4 mb-4">
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${feature.color} p-0.5 flex-shrink-0`}>
                     <div className="w-full h-full rounded-xl bg-background-card flex items-center justify-center">
-                      <feature.icon className="w-6 h-6 text-white" />
+                      <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">{feature.title}</h3>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold mb-1">{feature.title}</h3>
                     <p className="text-text-secondary text-sm">{feature.description}</p>
                   </div>
                 </div>
-                <ul className="space-y-2 ml-16">
+                <ul className="space-y-2 ml-13 sm:ml-16">
                   {feature.details.map((detail) => (
                     <li key={detail} className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-success-400 flex-shrink-0" />

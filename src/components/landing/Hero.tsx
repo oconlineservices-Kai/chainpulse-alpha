@@ -61,7 +61,7 @@ export default function Hero() {
           
           {/* Main Headline */}
           <FadeIn delay={0.2}>
-            <h1 className="text-5xl md:text-7xl xl:text-8xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl xl:text-8xl font-bold mb-6 leading-tight">
               <span className="block mb-2">Catch the</span>
               <span className="gradient-text block mb-2">10x Pumps</span>
               <span className="block">Before They Happen</span>
@@ -170,7 +170,7 @@ export default function Hero() {
           
           {/* Social Proof Stats */}
           <FadeIn delay={0.9}>
-            <div className="flex items-center justify-center gap-8 mt-16 text-sm">
+            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mt-16 text-sm">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary-400">47,329</div>
                 <div className="text-text-muted">Signals Generated</div>

@@ -65,6 +65,10 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
           },
+          {
+            key: 'Content-Security-Policy-Report-Only',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.razorpay.com https://api.coingecko.com wss:; frame-src https://api.razorpay.com; worker-src blob: 'self'; report-uri /api/csp-report;"
+          },
         ],
       },
     ];

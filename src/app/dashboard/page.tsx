@@ -78,9 +78,9 @@ export default function DashboardPage() {
       {/* Dashboard sub-header */}
       <header className="border-b border-border bg-background-card">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
-            <span className="text-sm font-medium text-text-secondary">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse shrink-0" />
+            <span className="text-sm font-medium text-text-secondary truncate">
               {isPremium ? '⚡ Premium — Live Alpha Feed' : 'Alpha Feed (Free Tier)'}
             </span>
           </div>

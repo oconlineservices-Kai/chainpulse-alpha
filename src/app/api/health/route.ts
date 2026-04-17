@@ -1,6 +1,58 @@
 import { NextResponse } from "next/server";
+import { exec } from "child_process";
+import { promisify } from "util";
 
 export const dynamic = "force-dynamic";
+
+const execAsync = promisify(exec);
+
+async function getSignalGeneratorStatus() {
+  try {
+    const { stdout } = await execAsync('pm2 jlist 2>/dev/null', {
+      timeout: 5000,
+    });
+    
+    const processes = JSON.parse(stdout);
+    const signalProc = processes.find((p: any) => p.name === 'signal-generator');
+    
+    if (!signalProc) {
+      return {
+        service: 'signal-generator',
+        status: 'stopped',
+        pid: null,
+        uptime: null,
+        restarts: 0,
+        healthy: false
+      };
+    }
+    
+    const pm2Status = signalProc.pm2_env?.status ?? 'unknown';
+    const status = pm2Status === 'online' ? 'running' : 
+                   pm2Status === 'stopped' ? 'stopped' : 
+                   pm2Status === 'errored' ? 'errored' : 'unknown';
+    
+    const pm2UptimeMs = signalProc.pm2_env?.pm_uptime;
+    const nowMs = Date.now();
+    
+    return {
+      service: 'signal-generator',
+      status,
+      pid: signalProc.pid ?? null,
+      uptime: pm2UptimeMs ? Math.floor((nowMs - pm2UptimeMs) / 1000) : null,
+      restarts: signalProc.pm2_env?.restart_time ?? 0,
+      healthy: status === 'running'
+    };
+  } catch {
+    return {
+      service: 'signal-generator',
+      status: 'unknown',
+      pid: null,
+      uptime: null,
+      restarts: 0,
+      healthy: false
+    };
+  }
+}
 
 function isConfigured(value?: string) {
   return Boolean(value && value.trim().length > 0);
@@ -21,6 +73,10 @@ function isPlaceholder(value?: string) {
 
 export async function GET() {
   try {
+    const [signalStatus] = await Promise.all([
+      getSignalGeneratorStatus()
+    ]);
+    
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
     const razorpayWebhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -47,14 +103,16 @@ export async function GET() {
 
     const paypalReady = paypal.clientIdConfigured && paypal.clientSecretConfigured;
     const paymentReady = razorpayReady || paypalReady;
-
+    const allSystemsReady = paymentReady && signalStatus.healthy;
+    
     return NextResponse.json(
       {
-        status: paymentReady ? "ok" : "degraded",
+        status: allSystemsReady ? "ok" : "degraded",
         timestamp: new Date().toISOString(),
         database: "connected",
         uptime: process.uptime(),
         paymentGateway: paymentReady ? "configured" : "misconfigured",
+        signalGenerator: signalStatus,
         payment: {
           status: paymentReady ? "ready" : "action_required",
           primaryProvider: "razorpay",
@@ -66,9 +124,11 @@ export async function GET() {
             ...(razorpay.keySecretPlaceholder ? ["RAZORPAY_KEY_SECRET is placeholder"] : []),
           ],
         },
-        message: paymentReady
+        message: allSystemsReady
           ? "All systems operational"
-          : "Payment gateway requires configuration updates",
+          : signalStatus.healthy 
+            ? "Payment gateway requires configuration updates"
+            : "Signal generator service not running",
       },
       {
         headers: {

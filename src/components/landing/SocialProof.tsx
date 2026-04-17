@@ -150,19 +150,19 @@ export default function SocialProof() {
         {/* Trust Indicators */}
         <FadeIn delay={0.6}>
           <div className="text-center">
-            <div className="inline-flex items-center gap-6 px-6 py-4 rounded-xl bg-background-card/50 border border-border">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 px-4 sm:px-6 py-4 rounded-xl bg-background-card/50 border border-border">
               <div className="flex items-center gap-2 text-sm text-text-muted">
-                <Shield className="w-4 h-4 text-success-400" />
+                <Shield className="w-4 h-4 text-success-400 shrink-0" />
                 <span>🔒 Secure 256-bit encryption</span>
               </div>
-              <div className="w-px h-4 bg-border" />
+              <div className="hidden sm:block w-px h-4 bg-border" />
               <div className="flex items-center gap-2 text-sm text-text-muted">
-                <Zap className="w-4 h-4 text-warning-400" />
+                <Zap className="w-4 h-4 text-warning-400 shrink-0" />
                 <span>⚡ Real-time data</span>
               </div>
-              <div className="w-px h-4 bg-border" />
+              <div className="hidden sm:block w-px h-4 bg-border" />
               <div className="flex items-center gap-2 text-sm text-text-muted">
-                <Activity className="w-4 h-4 text-primary-400" />
+                <Activity className="w-4 h-4 text-primary-400 shrink-0" />
                 <span>📊 99.9% uptime SLA</span>
               </div>
             </div>

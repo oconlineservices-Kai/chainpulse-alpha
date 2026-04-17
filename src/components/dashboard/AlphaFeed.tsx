@@ -295,7 +295,7 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
                               {signal.status}
                             </Badge>
                           </div>
-                          <p className="text-text-muted text-xs truncate max-w-[90px] sm:max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap w-full">{signal.tokenName}</p>
+                          <p className="text-text-muted text-xs truncate max-w-[70px] xs:max-w-[90px] sm:max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap w-full">{signal.tokenName}</p>
                         </div>
                       </div>
                       

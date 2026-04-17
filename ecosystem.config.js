@@ -1,5 +1,24 @@
 module.exports = {
-  apps: [{
+  apps: [
+  // Signal generator — runs every 6 hours, exits after each run (cron_restart)
+  {
+    name: 'signal-generator',
+    script: 'engine/signal-generator.js',
+    cwd: '/opt/chainpulse/app',
+    cron_restart: '0 */6 * * *',
+    autorestart: false,
+    watch: false,
+    env: {
+      NODE_ENV: 'production',
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
+      NEON_DATABASE_URL: process.env.NEON_DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
+    },
+    error_file: '/var/log/chainpulse/signals-error.log',
+    out_file: '/var/log/chainpulse/signals.log',
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+    max_memory_restart: '256M',
+  },
+  {
     name: 'chainpulse-alpha',
     script: '.next/standalone/server.js',
     cwd: '/opt/chainpulse/app',

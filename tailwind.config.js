@@ -19,11 +19,12 @@ module.exports = {
           DEFAULT: '#262638',
           muted: '#1f1f2e',
         },
-        text: {
-          primary: '#ffffff',     // Text Primary
-          secondary: '#94a3b8',   // Text Secondary (slate-400)
-          muted: '#6b7280',
-        },
+    text: {
+      primary: "#f8fafc",    // slate-50 (ULTRA BRIGHT)
+      secondary: "#e2e8f0",  // slate-200 (60% brighter than original)
+      muted: "#cbd5e1",      // slate-300 (move current secondary to muted)
+      inverted: "#0f172a",   // slate-950
+    },
         primary: {
           50: '#eef2ff',
           100: '#e0e7ff',
