@@ -25,8 +25,8 @@ export default auth((req) => {
     '/contact',
     '/sitemap.xml',
     '/robots.txt',
-    ',
-    '/admin/public'/admin/test'  // Public demo admin dashboard
+    '/admin/public',
+    '/admin/test'  // Public demo admin dashboard
   ].includes(nextUrl.pathname)
   const isAdminRoute = nextUrl.pathname.startsWith('/admin')
   const isDashboardRoute = nextUrl.pathname.startsWith('/dashboard')
