@@ -248,7 +248,7 @@ export const GET = auth(async (req) => {
       allSignals = allSignals.slice(0, 3).map(s => ({
         ...s,
         whaleWallets: [],
-        twitterMentions: null, // hide exact counts
+        twitterMentions: 0, // hide exact counts
       }))
     }
 
