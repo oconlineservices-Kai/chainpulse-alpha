@@ -230,9 +230,17 @@ export const GET = auth(async (req) => {
     // Merge DB signals with demo signals (use demo if DB empty)
     let allSignals = dbSignals.length > 0
       ? dbSignals.map(s => ({
-          ...s,
+          id: s.id,
+          tokenSymbol: s.tokenSymbol,
+          tokenName: s.tokenName ?? s.tokenSymbol,
+          sentimentScore: s.sentimentScore ?? 0,
+          whaleConfidence: s.whaleConfidence ?? 0,
+          correlationScore: s.correlationScore ?? 0,
+          isDiamondSignal: s.isDiamondSignal,
+          twitterMentions: s.twitterMentions ?? 0,
+          whaleWallets: (s.whaleWallets as string[]) ?? [],
           createdAt: s.createdAt.toISOString(),
-          expiresAt: s.expiresAt?.toISOString() ?? null,
+          expiresAt: s.expiresAt?.toISOString() ?? new Date().toISOString(),
         }))
       : DEMO_SIGNALS.filter(s => {
           if (typeFilter === 'diamond') return s.isDiamondSignal
