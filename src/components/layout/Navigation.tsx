@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Activity, LogIn, UserPlus, Menu, X } from 'lucide-react'
+import { Activity, LogIn, UserPlus, Menu, X, LayoutDashboard } from 'lucide-react'
 
 export default function PremiumNavigationSimple() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -40,6 +40,9 @@ export default function PremiumNavigationSimple() {
             <Link href="/signals" className="text-gray-300 hover:text-white transition">Signals</Link>
             <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
             <Link href="/contact" className="text-gray-300 hover:text-white transition">Contact</Link>
+            <Link href="/dashboard" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-1.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-1.5">
+              <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+            </Link>
             <Link href="/login" className="text-gray-300 hover:text-white transition flex items-center gap-2">
               <LogIn className="w-4 h-4" /> Login
             </Link>
@@ -69,6 +72,9 @@ export default function PremiumNavigationSimple() {
               <Link href="/signals" className="block text-gray-300 hover:text-white py-2">Signals</Link>
               <Link href="/pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
               <Link href="/contact" className="block text-gray-300 hover:text-white py-2">Contact</Link>
+              <Link href="/dashboard" className="block text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-2.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-2">
+                <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+              </Link>
               <div className="pt-4 border-t border-gray-800 space-y-3">
                 <Link href="/login" className="block text-gray-300 hover:text-white py-2 flex items-center gap-2">
                   <LogIn className="w-4 h-4" /> Login
