@@ -27,10 +27,16 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-30 bg-background-card/95 backdrop-blur-xl border-b border-border">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-4 gap-4">
         {/* Left Section - Search */}
-        <div className="flex items-center gap-4 flex-1 max-w-md">
-          <div className="relative flex-1">
+        <div className="flex items-center gap-4 flex-1 min-w-0 max-w-2xl">
+          {/* Search icon for small screens */}
+          <button className="lg:hidden p-2 rounded-xl bg-background-hover border border-border hover:border-primary-500 transition-all">
+            <Search className="w-4 h-4 text-text-muted" />
+          </button>
+          
+          {/* Full search bar for larger screens */}
+          <div className="hidden lg:block relative flex-1 min-w-[200px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
@@ -52,7 +58,7 @@ export default function Header() {
           </div>
           
           <motion.button
-            className="p-2 rounded-xl bg-background-hover border border-border hover:border-primary-500 transition-all"
+            className="hidden lg:flex p-2 rounded-xl bg-background-hover border border-border hover:border-primary-500 transition-all"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -61,9 +67,9 @@ export default function Header() {
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-shrink-0">
           {/* Status Indicator */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success-500/10 border border-success-500/20">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success-500/10 border border-success-500/20 flex-shrink-0">
             <div className="relative">
               <div className="w-2 h-2 bg-success-400 rounded-full" />
               <motion.div
@@ -76,7 +82,7 @@ export default function Header() {
           </div>
 
           {/* Last Update */}
-          <div className="hidden lg:flex items-center gap-2 text-sm text-text-muted">
+          <div className="hidden xl:flex items-center gap-2 text-sm text-text-muted flex-shrink-0">
             <Clock className="w-4 h-4" />
             <span>Updated 2m ago</span>
           </div>
