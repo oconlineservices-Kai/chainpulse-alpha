@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { Users, CreditCard, Signal, TrendingUp, LogOut, Shield, Activity, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -37,13 +38,26 @@ interface DashboardData {
 
 export default function AdminDashboardPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Client-side guard: redirect non-admins
   useEffect(() => {
-    fetchStats()
-  }, [])
+    if (status === 'unauthenticated') {
+      router.push('/admin/login')
+      return
+    }
+    if (status === 'authenticated' && !(session?.user as { isAdmin?: boolean })?.isAdmin) {
+      router.push('/dashboard')
+      return
+    }
+  }, [status, session, router])
+
+  useEffect(() => {
+    if (status === 'authenticated') fetchStats()
+  }, [status])
 
   const fetchStats = async () => {
     try {
@@ -97,9 +111,8 @@ export default function AdminDashboardPage() {
   }
 
   const handleLogout = async () => {
-    await fetch('/api/auth/signout', { method: 'POST' })
-    router.push('/')
-    router.refresh()
+    const { signOut } = await import('next-auth/react')
+    await signOut({ callbackUrl: '/admin/login' })
   }
 
   const val = (n: number | undefined | null) => loading ? '—' : (n ?? 0).toLocaleString()

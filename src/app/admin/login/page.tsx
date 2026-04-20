@@ -1,42 +1,45 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
-import { motion } from 'framer-motion'
-import { ArrowRight, Lock, Mail, Shield } from 'lucide-react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { Shield, LogIn, AlertCircle } from 'lucide-react'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     setLoading(true)
-    setError('')
 
     try {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false
+        redirect: false,
       })
 
       if (result?.error) {
-        setError('Invalid admin credentials')
-      } else if (result?.ok) {
-        router.push('/admin/dashboard')
-        router.refresh()
-      } else {
-        setError('Something went wrong. Please try again.')
+        setError('Invalid credentials or insufficient permissions.')
+        return
       }
+
+      // Verify admin access after login
+      const res = await fetch('/api/admin/enhanced-stats')
+      if (res.status === 403 || res.status === 401) {
+        setError('You do not have admin access.')
+        return
+      }
+
+      router.push('/admin/dashboard')
+      router.refresh()
     } catch {
-      setError('Something went wrong. Please try again.')
+      setError('Login failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -44,89 +47,79 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
-      >
-        {/* Logo */}
+      <div className="w-full max-w-md">
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-danger-500 to-warning-500 flex items-center justify-center">
-              <Shield className="w-6 h-6" />
-            </div>
-            <span className="font-bold text-2xl">Admin Portal</span>
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-danger-500 to-warning-500 flex items-center justify-center mx-auto mb-4">
+            <Shield className="w-8 h-8 text-white" />
           </div>
+          <h1 className="text-2xl font-bold text-text-primary">Admin Access</h1>
+          <p className="text-text-muted text-sm mt-2">ChainPulse Alpha — Restricted Area</p>
         </div>
 
-        {/* Login Card */}
+        {/* Login Form */}
         <div className="bg-background-card border border-border rounded-2xl p-8">
-          <h1 className="text-2xl font-bold mb-2">Admin Access</h1>
-          <p className="text-text-secondary mb-6">
-            Restricted area. Authorized personnel only.
-          </p>
-
-          {error && (
-            <div className="mb-4 p-3 bg-danger-500/10 border border-danger-500/20 rounded-lg text-danger-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Admin Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@chainpulsealpha.com"
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
-                  required
-                />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="flex items-center gap-3 p-4 bg-danger-900/30 border border-danger-500/50 rounded-xl">
+                <AlertCircle className="w-5 h-5 text-danger-400 shrink-0" />
+                <p className="text-sm text-danger-300">{error}</p>
               </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Admin Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@chainpulsealpha.com"
+                className="w-full px-4 py-3 rounded-xl bg-background border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:border-danger-500 transition-colors"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-lg focus:border-primary-500 focus:outline-none transition-colors"
-                  required
-                />
-              </div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl bg-background border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:border-danger-500 transition-colors"
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-danger-500 to-warning-500 hover:from-danger-600 hover:to-warning-600 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-all"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-danger-500 to-warning-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? (
-                <div className="loading-spinner" />
+                <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
               ) : (
                 <>
-                  Access Admin
-                  <ArrowRight className="w-4 h-4" />
+                  <LogIn className="w-5 h-5" />
+                  Sign In to Admin
                 </>
               )}
             </button>
           </form>
         </div>
 
-        {/* Back to home */}
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-text-muted hover:text-text-primary">
-            ← Back to home
-          </Link>
-        </div>
-      </motion.div>
+        <p className="text-center text-text-muted text-xs mt-6">
+          This area is restricted to authorized administrators only.
+          <br />
+          <a href="/" className="text-primary-400 hover:text-primary-300 mt-1 inline-block">
+            ← Back to ChainPulse Alpha
+          </a>
+        </p>
+      </div>
     </div>
   )
 }
