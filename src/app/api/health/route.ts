@@ -73,9 +73,16 @@ function isPlaceholder(value?: string) {
 
 export async function GET() {
   try {
-    const [signalStatus] = await Promise.all([
-      getSignalGeneratorStatus()
-    ]);
+    // Signal generator is not part of current Fly.io architecture
+    const signalStatus = {
+      service: 'signal-generator',
+      status: 'not_required',
+      pid: null,
+      uptime: null,
+      restarts: 0,
+      healthy: true,
+      note: 'Service not required in current Fly.io architecture'
+    };
     
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
