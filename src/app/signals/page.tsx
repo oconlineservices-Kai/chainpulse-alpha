@@ -17,6 +17,7 @@ import FadeIn, { FadeInStagger } from '@/components/animations/FadeIn'
 import { HoverScale } from '@/components/animations/ScaleIn'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import BuySignalButton from '@/components/signals/BuySignalButton'
 
 interface LiveSignal {
   id: string
@@ -312,9 +313,23 @@ export default function SignalsPage() {
 
                         {/* Center: Scores */}
                         {isLocked ? (
-                          <div className="flex items-center gap-2 text-text-muted">
-                            <Lock className="w-5 h-5" />
-                            <span className="text-sm font-medium">Premium Signal — Upgrade to Unlock</span>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <div className="flex items-center gap-2 text-text-muted">
+                              <Lock className="w-4 h-4" />
+                              <span className="text-sm font-medium">Premium Signal</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <BuySignalButton
+                                signalId={signal.id}
+                                signalType={type === 'diamond' ? 'diamond' : type === 'whale' ? 'whale' : 'default'}
+                                compact
+                                onUnlocked={() => fetchSignals()}
+                              />
+                              <span className="text-xs text-text-muted">or</span>
+                              <Link href="/pricing" className="text-xs text-primary-400 hover:text-primary-300 font-medium">
+                                Upgrade for All →
+                              </Link>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-6 text-sm">

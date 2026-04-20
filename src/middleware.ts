@@ -23,11 +23,12 @@ export default auth((req) => {
     '/privacy',
     '/terms',
     '/contact',
+    '/blog',
     '/sitemap.xml',
     '/robots.txt',
-    '/admin/public',
-    '/admin/test'  // Public demo admin dashboard
-  ].includes(nextUrl.pathname)
+    '/admin/login',  // Admin login page is public
+    '/admin/test'    // Public demo admin dashboard
+  ].includes(nextUrl.pathname) || nextUrl.pathname.startsWith('/blog/')
   const isAdminRoute = nextUrl.pathname.startsWith('/admin')
   const isDashboardRoute = nextUrl.pathname.startsWith('/dashboard')
 
@@ -41,14 +42,20 @@ export default auth((req) => {
     return NextResponse.next()
   }
 
-  // Redirect to login if not authenticated
-  if (!isLoggedIn && (isDashboardRoute || isAdminRoute)) {
-    return NextResponse.redirect(new URL('/login', nextUrl))
+  // Redirect to login if not authenticated for dashboard
+  if (!isLoggedIn && isDashboardRoute) {
+    const callbackUrl = encodeURIComponent(nextUrl.pathname)
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, nextUrl))
   }
 
-  // Check admin access
-  if (isAdminRoute && !isAdmin) {
-    return NextResponse.redirect(new URL('/login', nextUrl))
+  // Redirect to admin login if not authenticated for admin routes
+  if (!isLoggedIn && isAdminRoute) {
+    return NextResponse.redirect(new URL('/admin/login', nextUrl))
+  }
+
+  // Check admin access — non-admin authenticated users get bounced to dashboard
+  if (isAdminRoute && isLoggedIn && !isAdmin) {
+    return NextResponse.redirect(new URL('/dashboard', nextUrl))
   }
 
   return NextResponse.next()
