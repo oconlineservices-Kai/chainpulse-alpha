@@ -12,11 +12,8 @@ interface PaymentButtonProps {
   className?: string
 }
 
-declare global {
-  interface Window {
-    Razorpay: any
-  }
-}
+// Window.Razorpay type is declared in BuySignalButton.tsx
+// Avoid redeclaration conflict — use (window as any).Razorpay in this file
 
 export default function PaymentButton({
   amount,
@@ -94,7 +91,7 @@ export default function PaymentButton({
         }
       }
 
-      const rzp = new window.Razorpay(options)
+      const rzp = new (window as any).Razorpay(options)
       rzp.open()
     } catch (error) {
       console.error('Payment error:', error)

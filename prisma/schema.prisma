@@ -92,3 +92,15 @@ model Signal {
   @@index([performanceStatus])
   @@map("signals")
 }
+
+model PasswordReset {
+  id      String   @id @default(uuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([token])
+  @@map("password_resets")
+}
