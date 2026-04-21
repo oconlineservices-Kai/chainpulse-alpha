@@ -18,7 +18,7 @@ import {
 const signupSchema = z.object({
   email: z.string().email('Invalid email address').max(254),
   password: z.string().min(8, 'Password must be at least 8 characters').max(128),
-  name: z.string().max(100).optional(),
+  name: z.string().max(100).optional(), // accepted but not stored (no name field in User model)
 })
 
 export async function POST(req: NextRequest) {
