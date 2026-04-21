@@ -64,7 +64,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const lastCheck = (token.premiumStatusCheckedAt as number) ?? 0
       const shouldRefresh = trigger === 'update' || now - lastCheck > 2 * 60 * 1000
 
-      if (shouldRefresh && token.email) {
+      // Skip DB refresh during Next.js build phase (no real DB connection available)
+      const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build' ||
+        process.env.NEON_DATABASE_URL?.startsWith('postgresql://build:')
+
+      if (shouldRefresh && token.email && !isBuildPhase) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email as string },

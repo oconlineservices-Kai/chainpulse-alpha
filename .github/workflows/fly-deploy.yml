@@ -24,11 +24,14 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          # Use dummy DB URL for build-time (real URL is a Fly.io secret at runtime)
+          NEON_DATABASE_URL: postgresql://build:build@localhost/build
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           AUTH_URL: ${{ secrets.AUTH_URL }}
           NEXTAUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.AUTH_URL }}
+          # Signal to auth.ts to skip DB queries during static generation
+          NEXT_PHASE: phase-production-build
           
       - name: Deploy to Fly.io
         uses: superfly/flyctl-actions@1.4
