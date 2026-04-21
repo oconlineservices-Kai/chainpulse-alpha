@@ -154,12 +154,12 @@ export default function RootLayout({
           Skip to main content
         </a>
         <div id="root">
-          <Navigation />
-          <main id="main-content">
-            <SessionProvider>
+          <SessionProvider>
+            <Navigation />
+            <main id="main-content">
               {children}
-            </SessionProvider>
-          </main>
+            </main>
+          </SessionProvider>
         </div>
         
         {/* Google Analytics 4 - XSS Safe */}
