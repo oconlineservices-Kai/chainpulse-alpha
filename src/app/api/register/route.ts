@@ -18,7 +18,7 @@ import {
 const signupSchema = z.object({
   email: z.string().email('Invalid email address').max(254),
   password: z.string().min(8, 'Password must be at least 8 characters').max(128),
-  name: z.string().max(100).optional(),
+  name: z.string().max(100).optional(), // accepted but not stored (no name field in User model)
 })
 
 export async function POST(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const email = sanitizeEmail(result.data.email)
-    const { password, name } = result.data
+    const { password } = result.data
 
     // Block disposable email providers
     const domain = email.split('@')[1]
@@ -76,7 +76,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.create({
       data: {
         email,
-        name: name || null,
         password: hashedPassword,
         premiumStatus: 'free',
         credits: 0,

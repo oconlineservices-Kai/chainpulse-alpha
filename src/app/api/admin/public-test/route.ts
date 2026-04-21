@@ -5,24 +5,12 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 export const GET = auth(async (req) => {
-  // Check if user is admin via JWT token
+  // Check if user is admin
   if (!req.auth?.user?.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    // Check authentication
-    const session = req.auth
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-    
-    // Admin is verified via JWT token isAdmin field (set in auth.ts)
-    // No DB query needed since isAdmin comes from token
-    
     // Get basic counts
     const [users, signals, waitlist, transactions] = await Promise.all([
       prisma.user.count(),

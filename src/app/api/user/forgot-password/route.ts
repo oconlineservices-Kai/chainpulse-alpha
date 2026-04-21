@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import crypto from 'crypto'
 
+// Shared in-memory token store (process-scoped via globalThis).
+// Tokens survive hot-reloads; a DB-backed PasswordReset model would be
+// required for multi-instance deployments.
+const getResetTokens = () => {
+  const g = globalThis as any
+  if (!g._resetTokens) g._resetTokens = new Map<string, { token: string; expires: Date }>()
+  return g._resetTokens as Map<string, { token: string; expires: Date }>
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json()
@@ -13,9 +22,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const normalizedEmail = email.toLowerCase().trim()
+
     // Check if user exists
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: { email: normalizedEmail }
     })
 
     // Always return success to prevent email enumeration
@@ -26,28 +37,17 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Generate reset token
+    // Generate reset token (valid for 1 hour)
     const token = crypto.randomBytes(32).toString('hex')
-    const expires = new Date(Date.now() + 3600000) // 1 hour from now
+    const expires = new Date(Date.now() + 3600000)
 
-    // Delete any existing reset tokens for this email
-    await prisma.passwordReset.deleteMany({
-      where: { email: email.toLowerCase() }
-    })
+    // Store token in the shared global map
+    getResetTokens().set(normalizedEmail, { token, expires })
 
-    // Create new reset token
-    await prisma.passwordReset.create({
-      data: {
-        email: email.toLowerCase(),
-        token,
-        expires,
-      }
-    })
-
-    // In production, send email here
-    // For now, just log the reset link
-    const resetUrl = `${process.env.APP_URL || 'https://chainpulsealpha.com'}/reset-password?token=${token}`
+    const resetUrl = `${process.env.NEXTAUTH_URL || 'https://chainpulsealpha.com'}/reset-password?token=${token}`
     console.log('Password reset URL:', resetUrl)
+
+    // TODO: send email when an email provider is configured
 
     return NextResponse.json(
       { message: 'If an account exists with this email, you will receive a password reset link.' },

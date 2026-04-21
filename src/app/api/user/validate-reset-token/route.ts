@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
+
+// Import the shared in-memory token store from forgot-password route
+// Note: in a multi-process deployment this won't work across instances,
+// but it's sufficient for a single-process PM2 setup.
+const getResetTokens = () => {
+  // We use a module-level global to share state within the process
+  const g = globalThis as any
+  if (!g._resetTokens) g._resetTokens = new Map<string, { token: string; expires: Date }>()
+  return g._resetTokens as Map<string, { token: string; expires: Date }>
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,19 +24,26 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Find valid reset token
-    const resetRecord = await prisma.passwordReset.findUnique({
-      where: { token }
-    })
+    const resetTokens = getResetTokens()
+    // Find entry by token value
+    let foundEmail: string | null = null
+    for (const [email, entry] of Array.from(resetTokens.entries())) {
+      if (entry.token === token) {
+        foundEmail = email
+        break
+      }
+    }
 
-    if (!resetRecord) {
+    if (!foundEmail) {
       return NextResponse.json(
         { message: 'Invalid reset token' },
         { status: 400 }
       )
     }
 
-    if (resetRecord.expires < new Date()) {
+    const entry = resetTokens.get(foundEmail)!
+    if (entry.expires < new Date()) {
+      resetTokens.delete(foundEmail)
       return NextResponse.json(
         { message: 'Reset token has expired' },
         { status: 400 }

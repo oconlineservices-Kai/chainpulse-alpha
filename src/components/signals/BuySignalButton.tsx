@@ -14,7 +14,7 @@ interface BuySignalButtonProps {
 
 declare global {
   interface Window {
-    Razorpay: new (options: RazorpayOptions) => RazorpayInstance
+    Razorpay: any
   }
 }
 interface RazorpayOptions {

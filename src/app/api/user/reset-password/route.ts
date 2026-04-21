@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 
+const getResetTokens = () => {
+  const g = globalThis as any
+  if (!g._resetTokens) g._resetTokens = new Map<string, { token: string; expires: Date }>()
+  return g._resetTokens as Map<string, { token: string; expires: Date }>
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { token, password } = await req.json()
@@ -13,25 +19,36 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Find valid reset token
-    const resetRecord = await prisma.passwordReset.findUnique({
-      where: { token }
-    })
+    const resetTokens = getResetTokens()
 
-    if (!resetRecord) {
+    // Find entry by token value
+    let foundEmail: string | null = null
+    for (const [email, entry] of Array.from(resetTokens.entries())) {
+      if (entry.token === token) {
+        foundEmail = email
+        break
+      }
+    }
+
+    if (!foundEmail) {
       return NextResponse.json(
         { message: 'Invalid reset token' },
         { status: 400 }
       )
     }
 
-    if (resetRecord.expires < new Date()) {
-      // Delete expired token
-      await prisma.passwordReset.delete({
-        where: { token }
-      })
+    const entry = resetTokens.get(foundEmail)!
+    if (entry.expires < new Date()) {
+      resetTokens.delete(foundEmail)
       return NextResponse.json(
         { message: 'Reset token has expired' },
+        { status: 400 }
+      )
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { message: 'Password must be at least 8 characters.' },
         { status: 400 }
       )
     }
@@ -41,14 +58,12 @@ export async function POST(req: NextRequest) {
 
     // Update user password
     await prisma.user.update({
-      where: { email: resetRecord.email },
+      where: { email: foundEmail },
       data: { password: hashedPassword }
     })
 
-    // Delete used token
-    await prisma.passwordReset.delete({
-      where: { token }
-    })
+    // Remove used token
+    resetTokens.delete(foundEmail)
 
     return NextResponse.json(
       { message: 'Password reset successfully' },
