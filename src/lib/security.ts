@@ -215,3 +215,77 @@ export default {
   isHoneypotTriggered,
   isTemporaryEmail
 };
+// ── Extended exports required by register/route.ts ──────────────────────────
+
+/**
+ * Normalize and sanitize an email address (lowercase + trim).
+ */
+export function sanitizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/**
+ * Return true if the domain belongs to a known temporary / disposable provider.
+ */
+export function isTempEmailDomain(domain: string): boolean {
+  const tempDomains = [
+    'tempmail.com', 'mailinator.com', 'guerrillamail.com',
+    '10minutemail.com', 'throwawaymail.com', 'yopmail.com',
+    'fakeinbox.com', 'trashmail.com', 'dispostable.com',
+    'sharklasers.com', 'guerrillamailblock.com', 'grr.la',
+    'spam4.me', 'trashmail.at', 'trashmail.io',
+  ];
+  const d = domain.toLowerCase();
+  return tempDomains.some(t => d === t || d.endsWith('.' + t));
+}
+
+/**
+ * Validate password strength. Returns an error string or null if valid.
+ */
+export function validatePassword(password: string): string | null {
+  if (password.length < 8) return 'Password must be at least 8 characters.';
+  if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter.';
+  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter.';
+  if (!/\d/.test(password)) return 'Password must contain at least one number.';
+  return null;
+}
+
+// Simple in-memory rate limiter store
+const rateLimitStore = new Map<string, { count: number; firstAt: number }>();
+
+/**
+ * Check rate limit. Returns true if the request is allowed.
+ * @param key       Unique key (e.g. "signup:1.2.3.4")
+ * @param max       Maximum allowed attempts
+ * @param windowMs  Rolling window in milliseconds
+ */
+export function checkRateLimit(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+
+  if (!entry || now - entry.firstAt > windowMs) {
+    rateLimitStore.set(key, { count: 1, firstAt: now });
+    return true;
+  }
+
+  entry.count += 1;
+  if (entry.count > max) return false;
+  return true;
+}
+
+/**
+ * Extract the real client IP from request headers.
+ */
+export function getClientIP(req: Request): string {
+  const forwarded = (req as any).headers?.get?.('x-forwarded-for') ??
+                    (req as any).headers?.['x-forwarded-for'] ?? '';
+  if (forwarded) return (forwarded as string).split(',')[0].trim();
+  return '0.0.0.0';
+}
+
+/**
+ * Build a rate-limit key scoped to an IP and action.
+ */
+export function getRateLimitKey(ip: string, action: string): string {
+  return `${action}:${ip}`;
+}
