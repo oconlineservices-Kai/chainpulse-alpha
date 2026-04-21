@@ -25,8 +25,10 @@ jobs:
         run: npm run build
         env:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_URL: ${{ secrets.AUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          NEXTAUTH_URL: ${{ secrets.AUTH_URL }}
           
       - name: Deploy to Fly.io
         uses: superfly/flyctl-actions@1.4

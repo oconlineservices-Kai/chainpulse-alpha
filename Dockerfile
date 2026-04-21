@@ -23,6 +23,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEON_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV AUTH_SECRET="build-time-secret"
+ENV AUTH_URL="https://chainpulse-alpha.fly.dev"
 ENV NEXTAUTH_SECRET="build-time-secret"
 ENV NEXTAUTH_URL="https://chainpulse-alpha.fly.dev"
 
