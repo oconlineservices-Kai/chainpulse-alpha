@@ -4,6 +4,10 @@ import '@/styles/globals.css'
 import Navigation from '@/components/layout/Navigation'
 import SessionProvider from '@/components/providers/SessionProvider'
 
+// Force dynamic rendering for all pages - the app uses client-side session hooks
+// in Navigation (via SessionProvider) which cannot be statically pre-rendered
+export const dynamic = 'force-dynamic'
+
 const inter = Inter({ 
   subsets: ['latin'],
   display: 'swap',
