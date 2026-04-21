@@ -110,7 +110,10 @@ export async function GET() {
 
     const paypalReady = paypal.clientIdConfigured && paypal.clientSecretConfigured;
     const paymentReady = razorpayReady || paypalReady;
-    const allSystemsReady = paymentReady && signalStatus.healthy;
+    // Signal generator is a cron job (runs every 6h then exits) — not a daemon.
+    // Being stopped is normal between runs; only treat as degraded if errored.
+    const signalHealthy = signalStatus.status !== 'errored';
+    const allSystemsReady = paymentReady && signalHealthy;
     
     return NextResponse.json(
       {
@@ -133,9 +136,11 @@ export async function GET() {
         },
         message: allSystemsReady
           ? "All systems operational"
-          : signalStatus.healthy 
+          : !paymentReady
             ? "Payment gateway requires configuration updates"
-            : "Signal generator service not running",
+            : signalStatus.status === 'errored'
+              ? "Signal generator service errored — check logs"
+              : "All systems operational",
       },
       {
         headers: {

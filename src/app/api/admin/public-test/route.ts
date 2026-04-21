@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { auth } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = auth(async (req) => {
+  // Check if user is admin via JWT token
+  if (!req.auth?.user?.isAdmin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     // Check authentication
-    const session = await auth()
+    const session = req.auth
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
@@ -15,18 +20,8 @@ export async function GET() {
       )
     }
     
-    // Check admin role
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { isAdmin: true }
-    })
-    
-    if (!user?.isAdmin) {
-      return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // Admin is verified via JWT token isAdmin field (set in auth.ts)
+    // No DB query needed since isAdmin comes from token
     
     // Get basic counts
     const [users, signals, waitlist, transactions] = await Promise.all([
@@ -78,15 +73,9 @@ export async function GET() {
       }
     })
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: "Database error",
-      mockData: {
-        users: { total: 4, premium: 1, admin: 1 },
-        financial: { payments: 0, revenue: 0 },
-        signals: { total: 14, recent: 5, winRate: 57.1 },
-        system: { waitlist: 0, uptime: "1d 20h", status: "HEALTHY" }
-      }
-    })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
-}
+})
