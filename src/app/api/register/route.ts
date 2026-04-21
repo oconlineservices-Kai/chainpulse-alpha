@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     const email = sanitizeEmail(result.data.email)
-    const { password, name } = result.data
+    const { password } = result.data
 
     // Block disposable email providers
     const domain = email.split('@')[1]
@@ -76,7 +76,6 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.create({
       data: {
         email,
-        name: name || null,
         password: hashedPassword,
         premiumStatus: 'free',
         credits: 0,
