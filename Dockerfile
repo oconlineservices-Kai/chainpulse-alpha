@@ -21,8 +21,14 @@ RUN npx prisma generate
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-# These are set at runtime via Fly.io secrets, not hardcoded here
-# NEON_DATABASE_URL, AUTH_SECRET, AUTH_URL are injected by Fly.io
+# Build-time env vars - runtime values are set via Fly.io secrets
+# These placeholders are used for build compilation only
+ENV AUTH_SECRET="4a408931926c8a1e249064a44c6a06b7fed8192fc2a34eec8134671e84663356"
+ENV NEXTAUTH_SECRET="4a408931926c8a1e249064a44c6a06b7fed8192fc2a34eec8134671e84663356"
+ENV NEXTAUTH_URL="https://chainpulsealpha.com"
+ENV AUTH_URL="https://chainpulsealpha.com"
+ENV NEON_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 
 RUN npm run build
 
