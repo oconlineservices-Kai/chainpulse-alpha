@@ -323,7 +323,7 @@ export const GET = auth(async (req) => {
           isRealTime: isAuthenticated,
           delayHours: isFree ? 24 : 0,
           signalsVisible: demoSignals.length,
-          totalAvailable: demoSignals.length,
+          totalAvailable: isFree ? DEMO_SIGNALS.length : demoSignals.length,
           source: 'demo',
         },
         performance: { overall: { winRate: 85, totalSignals: 1247 } },

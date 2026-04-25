@@ -361,16 +361,25 @@ export default function SignalsPage() {
                           </div>
                         )}
 
-                        {/* Right: Recommendation */}
+                        {/* Right: Recommendation or Buy button */}
                         {!isLocked && (
-                          <div className={cn(
-                            "px-4 py-2 rounded-lg text-sm font-bold",
-                            recommendation === 'Buy' ? "bg-success-500/20 text-success-400" :
-                            recommendation === 'Sell' ? "bg-danger-500/20 text-danger-400" :
-                            "bg-text-muted/20 text-text-muted"
-                          )}>
-                            {recommendation}
-                          </div>
+                          meta?.authenticated ? (
+                            <div className={cn(
+                              "px-4 py-2 rounded-lg text-sm font-bold",
+                              recommendation === 'Buy' ? "bg-success-500/20 text-success-400" :
+                              recommendation === 'Sell' ? "bg-danger-500/20 text-danger-400" :
+                              "bg-text-muted/20 text-text-muted"
+                            )}>
+                              {recommendation}
+                            </div>
+                          ) : (
+                            <BuySignalButton
+                              signalId={signal.id}
+                              signalType={type === 'diamond' ? 'diamond' : type === 'whale' ? 'whale' : 'default'}
+                              compact
+                              onUnlocked={() => fetchSignals()}
+                            />
+                          )
                         )}
                       </div>
 
