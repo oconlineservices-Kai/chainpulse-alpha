@@ -29,7 +29,7 @@ ENV NEXTAUTH_URL="https://chainpulsealpha.com"
 ENV AUTH_URL="https://chainpulsealpha.com"
 ENV NEON_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN npm run build
 
 # Production image — only production deps

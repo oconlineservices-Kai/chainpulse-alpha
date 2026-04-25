@@ -24,6 +24,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
           # Use dummy DB URL for build-time (real URL is a Fly.io secret at runtime)
           NEON_DATABASE_URL: postgresql://build:build@localhost/build
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
