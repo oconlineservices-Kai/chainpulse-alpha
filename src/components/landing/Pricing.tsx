@@ -256,7 +256,7 @@ export default function Pricing() {
                 
                 {/* Background Effect */}
                 <motion.div
-                  className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-[0.01] rounded-2xl`}
+                  className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-[0.01] rounded-2xl pointer-events-none`}
                   whileHover={{ opacity: 0.02 }}
                   transition={{ duration: 0.3 }}
                 />
