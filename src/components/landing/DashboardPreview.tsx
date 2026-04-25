@@ -1,7 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { TrendingUp, TrendingDown, Eye, Wallet, Diamond } from 'lucide-react'
+import { TrendingUp, TrendingDown, Eye, Wallet, Diamond, ShoppingCart } from 'lucide-react'
+import Link from 'next/link'
 
 const mockSignals = [
   {
@@ -180,8 +181,9 @@ export default function DashboardPreview() {
                       <div className="text-xs text-text-muted">Whale</div>
                     </div>
                     
-                    <motion.button
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] flex items-center justify-center ${
+                    <motion.a
+                      href="/login?callbackUrl=/signals"
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] ${
                         signal.recommendation === 'Strong Buy' 
                           ? 'bg-success-500 text-white hover:bg-success-600'
                           : signal.recommendation === 'Buy'
@@ -191,8 +193,12 @@ export default function DashboardPreview() {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      {signal.recommendation}
-                    </motion.button>
+                      {signal.recommendation === 'Buy' || signal.recommendation === 'Strong Buy' ? (
+                        <><ShoppingCart className="w-3 h-3" /> {signal.recommendation}</>
+                      ) : (
+                        signal.recommendation
+                      )}
+                    </motion.a>
                   </div>
                 </div>
               </motion.div>
