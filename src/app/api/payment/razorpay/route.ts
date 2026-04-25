@@ -17,6 +17,14 @@ export const POST = auth(async (req) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Defensive check: email is required for DB lookup
+  if (!req.auth.user?.email) {
+    return NextResponse.json(
+      { error: 'User email not found in session. Please log out and log in again.' },
+      { status: 401 }
+    )
+  }
+
   try {
     const { amount, plan } = await req.json()
 

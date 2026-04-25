@@ -93,9 +93,9 @@ export default function PaymentButton({
 
       const rzp = new (window as any).Razorpay(options)
       rzp.open()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error)
-      alert('Payment failed. Please try again.')
+      alert(error?.message || 'Payment failed. Please try again.')
     } finally {
       setLoading(false)
     }
