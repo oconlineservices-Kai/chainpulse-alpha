@@ -8,17 +8,19 @@ datasource db {
 }
 
 model User {
-  id               String          @id @default(uuid())
-  email            String          @unique
-  walletAddress    String?         @unique @map("wallet_address")
-  premiumStatus    String          @default("free") @map("premium_status")
-  premiumExpiresAt DateTime?       @map("premium_expires_at")
-  credits          Int             @default(0)
-  createdAt        DateTime        @default(now()) @map("created_at")
-  updatedAt        DateTime        @default(now()) @map("updated_at")
-  password         String?
-  alphaPurchases   AlphaPurchase[]
-  transactions     Transaction[]
+  id                      String          @id @default(uuid())
+  email                   String          @unique
+  walletAddress           String?         @unique @map("wallet_address")
+  premiumStatus           String          @default("free") @map("premium_status")
+  premiumExpiresAt        DateTime?       @map("premium_expires_at")
+  credits                 Int             @default(0)
+  createdAt               DateTime        @default(now()) @map("created_at")
+  updatedAt               DateTime        @default(now()) @map("updated_at")
+  password                String?
+  last_login              DateTime?       @db.Timestamp(6)
+  subscription_expires_at DateTime?       @db.Timestamp(6)
+  alphaPurchases          AlphaPurchase[]
+  transactions            Transaction[]
 
   @@map("users")
 }
@@ -68,23 +70,23 @@ model Waitlist {
 }
 
 model Signal {
-  id                       String    @id @default(uuid())
-  tokenSymbol              String    @map("token_symbol")
-  tokenName                String?   @map("token_name")
-  sentimentScore           Int?      @map("sentiment_score")
-  whaleConfidence          Int?      @map("whale_confidence")
-  correlationScore         Int?      @map("correlation_score")
-  isDiamondSignal          Boolean   @default(false) @map("is_diamond_signal")
-  twitterMentions          Int?      @map("twitter_mentions")
-  whaleWallets             String[]  @map("whale_wallets")
-  entryPrice               Float?    @map("entry_price")
-  currentPrice             Float?    @map("current_price")
-  priceChangePct           Float?    @map("price_change_pct")
-  performanceStatus        String?   @map("performance_status")
-  hoursTracked             Float?    @default(0) @map("hours_tracked")
-  lastPerformanceUpdate    DateTime? @map("last_performance_update")
-  createdAt                DateTime  @default(now()) @map("created_at")
-  expiresAt                DateTime? @map("expires_at")
+  id                    String    @id @default(uuid())
+  tokenSymbol           String    @map("token_symbol")
+  tokenName             String?   @map("token_name")
+  sentimentScore        Int?      @map("sentiment_score")
+  whaleConfidence       Int?      @map("whale_confidence")
+  correlationScore      Int?      @map("correlation_score")
+  isDiamondSignal       Boolean   @default(false) @map("is_diamond_signal")
+  twitterMentions       Int?      @map("twitter_mentions")
+  whaleWallets          String[]  @map("whale_wallets")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  expiresAt             DateTime? @map("expires_at")
+  currentPrice          Float?    @map("current_price")
+  entryPrice            Float?    @map("entry_price")
+  hoursTracked          Float?    @default(0) @map("hours_tracked")
+  lastPerformanceUpdate DateTime? @map("last_performance_update")
+  performanceStatus     String?   @map("performance_status")
+  priceChangePct        Float?    @map("price_change_pct")
 
   @@index([tokenSymbol])
   @@index([createdAt])
@@ -93,14 +95,9 @@ model Signal {
   @@map("signals")
 }
 
-model PasswordReset {
-  id      String   @id @default(uuid())
-  email   String
-  token   String   @unique
-  expires DateTime
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([email])
-  @@index([token])
-  @@map("password_resets")
+model monthly_visitors {
+  id            Int       @id @default(autoincrement())
+  month         DateTime  @db.Date
+  visitor_count Int?      @default(0)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
 }

@@ -1,14 +1,13 @@
+import DashboardNav from '@/components/dashboard/DashboardNav'
+
 /**
  * Dashboard layout
  *
- * The root layout.tsx already renders <Navigation /> (fixed top bar).
- * This layout adds NO extra headers — the dashboard sub-header lives
- * directly in dashboard/page.tsx to avoid overlap.
- *
- * Previous version had a <Sidebar> + <Header> that conflicted with
- * the global Navigation and caused visual overlap. Removed.
+ * Renders the dashboard-specific navigation (DashboardNav) instead of the
+ * main site Navigation. The root layout's ConditionalNavigation suppresses
+ * the main nav for all /dashboard routes, and this layout adds the proper
+ * dashboard nav bar.
  */
-
 export default function DashboardLayout({
   children,
 }: {
@@ -16,6 +15,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="min-h-screen bg-background">
+      <DashboardNav />
       {children}
     </div>
   )

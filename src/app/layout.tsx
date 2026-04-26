@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
-import Navigation from '@/components/layout/Navigation'
+import ConditionalNavigation from '@/components/layout/ConditionalNavigation'
 import SessionProvider from '@/components/providers/SessionProvider'
 
 // Force dynamic rendering for all pages - the app uses client-side session hooks
@@ -155,7 +155,7 @@ export default function RootLayout({
         </a>
         <div id="root">
           <SessionProvider>
-            <Navigation />
+            <ConditionalNavigation />
             <main id="main-content">
               {children}
             </main>
