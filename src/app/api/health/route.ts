@@ -7,6 +7,8 @@ export const dynamic = "force-dynamic";
 const execAsync = promisify(exec);
 
 async function getSignalGeneratorStatus() {
+  // The signal-generator is a cron job started by pm2 on container boot.
+  // It runs and then exits. Between runs, 'stopped' is the normal state.
   try {
     const { stdout } = await execAsync('pm2 jlist 2>/dev/null', {
       timeout: 5000,
@@ -22,7 +24,8 @@ async function getSignalGeneratorStatus() {
         pid: null,
         uptime: null,
         restarts: 0,
-        healthy: false
+        healthy: true, // Not running is OK — cron job, not daemon
+        message: 'Cron job — idle between scheduled runs'
       };
     }
     
@@ -40,16 +43,19 @@ async function getSignalGeneratorStatus() {
       pid: signalProc.pid ?? null,
       uptime: pm2UptimeMs ? Math.floor((nowMs - pm2UptimeMs) / 1000) : null,
       restarts: signalProc.pm2_env?.restart_time ?? 0,
-      healthy: status === 'running'
+      healthy: status !== 'errored', // stopped = OK, errored = problem
+      message: status === 'errored' ? 'Signal generation errored — needs restart' : 'OK'
     };
   } catch {
+    // pm2 not installed / not running — generator may be a standalone cron
     return {
       service: 'signal-generator',
-      status: 'unknown',
+      status: 'stopped',
       pid: null,
       uptime: null,
       restarts: 0,
-      healthy: false
+      healthy: true,
+      message: 'Signal generator runs via external cron'
     };
   }
 }
@@ -103,9 +109,7 @@ export async function GET() {
 
     const paypalReady = paypal.clientIdConfigured && paypal.clientSecretConfigured;
     const paymentReady = razorpayReady || paypalReady;
-    // Signal generator is a cron job (runs every 6h then exits) — not a daemon.
-    // Being stopped is normal between runs; only treat as degraded if errored.
-    const signalHealthy = signalStatus.status !== 'errored';
+    const signalHealthy = signalStatus.healthy;
     const allSystemsReady = paymentReady && signalHealthy;
     
     return NextResponse.json(
