@@ -43,6 +43,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Install pm2 globally for process management and signal generator cron
+RUN npm install -g pm2
+
+# Create log directory
+RUN mkdir -p /var/log/chainpulse && chown nextjs:nodejs /var/log/chainpulse
+
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -50,10 +56,16 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Copy engine and pm2 config
+COPY --from=builder --chown=nextjs:nodejs /app/engine ./engine
+COPY --from=builder --chown=nextjs:nodejs /app/ecosystem.config.js ./ecosystem.config.js
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
 USER nextjs
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Start pm2 with ecosystem config (manages both web app and signal generator cron)
+CMD ["pm2-runtime", "start", "ecosystem.config.js", "--only", "chainpulse-alpha,signal-generator"]

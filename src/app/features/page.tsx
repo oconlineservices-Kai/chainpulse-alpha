@@ -208,7 +208,7 @@ export default function FeaturesPage() {
             <Shield className="w-12 h-12 text-primary-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-3">Ready to get the edge?</h2>
             <p className="text-text-secondary mb-6 max-w-md mx-auto">
-              Join 500+ traders already using ChainPulse Alpha to stay ahead of the market.
+              Join our growing community of traders already using ChainPulse Alpha to stay ahead of the market.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

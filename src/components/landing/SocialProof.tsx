@@ -1,9 +1,28 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Star, TrendingUp, Shield, Zap, Activity } from 'lucide-react'
+import { Star, TrendingUp, Shield, Zap, Activity, Users } from 'lucide-react'
 import FadeIn, { FadeInStagger } from '../animations/FadeIn'
 import { HoverScale } from '../animations/ScaleIn'
+
+interface PublicStats {
+  totalUsers: number
+  totalPayments: number
+  totalSignals: number
+  waitlistCount: number
+}
+
+function useLiveStats() {
+  const [stats, setStats] = useState<PublicStats | null>(null)
+  useEffect(() => {
+    fetch('/api/public/stats')
+      .then(r => r.json())
+      .then(d => setStats(d))
+      .catch(() => {})
+  }, [])
+  return stats
+}
 
 const testimonials = [
   {
@@ -29,28 +48,29 @@ const testimonials = [
   }
 ]
 
-const stats = [
-  {
-    icon: TrendingUp,
-    value: "500+",
-    label: "Crypto Traders",
-    color: "text-primary-400"
-  },
-  {
-    icon: Zap,
-    value: "85%", 
-    label: "Diamond Signal Accuracy",
-    color: "text-warning-400"
-  },
-  {
-    icon: Shield,
-    value: "24/7",
-    label: "AI Monitoring",
-    color: "text-success-400"
-  }
-]
-
 export default function SocialProof() {
+  const liveStats = useLiveStats()
+
+  const stats = [
+    {
+      icon: Users,
+      value: liveStats ? `${liveStats.totalUsers}+` : '40+',
+      label: 'Crypto Traders',
+      color: 'text-primary-400'
+    },
+    {
+      icon: Zap,
+      value: '85%',
+      label: 'Diamond Signal Accuracy',
+      color: 'text-warning-400'
+    },
+    {
+      icon: Shield,
+      value: '24/7',
+      label: 'AI Monitoring',
+      color: 'text-success-400'
+    }
+  ]
   return (
     <section className="py-24 relative">
       <div className="container mx-auto px-4">
@@ -59,11 +79,11 @@ export default function SocialProof() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success-500/20 text-success-400 text-sm mb-6">
               <Star className="w-4 h-4 fill-current" />
-              <span>Trusted by 500+ traders</span>
+              <span>Trusted by {liveStats ? `${liveStats.totalUsers}+` : '40+'} traders</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Trusted by{' '}
-              <span className="gradient-text">500+ crypto traders</span>
+              <span className="gradient-text">{liveStats ? `${liveStats.totalUsers}+` : '40+'} crypto traders</span>
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto">
               85% of our Diamond Signals hit +20% within 48 hours. 

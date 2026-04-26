@@ -7,26 +7,25 @@ import FadeIn from '../animations/FadeIn'
 import { AnimatedBackground } from '../animations/FloatingElements'
 import DashboardPreview from './DashboardPreview'
 import { cn } from '@/lib/utils'
+import { useLiveStats } from './StatsDisplay'
 
 export default function Hero() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const liveStats = useLiveStats()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || status === 'loading') return
-    
+    if (!email) return
     setStatus('loading')
     try {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email })
       })
-      
       if (res.ok) {
         setStatus('success')
-        setEmail('')
       } else {
         setStatus('error')
       }
@@ -36,176 +35,94 @@ export default function Hero() {
   }
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center pt-24 pb-16 overflow-hidden">
       <AnimatedBackground />
       
-      <div className="relative z-10 container mx-auto px-4 py-20">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Status Badge */}
-          <FadeIn delay={0.1}>
-            <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border text-primary-400 text-sm mb-8"
-              whileHover={{ scale: 1.05 }}
-            >
-              <div className="relative">
-                <Activity className="w-4 h-4" />
-                <motion.div
-                  className="absolute -top-1 -right-1 w-2 h-2 bg-success-400 rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </div>
-              <span>Now in Early Access</span>
-            </motion.div>
-          </FadeIn>
-          
-          {/* Main Headline */}
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-5xl mx-auto">
+          {/* Waiting List Badge */}
           <FadeIn delay={0.2}>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl xl:text-8xl font-bold mb-6 leading-tight">
-              <span className="block mb-2">Catch the</span>
-              <span className="gradient-text block mb-2">10x Pumps</span>
-              <span className="block">Before They Happen</span>
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning-500/10 border border-warning-500/30 text-warning-400 text-sm font-medium">
+                <Activity className="w-4 h-4" />
+                {liveStats ? `${liveStats.totalSignals}+ signals generated` : 'Live signals generating...'}
+              </div>
+            </div>
+          </FadeIn>
+
+          {/* Headline */}
+          <FadeIn delay={0.3}>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-center leading-tight mb-6">
+              Catch the <span className="gradient-text">10x Pumps</span> Before<br />They Happen
             </h1>
           </FadeIn>
-          
-          {/* Subheading */}
-          <FadeIn delay={0.3}>
-            <p className="text-xl md:text-2xl text-text-secondary mb-10 max-w-3xl mx-auto leading-relaxed">
-              Our AI monitors <span className="text-warning-400 font-semibold">10,000+ tweets</span> and{' '}
-              <span className="text-primary-400 font-semibold">1,000+ whale wallets</span> daily. 
-              When smart money meets social buzz, you get alerted.
-            </p>
-          </FadeIn>
-          
-          {/* CTA Form */}
+
+          {/* Subheadline */}
           <FadeIn delay={0.4}>
-            <motion.form 
-              onSubmit={handleSubmit} 
-              className="max-w-md mx-auto mb-8"
-              whileHover={{ y: -2 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className={cn(
-                      "input-field pr-12 transition-all duration-300",
-                      status === 'success' && "border-success-500 focus:border-success-500"
-                    )}
-                    required
-                  />
-                  {status === 'success' && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-success-400" />
-                    </motion.div>
-                  )}
-                </div>
-                
-                <motion.button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className={cn(
-                    "button-primary min-w-[160px] group h-[52px]",
-                    status === 'success' && "bg-success-500 hover:bg-success-600"
-                  )}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {status === 'loading' ? (
-                    <div className="loading-spinner" />
-                  ) : status === 'success' ? (
-                    <>
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
-                      You're In!
-                    </>
-                  ) : (
-                    <>
-                      Get Free Alerts →
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
-                </motion.button>
-              </div>
-              
-              {status === 'success' && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-3 text-success-400 flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-4 h-4" />
-                  You're on the list! Check your inbox.
-                </motion.p>
-              )}
-              
-              {status === 'error' && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-3 text-danger-400"
-                >
-                  Something went wrong. Please try again.
-                </motion.p>
-              )}
-            </motion.form>
-          </FadeIn>
-          
-          {/* Reassurance Text */}
-          <FadeIn delay={0.5}>
-            <p className="text-sm text-text-muted">
-              Free alerts • No credit card required • <span className="text-warning-400 font-medium">Only 47 spots left this month</span>
+            <p className="text-lg md:text-xl text-text-secondary text-center max-w-2xl mx-auto mb-8">
+              Track whale wallets, decode Twitter sentiment, and get real-time{' '}
+              <span className="text-text-primary font-semibold">Diamond Signals</span> — 
+              all powered by AI.
             </p>
           </FadeIn>
-          
-          {/* Dashboard Preview - VISUAL PROOF */}
-          <DashboardPreview />
-          
-          {/* Social Proof Stats */}
-          <FadeIn delay={0.9}>
+
+          {/* CTA Buttons */}
+          <FadeIn delay={0.5}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+              <a
+                href="/signup"
+                className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary-500/25"
+              >
+                Get Free Alerts
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+              <a
+                href="/signals"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-border hover:border-primary-500/50 text-text-primary font-semibold text-lg transition-all hover:scale-105"
+              >
+                <Zap className="w-5 h-5 text-warning-400" />
+                View Live Signals
+              </a>
+            </div>
+          </FadeIn>
+
+          {/* Trust Badges */}
+          <FadeIn delay={0.5}>
             <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mt-16 text-sm">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary-400">47,329</div>
+                <div className="text-2xl font-bold text-primary-400">
+                  {liveStats ? liveStats.totalSignals.toLocaleString() : '...'}
+                </div>
                 <div className="text-text-muted">Signals Generated</div>
               </div>
               <div className="w-px h-8 bg-border" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-success-400">85%</div>
-                <div className="text-text-muted">Diamond Signals Hit +20%</div>
+                <div className="text-2xl font-bold text-warning-400">{liveStats ? `${liveStats.totalSignals}+` : '...'}</div>
+                <div className="text-text-muted">Whale Wallets Tracked</div>
               </div>
               <div className="w-px h-8 bg-border" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-warning-400">1,247</div>
-                <div className="text-text-muted">Whale Wallets</div>
+                <div className="text-2xl font-bold text-warning-400">24/7</div>
+                <div className="text-text-muted">AI Monitoring</div>
               </div>
+            </div>
+          </FadeIn>
+          
+          {/* Reassurance Text */}
+          <FadeIn delay={0.5}>
+            <p className="text-sm text-text-muted text-center mt-8">
+              Free alerts • No credit card required • <span className="text-warning-400 font-medium">Limited early access spots</span>
+            </p>
+          </FadeIn>
+
+          {/* Dashboard Preview */}
+          <FadeIn delay={0.7}>
+            <div className="mt-16">
+              <DashboardPreview />
             </div>
           </FadeIn>
         </div>
       </div>
-      
-      {/* Scroll Indicator */}
-      <FadeIn delay={1}>
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <div className="w-6 h-10 border-2 border-border rounded-full flex justify-center">
-            <motion.div
-              className="w-1 h-2 bg-text-muted rounded-full mt-2"
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          </div>
-        </motion.div>
-      </FadeIn>
     </section>
   )
 }

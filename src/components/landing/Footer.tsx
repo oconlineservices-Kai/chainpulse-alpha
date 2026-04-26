@@ -182,7 +182,7 @@ export default function Footer() {
           <FadeIn>
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-text-muted text-sm">
-                © 2024 ChainPulse Alpha. All rights reserved.
+                © {new Date().getFullYear()} ChainPulse Alpha. All rights reserved.
               </p>
               <div className="flex items-center gap-6 text-sm">
                 <span className="text-text-muted">
