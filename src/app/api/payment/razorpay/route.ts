@@ -26,7 +26,18 @@ export const POST = auth(async (req) => {
   }
 
   try {
-    const { amount, plan } = await req.json()
+    let amount: number, plan: string
+    try {
+      const body = await req.json()
+      amount = body.amount
+      plan = body.plan
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError)
+      return NextResponse.json(
+        { error: 'Invalid request body — could not parse JSON' },
+        { status: 400 }
+      )
+    }
 
     if (!amount || !plan) {
       return NextResponse.json(
@@ -45,28 +56,47 @@ export const POST = auth(async (req) => {
 
     // Create Razorpay order
     const razorpay = getRazorpay()
-    const order = await razorpay.orders.create({
-      amount: amount * 100, // Razorpay expects amount in paise (INR) or cents (USD)
-      currency: 'INR',
-      receipt: `receipt_${Date.now()}`,
-      notes: {
-        userId: user.id,
-        plan: plan
-      }
-    })
+    let order
+    try {
+      order = await razorpay.orders.create({
+        amount: amount * 100, // Razorpay expects amount in paise (INR) or cents (USD)
+        currency: 'INR',
+        receipt: `receipt_${Date.now()}`,
+        notes: {
+          userId: user.id,
+          plan: plan
+        }
+      })
+    } catch (razorpayError: any) {
+      console.error('Razorpay API error:', razorpayError)
+      const rzpMsg = razorpayError?.error?.description
+        || razorpayError?.message
+        || 'Razorpay order creation failed'
+      return NextResponse.json(
+        { error: `Payment gateway error: ${rzpMsg}` },
+        { status: 502 }
+      )
+    }
 
     // Create transaction record
-    await prisma.transaction.create({
-      data: {
-        userId: user.id,
-        provider: 'razorpay',
-        transactionType: 'subscription',
-        providerPaymentId: order.id,
-        amount: amount,
-        currency: 'INR',
-        status: 'pending'
-      }
-    })
+    try {
+      await prisma.transaction.create({
+        data: {
+          userId: user.id,
+          provider: 'razorpay',
+          transactionType: 'subscription',
+          providerPaymentId: order.id,
+          amount: amount,
+          currency: 'INR',
+          status: 'pending'
+        }
+      })
+    } catch (dbError: any) {
+      console.error('Database error creating transaction:', dbError)
+      // Order was created but DB record failed — still return success to user
+      // since the order exists in Razorpay and can be matched during verification
+      console.warn('Proceeding without DB transaction record for order:', order.id)
+    }
 
     return NextResponse.json({
       orderId: order.id,
@@ -76,8 +106,9 @@ export const POST = auth(async (req) => {
     })
   } catch (error) {
     console.error('Razorpay order error:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { error: `Failed to create order: ${message}` },
       { status: 500 }
     )
   }
