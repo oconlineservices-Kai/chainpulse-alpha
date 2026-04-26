@@ -42,7 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.email.split('@')[0],
-          isAdmin: user.email === process.env.ADMIN_EMAIL,
+          isAdmin: user.email === process.env.ADMIN_EMAIL || user.premiumStatus === 'admin',
           premiumStatus: user.premiumStatus ?? 'free'
         }
       }

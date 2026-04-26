@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Zap, Crown, Sparkles, Lock, Unlock, ArrowLeft } from 'lucide-react'
 import PaymentButton from '@/components/PaymentButton'
@@ -85,6 +86,7 @@ const plans = [
 
 export default function PricingPage() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const { data: session } = useSession()
 
   return (
     <main className="min-h-screen bg-background">
@@ -250,19 +252,25 @@ export default function PricingPage() {
                     )}
                   />
                 ) : (
-                  <motion.a
-                    href="/signup"
-                    className={cn(
-                      "w-full py-3 rounded-xl font-semibold transition-all block text-center",
-                      plan.popular
-                        ? "button-primary"
-                        : "button-secondary"
-                    )}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {plan.cta}
-                  </motion.a>
+                  session?.user ? (
+                    <div className="w-full py-3 rounded-xl font-semibold text-center bg-success-500/10 border border-success-500/30 text-success-400 text-sm">
+                      ✓ Current Plan
+                    </div>
+                  ) : (
+                    <motion.a
+                      href="/signup"
+                      className={cn(
+                        "w-full py-3 rounded-xl font-semibold transition-all block text-center",
+                        plan.popular
+                          ? "button-primary"
+                          : "button-secondary"
+                      )}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {plan.cta}
+                    </motion.a>
+                  )
                 )}
                 
                 {/* Background Effect */}
