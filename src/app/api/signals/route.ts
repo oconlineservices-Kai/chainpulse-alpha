@@ -197,6 +197,10 @@ export const GET = auth(async (req) => {
   const isAdmin = req.auth?.user?.isAdmin === true
   const isAuthenticated = !!req.auth?.user
   const isFree = !isAuthenticated
+  // Authenticated but not premium and not admin = free tier (30-min delay)
+  const premiumStatus = (req.auth?.user as any)?.premiumStatus ?? 'free'
+  const isFreeTierAuth = isAuthenticated && !isAdmin && premiumStatus !== 'premium'
+  const FREE_TIER_DELAY_MS = 30 * 60 * 1000 // 30 minutes
 
   try {
     // Build filter for DB query
@@ -251,6 +255,19 @@ export const GET = auth(async (req) => {
 
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
 
+    // Apply 30-minute delay for authenticated free-tier users
+    // Shift createdAt and expiresAt back by 30 minutes so they see older signals
+    if (isFreeTierAuth) {
+      const cutoff = new Date(Date.now() - FREE_TIER_DELAY_MS)
+      allSignals = allSignals
+        .filter(s => new Date(s.createdAt) <= cutoff) // only show signals older than 30 min
+        .map(s => ({
+          ...s,
+          // Surface the delayed timestamp to the UI
+          _delayedBy: '30min',
+        }))
+    }
+
     // Free/unauthenticated users: limit to 3 signals, strip sensitive data
     if (isFree) {
       allSignals = allSignals.slice(0, 3).map(s => ({
@@ -281,8 +298,9 @@ export const GET = auth(async (req) => {
         meta: {
           authenticated: isAuthenticated,
           isAdmin,
-          isRealTime: isAuthenticated,
-          delayHours: isFree ? 24 : 0,
+          isRealTime: isAuthenticated && !isFreeTierAuth,
+          delayHours: isFree ? 24 : isFreeTierAuth ? 0.5 : 0,
+          delayMinutes: isFreeTierAuth ? 30 : 0,
           signalsVisible: allSignals.length,
           totalAvailable: totalCount,
         },

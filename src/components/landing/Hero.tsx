@@ -2,17 +2,20 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle2, Activity, Zap } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Activity, Zap, LayoutDashboard } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 import { AnimatedBackground } from '../animations/FloatingElements'
 import DashboardPreview from './DashboardPreview'
 import { cn } from '@/lib/utils'
 import { useLiveStats } from './StatsDisplay'
+import { useSession } from 'next-auth/react'
 
 export default function Hero() {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const liveStats = useLiveStats()
+  const { data: session } = useSession()
+  const isLoggedIn = !!session
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,13 +72,24 @@ export default function Hero() {
           {/* CTA Buttons */}
           <FadeIn delay={0.5}>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-              <a
-                href="/signup"
-                className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary-500/25"
-              >
-                Get Free Alerts
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
+              {isLoggedIn ? (
+                <a
+                  href="/dashboard"
+                  className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary-500/25"
+                >
+                  <LayoutDashboard className="w-5 h-5" />
+                  Go to Dashboard
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              ) : (
+                <a
+                  href="/signup"
+                  className="group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-primary-500/25"
+                >
+                  Get Free Alerts
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              )}
               <a
                 href="/signals"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-border hover:border-primary-500/50 text-text-primary font-semibold text-lg transition-all hover:scale-105"

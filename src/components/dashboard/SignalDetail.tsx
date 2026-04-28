@@ -353,10 +353,20 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
                   ))}
                 </div>
                 
-                <Button variant="outline" size="sm" className="w-full">
-                  <ExternalLink className="w-4 h-4 mr-2" />
+                {/* Link to Etherscan — use first wallet address, or fall back to a search */}
+                <a
+                  href={
+                    signal.whaleWallets.length > 0 && signal.whaleWallets[0].startsWith('0x') && signal.whaleWallets[0].length > 10
+                      ? `https://etherscan.io/address/${signal.whaleWallets[0]}`
+                      : `https://etherscan.io/search?q=${encodeURIComponent(signal.tokenSymbol)}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium hover:border-primary-500/50 hover:text-primary-400 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
                   View on Etherscan
-                </Button>
+                </a>
               </CardContent>
             </Card>
           </div>

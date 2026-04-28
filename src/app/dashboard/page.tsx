@@ -25,7 +25,9 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   // Pull premiumStatus from session — refreshed after payment via JWT callback
-  const isPremium = (session?.user as any)?.premiumStatus === 'premium'
+  // Admin users also get full premium access
+  const isAdmin = (session?.user as any)?.isAdmin === true
+  const isPremium = isAdmin || (session?.user as any)?.premiumStatus === 'premium'
 
   const fetchData = async () => {
     try {

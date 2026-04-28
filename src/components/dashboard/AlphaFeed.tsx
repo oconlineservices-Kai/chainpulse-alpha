@@ -23,6 +23,7 @@ import Button from '@/components/ui/Button'
 import { cn, formatNumber, formatPercentage, getTimeAgo, getScoreColor } from '@/lib/utils'
 import { HoverScale } from '@/components/animations/ScaleIn'
 import { Signal } from '@/lib/api/crypto'
+import BuySignalButton from '@/components/signals/BuySignalButton'
 
 type SignalStatus = 'Free' | 'Premium' | 'Locked'
 type Recommendation = 'Buy' | 'Sell' | 'Skip'
@@ -102,18 +103,27 @@ const mockSignals: Signal[] = [
 interface AlphaFeedProps {
   signals: Signal[]
   onSelectSignal: (signal: Signal) => void
+  onSkipSignal?: (signalId: string) => void
+  isAuthenticated?: boolean
 }
 
-export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
+export default function AlphaFeed({ signals, onSelectSignal, onSkipSignal, isAuthenticated = false }: AlphaFeedProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('All')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [skippedIds, setSkippedIds] = useState<Set<string>>(new Set())
+
+  const handleSkip = (e: React.MouseEvent, signalId: string) => {
+    e.stopPropagation()
+    setSkippedIds(prev => new Set(prev).add(signalId))
+    if (onSkipSignal) onSkipSignal(signalId)
+  }
 
   const filters: FilterType[] = ['All', 'Free', 'Premium', 'High Confidence']
 
-  // Filter by category and search query
+  // Filter by category and search query (also hide skipped)
   const filteredSignals = useMemo(() => {
-    let result = signals
+    let result = signals.filter(s => !skippedIds.has(s.id))
 
     // Apply category filter
     if (activeFilter === 'Free') result = result.filter(s => s.status === 'Free')
@@ -130,7 +140,7 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
     }
 
     return result
-  }, [signals, activeFilter, searchQuery])
+  }, [signals, activeFilter, searchQuery, skippedIds])
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -361,13 +371,34 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
                       </div>
                       
                       <div className="flex items-center gap-4">
-                        <Badge 
-                          variant={getRecommendationColor(signal.recommendation) as any}
-                          size="sm"
-                        >
-                          {signal.recommendation === 'Buy' && <Zap className="w-3 h-3 mr-1" />}
-                          {signal.recommendation}
-                        </Badge>
+                        {/* Buy button for Buy signals, or badge for others */}
+                        {signal.recommendation === 'Buy' && signal.status !== 'Locked' ? (
+                          <BuySignalButton
+                            signalId={signal.id}
+                            signalType={signal.correlationScore >= 85 ? 'diamond' : signal.whaleConfidence >= 70 ? 'whale' : 'default'}
+                            compact
+                            onUnlocked={() => {}}
+                          />
+                        ) : (
+                          <Badge 
+                            variant={getRecommendationColor(signal.recommendation) as any}
+                            size="sm"
+                          >
+                            {signal.recommendation === 'Buy' && <Zap className="w-3 h-3 mr-1" />}
+                            {signal.recommendation}
+                          </Badge>
+                        )}
+
+                        {/* Skip button — hides this signal from the feed */}
+                        {signal.recommendation === 'Skip' && (
+                          <button
+                            onClick={(e) => handleSkip(e, signal.id)}
+                            className="text-xs px-3 py-1.5 rounded-lg border border-border text-text-muted hover:text-text-primary hover:border-text-muted transition-colors"
+                            aria-label={`Skip ${signal.tokenSymbol} signal`}
+                          >
+                            Skip
+                          </button>
+                        )}
                         
                         <div className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
