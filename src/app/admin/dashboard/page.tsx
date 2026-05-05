@@ -314,7 +314,15 @@ export default function AdminDashboardPage() {
         {/* ── QUICK ACTIONS ────────────────────────────────────── */}
         <div className="bg-background-card border border-border rounded-xl p-6">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              href="/admin/users"
+              className="p-4 bg-background border border-border rounded-lg hover:border-primary-500 transition-colors"
+            >
+              <p className="font-medium">Manage Users</p>
+              <p className="text-sm text-text-muted mt-1">View &amp; manage accounts</p>
+            </Link>
+
             <Link
               href="/dashboard"
               className="p-4 bg-background border border-border rounded-lg hover:border-primary-500 transition-colors"

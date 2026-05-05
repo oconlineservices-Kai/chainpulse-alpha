@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     default: 'ChainPulse Alpha - Catch Crypto Moves Before They Happen',
     template: '%s'
   },
-  description: 'AI-powered crypto signals combining whale tracking + Twitter sentiment. Get high-confidence alpha before the crowd. Join 500+ traders getting Diamond Signals.',
+  description: 'AI-powered crypto signals combining whale tracking + Twitter sentiment. Get high-confidence alpha before the crowd. Early access now open.',
   keywords: [
     'crypto signals',
     'whale tracking',
@@ -87,32 +87,87 @@ export const metadata: Metadata = {
   category: 'technology',
 }
 
-// JSON-LD structured data
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'ChainPulse Alpha',
-  description: 'AI-powered crypto signals combining whale tracking and Twitter sentiment analysis',
-  url: 'https://chainpulsealpha.com',
-  logo: 'https://chainpulsealpha.com/logo.png',
-  sameAs: [
-    'https://twitter.com/chainpulsealpha',
-    'https://github.com/chainpulsealpha',
-    'https://discord.gg/chainpulsealpha'
-  ],
-  contactPoint: {
-    '@type': 'ContactPoint',
-    contactType: 'customer service',
-    availableLanguage: 'English'
+// JSON-LD structured data — multi-schema array
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': 'https://chainpulsealpha.com/#organization',
+    name: 'ChainPulse Alpha',
+    description: 'AI-powered crypto signals combining whale tracking and Twitter sentiment analysis',
+    url: 'https://chainpulsealpha.com',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://chainpulsealpha.com/logo.png',
+      width: 512,
+      height: 512,
+    },
+    sameAs: [
+      'https://twitter.com/chainpulsealpha',
+      'https://github.com/chainpulsealpha',
+      'https://discord.gg/chainpulsealpha'
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      availableLanguage: 'English',
+      email: 'support@chainpulsealpha.com',
+    },
   },
-  offers: {
-    '@type': 'Offer',
-    name: 'ChainPulse Alpha Premium',
-    description: 'Real-time crypto signals with whale tracking and sentiment analysis',
-    price: '49',
-    priceCurrency: 'USD'
-  }
-}
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': 'https://chainpulsealpha.com/#website',
+    url: 'https://chainpulsealpha.com',
+    name: 'ChainPulse Alpha',
+    description: 'AI-powered crypto signals combining whale tracking and Twitter sentiment analysis',
+    publisher: {
+      '@id': 'https://chainpulsealpha.com/#organization',
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://chainpulsealpha.com/signals?q={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'ChainPulse Alpha',
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Web',
+    url: 'https://chainpulsealpha.com',
+    description: 'AI-powered crypto trading signals with whale wallet tracking and Twitter sentiment analysis',
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'Free Tier',
+        price: '0',
+        priceCurrency: 'USD',
+        description: 'Top 5 daily signals with 24-hour delay',
+      },
+      {
+        '@type': 'Offer',
+        name: 'ChainPulse Alpha Premium Monthly',
+        price: '49',
+        priceCurrency: 'USD',
+        description: 'Real-time crypto signals with whale tracking and sentiment analysis',
+        billingIncrement: 'P1M',
+      },
+      {
+        '@type': 'Offer',
+        name: 'ChainPulse Alpha Premium Yearly',
+        price: '39',
+        priceCurrency: 'USD',
+        description: 'Real-time crypto signals, annual billing',
+        billingIncrement: 'P1Y',
+      },
+    ],
+  },
+]
 
 export default function RootLayout({
   children,
@@ -126,7 +181,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ 
-            __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e') 
+            __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026') 
           }}
         />
         

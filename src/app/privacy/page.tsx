@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Privacy Policy | ChainPulse Alpha',
     description: 'Learn how ChainPulse Alpha protects your data and privacy.',
+    url: 'https://chainpulsealpha.com/privacy',
+  },
+  alternates: {
+    canonical: 'https://chainpulsealpha.com/privacy',
   },
 }
 

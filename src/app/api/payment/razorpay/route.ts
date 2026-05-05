@@ -12,17 +12,34 @@ function getRazorpay() {
   })
 }
 
+// Server-side canonical pricing — NEVER trust client-provided amounts
+const PLAN_PRICES: Record<string, number> = {
+  'Premium Monthly': 4900,   // INR paise (₹49)
+  'Premium Yearly': 3900,    // INR paise (₹39/mo billed annually = ₹468)
+  'Pay Per Alpha': 100,      // INR paise (₹1 per credit)
+}
+
 export const POST = auth(async (req) => {
   if (!req.auth) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const { amount, plan } = await req.json()
+    const body = await req.json()
+    const { plan } = body
 
-    if (!amount || !plan) {
+    if (!plan) {
       return NextResponse.json(
-        { error: 'Amount and plan are required' },
+        { error: 'Plan is required' },
+        { status: 400 }
+      )
+    }
+
+    // Server-side price lookup — ignore any client-provided amount
+    const serverAmount = PLAN_PRICES[plan]
+    if (!serverAmount) {
+      return NextResponse.json(
+        { error: 'Invalid plan selected' },
         { status: 400 }
       )
     }
@@ -35,10 +52,10 @@ export const POST = auth(async (req) => {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Create Razorpay order
+    // Create Razorpay order using server-side amount
     const razorpay = getRazorpay()
     const order = await razorpay.orders.create({
-      amount: amount * 100, // Razorpay expects amount in paise (INR) or cents (USD)
+      amount: serverAmount, // Amount in paise — from server config, NOT client input
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
       notes: {
@@ -54,7 +71,7 @@ export const POST = auth(async (req) => {
         provider: 'razorpay',
         transactionType: 'subscription',
         providerPaymentId: order.id,
-        amount: amount,
+        amount: serverAmount / 100, // Store in INR rupees
         currency: 'INR',
         status: 'pending'
       }

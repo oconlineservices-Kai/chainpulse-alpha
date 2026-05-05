@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Contact Us | ChainPulse Alpha',
     description: 'Contact ChainPulse Alpha support team.',
+    url: 'https://chainpulsealpha.com/contact',
+  },
+  alternates: {
+    canonical: 'https://chainpulsealpha.com/contact',
   },
 }
 

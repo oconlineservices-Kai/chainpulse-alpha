@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: 5 registration attempts per IP per 15 minutes
+  const ip = getClientIP(req as unknown as Request)
+  const key = getRateLimitKey(ip, 'register')
+  if (!checkRateLimit(key, 5, 15 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': '900' } }
+    )
+  }
+
   try {
     const { email, password } = await req.json()
 

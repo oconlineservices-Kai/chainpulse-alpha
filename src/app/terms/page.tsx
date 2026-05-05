@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Terms of Service | ChainPulse Alpha',
     description: 'Terms and conditions for using ChainPulse Alpha.',
+    url: 'https://chainpulsealpha.com/terms',
+  },
+  alternates: {
+    canonical: 'https://chainpulsealpha.com/terms',
   },
 }
 

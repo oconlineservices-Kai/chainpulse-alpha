@@ -58,7 +58,7 @@ export default function CTA() {
             </h2>
             
             <p className="text-xl text-text-secondary mb-10 max-w-2xl mx-auto">
-              Join 500+ traders getting Diamond Signals. When smart money meets social buzz, 
+              Join early access traders getting Diamond Signals. When smart money meets social buzz, 
               you get alerted first.
             </p>
             

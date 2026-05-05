@@ -32,8 +32,8 @@ const testimonials = [
 const stats = [
   {
     icon: TrendingUp,
-    value: "500+",
-    label: "Crypto Traders",
+    value: "Beta",
+    label: "Early Access Open",
     color: "text-primary-400"
   },
   {
@@ -59,11 +59,11 @@ export default function SocialProof() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success-500/20 text-success-400 text-sm mb-6">
               <Star className="w-4 h-4 fill-current" />
-              <span>Trusted by 500+ traders</span>
+              <span>Early Access — Join Now</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Trusted by{' '}
-              <span className="gradient-text">500+ crypto traders</span>
+              Built for{' '}
+              <span className="gradient-text">serious crypto traders</span>
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto">
               85% of our Diamond Signals hit +20% within 48 hours. 

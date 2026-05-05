@@ -109,6 +109,22 @@ export const GET = auth(async (req) => {
       }
     })
 
+    // Fetch user list for admin user management page
+    const adminEmail = process.env.ADMIN_EMAIL ?? ''
+    const userList = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        email: true,
+        premiumStatus: true,
+        credits: true,
+        createdAt: true,
+        updatedAt: true,
+        premiumExpiresAt: true,
+      }
+    })
+
     // System metrics (would come from monitoring system)
     const systemUptime = '1d 14h' // This would come from monitoring system
     const lastSignal = recentSignals.length > 0 
@@ -156,7 +172,16 @@ export const GET = auth(async (req) => {
         losing: losingSignals,
         bestGain: performanceData._max.priceChangePct ? parseFloat(performanceData._max.priceChangePct.toFixed(2)) : 0,
         worstLoss: performanceData._min.priceChangePct ? parseFloat(performanceData._min.priceChangePct.toFixed(2)) : 0
-      }
+      },
+      
+      // User list for user management page (isAdmin computed from ADMIN_EMAIL env var)
+      users: userList.map(u => ({
+        ...u,
+        isAdmin: u.email === adminEmail,
+        createdAt: u.createdAt.toISOString(),
+        updatedAt: u.updatedAt.toISOString(),
+        premiumExpiresAt: u.premiumExpiresAt?.toISOString() ?? null,
+      }))
     })
     
   } catch (error) {

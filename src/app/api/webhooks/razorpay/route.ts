@@ -2,13 +2,36 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/db'
 import { notifyPremiumUser } from '@/lib/telegram'
 
+// In-memory idempotency store (use Redis in production for distributed deployments)
+const processedEvents = new Map<string, number>()
+const EVENT_TTL = 24 * 60 * 60 * 1000 // 24 hours
+
+function isAlreadyProcessed(eventId: string): boolean {
+  const ts = processedEvents.get(eventId)
+  if (!ts) return false
+  if (Date.now() - ts > EVENT_TTL) {
+    processedEvents.delete(eventId)
+    return false
+  }
+  return true
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.text()
     const signature = req.headers.get('x-razorpay-signature')
+    const eventId = req.headers.get('x-razorpay-event-id') ?? null
     
     if (!signature || !verifyWebhook(body, signature)) {
       return Response.json({ error: 'Invalid signature' }, { status: 400 })
+    }
+    
+    // Idempotency: skip already-processed events
+    if (eventId && isAlreadyProcessed(eventId)) {
+      return Response.json({ received: true, duplicate: true })
+    }
+    if (eventId) {
+      processedEvents.set(eventId, Date.now())
     }
     
     const event = JSON.parse(body)
