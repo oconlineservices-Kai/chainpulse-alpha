@@ -24,13 +24,20 @@ export const GET = auth(async (req) => {
       signals24h,
       diamondSignals,
       waitlistCount,
+      freeUsers,
+      monthlyOnboarded,
+      payPerAlphaTransactions,
+      premiumTransactions,
+      payPerAlphaRevenueResult,
+      premiumRevenueResult,
+      recentUsersResult,
       recentSignals
     ] = await Promise.all([
       // User metrics
       prisma.user.count(),
       prisma.user.count({ where: { premiumStatus: { not: 'free' } } }),
       prisma.user.count({ where: { premiumStatus: 'admin' } }),
-      
+
       // Financial metrics
       prisma.transaction.count({ where: { status: 'completed' } }),
       prisma.transaction.aggregate({
@@ -38,7 +45,7 @@ export const GET = auth(async (req) => {
         _sum: { amount: true }
       }),
       prisma.transaction.aggregate({
-        where: { 
+        where: {
           status: 'completed',
           createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }
         },
@@ -48,17 +55,65 @@ export const GET = auth(async (req) => {
         where: { status: 'completed' },
         _avg: { amount: true }
       }),
-      
+
       // Signal metrics
       prisma.signal.count(),
       prisma.signal.count({
         where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
       }),
       prisma.signal.count({ where: { isDiamondSignal: true } }),
-      
+
       // Waitlist
       prisma.waitlist.count(),
-      
+
+      // New metrics
+      prisma.user.count({ where: { premiumStatus: 'free' } }),
+      prisma.user.count({
+        where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }
+      }),
+      // Pay-per-alpha transactions
+      prisma.transaction.count({
+        where: {
+          status: 'completed',
+          transactionType: { in: ['pay_per_alpha', 'alpha_purchase'] }
+        }
+      }),
+      // Premium transactions
+      prisma.transaction.count({
+        where: {
+          status: 'completed',
+          transactionType: 'premium'
+        }
+      }),
+      // Pay-per-alpha revenue
+      prisma.transaction.aggregate({
+        where: {
+          status: 'completed',
+          transactionType: { in: ['pay_per_alpha', 'alpha_purchase'] }
+        },
+        _sum: { amount: true }
+      }),
+      // Premium revenue
+      prisma.transaction.aggregate({
+        where: {
+          status: 'completed',
+          transactionType: 'premium'
+        },
+        _sum: { amount: true }
+      }),
+
+      // Recent users (last 5)
+      prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        select: {
+          id: true,
+          email: true,
+          premiumStatus: true,
+          createdAt: true,
+        }
+      }),
+
       // Recent signals with performance
       prisma.signal.findMany({
         where: {
@@ -95,8 +150,8 @@ export const GET = auth(async (req) => {
       where: { priceChangePct: { lt: 0 } }
     })
 
-    const winRate = performanceData._count.id > 0 
-      ? (profitableSignals / performanceData._count.id) * 100 
+    const winRate = performanceData._count.id > 0
+      ? (profitableSignals / performanceData._count.id) * 100
       : 0
 
     // Estimate active users (users with transactions or recent activity)
@@ -125,46 +180,49 @@ export const GET = auth(async (req) => {
       }
     })
 
-    // System metrics (would come from monitoring system)
-    const systemUptime = '1d 14h' // This would come from monitoring system
-    const lastSignal = recentSignals.length > 0 
-      ? formatTimeAgo(recentSignals[0].createdAt)
-      : 'Never'
-    
-    const performanceStatus = 'HEALTHY' // This would come from monitoring system
-
     return NextResponse.json({
       // User Metrics
       totalUsers,
       activeUsers,
+      freeUsers,
       premiumUsers,
       adminUsers,
-      
+      monthlyOnboarded,
+      visitorsCount: totalUsers,
+
       // Financial Metrics
       totalPayments,
       totalRevenue: totalRevenueResult._sum.amount?.toNumber() || 0,
       monthlyRevenue: monthlyRevenueResult._sum.amount?.toNumber() || 0,
       avgTransaction: avgTransactionResult._avg.amount?.toNumber() || 0,
-      
+
+      // New revenue breakdown
+      payPerAlphaCount: payPerAlphaTransactions,
+      premiumPaymentCount: premiumTransactions,
+      payPerAlphaRevenue: payPerAlphaRevenueResult._sum.amount?.toNumber() || 0,
+      premiumRevenue: premiumRevenueResult._sum.amount?.toNumber() || 0,
+
       // Signal Metrics
       totalSignals,
+      diamondSignalCount: diamondSignals,
       signals24h,
-      diamondSignals,
       winRate: parseFloat(winRate.toFixed(1)),
       avgReturn: performanceData._avg.priceChangePct ? parseFloat(performanceData._avg.priceChangePct.toFixed(2)) : 0,
-      
-      // System Metrics
+
+      // Waitlist
       waitlistCount,
-      systemUptime,
-      lastSignal,
-      performanceStatus,
-      
+      signalCount: totalSignals,
+
       // Monitoring Data
       recentSignals: recentSignals.map(signal => ({
         ...signal,
         createdAt: signal.createdAt.toISOString()
       })),
-      
+      recentUsers: recentUsersResult.map(u => ({
+        ...u,
+        createdAt: u.createdAt.toISOString()
+      })),
+
       // Performance Tracking
       performanceStats: {
         totalTracked: performanceData._count.id,
@@ -173,7 +231,7 @@ export const GET = auth(async (req) => {
         bestGain: performanceData._max.priceChangePct ? parseFloat(performanceData._max.priceChangePct.toFixed(2)) : 0,
         worstLoss: performanceData._min.priceChangePct ? parseFloat(performanceData._min.priceChangePct.toFixed(2)) : 0
       },
-      
+
       // User list for user management page (isAdmin computed from ADMIN_EMAIL env var)
       users: userList.map(u => ({
         ...u,
@@ -183,7 +241,7 @@ export const GET = auth(async (req) => {
         premiumExpiresAt: u.premiumExpiresAt?.toISOString() ?? null,
       }))
     })
-    
+
   } catch (error) {
     console.error('Enhanced admin stats error:', error)
     return NextResponse.json(

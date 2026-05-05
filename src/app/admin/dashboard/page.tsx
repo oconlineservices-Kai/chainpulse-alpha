@@ -4,36 +4,42 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { Users, CreditCard, Signal, TrendingUp, LogOut, Shield, Activity, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Users, CreditCard, Signal, TrendingUp, LogOut, Shield, Activity, Clock, CheckCircle, AlertCircle, Diamond, UserPlus } from 'lucide-react'
 import Link from 'next/link'
+
+interface RecentUser {
+  id: string
+  email: string
+  premiumStatus: string
+  createdAt: string
+}
 
 interface DashboardData {
   users: {
     total: number
+    free: number
     premium: number
     admin: number
+    monthlyOnboarded: number
   }
   financial: {
     payments: number
     revenue: number
+    payPerAlphaCount: number
+    premiumPaymentCount: number
+    payPerAlphaRevenue: number
+    premiumRevenue: number
   }
   signals: {
     total: number
+    diamondCount: number
     recent: number
     winRate: number
   }
   system: {
     waitlist: number
-    uptime: string
-    status: string
   }
-  recentSignals: Array<{
-    tokenSymbol: string
-    sentimentScore: number | null
-    priceChangePct: number | null
-    performanceStatus: string | null
-    createdAt: string
-  }>
+  recentUsers: RecentUser[]
 }
 
 export default function AdminDashboardPage() {
@@ -62,32 +68,35 @@ export default function AdminDashboardPage() {
   const fetchStats = async () => {
     try {
       setLoading(true)
-      // Try enhanced-stats first (requires auth), fall back to public-test
       let res = await fetch('/api/admin/enhanced-stats')
       if (res.ok) {
         const enhanced = await res.json()
-        // Normalize enhanced-stats shape to our DashboardData shape
         setData({
           users: {
             total: enhanced.totalUsers ?? 0,
+            free: enhanced.freeUsers ?? 0,
             premium: enhanced.premiumUsers ?? 0,
             admin: enhanced.adminUsers ?? 0,
+            monthlyOnboarded: enhanced.monthlyOnboarded ?? 0,
           },
           financial: {
             payments: enhanced.totalPayments ?? 0,
             revenue: enhanced.totalRevenue ?? 0,
+            payPerAlphaCount: enhanced.payPerAlphaCount ?? 0,
+            premiumPaymentCount: enhanced.premiumPaymentCount ?? 0,
+            payPerAlphaRevenue: enhanced.payPerAlphaRevenue ?? 0,
+            premiumRevenue: enhanced.premiumRevenue ?? 0,
           },
           signals: {
             total: enhanced.totalSignals ?? 0,
+            diamondCount: enhanced.diamondSignalCount ?? 0,
             recent: enhanced.signals24h ?? 0,
             winRate: enhanced.winRate ?? 0,
           },
           system: {
             waitlist: enhanced.waitlistCount ?? 0,
-            uptime: enhanced.systemUptime ?? 'N/A',
-            status: enhanced.performanceStatus ?? 'UNKNOWN',
           },
-          recentSignals: enhanced.recentSignals ?? [],
+          recentUsers: enhanced.recentUsers ?? [],
         })
         return
       }
@@ -117,6 +126,7 @@ export default function AdminDashboardPage() {
 
   const val = (n: number | undefined | null) => loading ? '—' : (n ?? 0).toLocaleString()
   const pct = (n: number | undefined | null) => loading ? '—' : `${n ?? 0}%`
+  const inr = (n: number | undefined | null) => loading ? '—' : `₹${((n ?? 0) / 100).toLocaleString()}`
 
   return (
     <div className="min-h-screen bg-background pt-16 lg:pt-20">
@@ -168,11 +178,12 @@ export default function AdminDashboardPage() {
         {/* ── USERS ────────────────────────────────────────────── */}
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Users</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { label: 'Total Users',    icon: <Users className="w-6 h-6 text-primary-400" />,   value: val(data?.users.total) },
-              { label: 'Premium Users',  icon: <TrendingUp className="w-6 h-6 text-warning-400" />, value: val(data?.users.premium) },
-              { label: 'Admin Users',    icon: <Shield className="w-6 h-6 text-danger-400" />,   value: val(data?.users.admin) },
+              { label: 'Total Users',          icon: <Users className="w-6 h-6 text-primary-400" />,     value: val(data?.users.total) },
+              { label: 'Free Users',           icon: <Users className="w-6 h-6 text-text-muted" />,      value: val(data?.users.free) },
+              { label: 'Premium Users',        icon: <TrendingUp className="w-6 h-6 text-warning-400" />, value: val(data?.users.premium) },
+              { label: 'Monthly Onboarded',    icon: <UserPlus className="w-6 h-6 text-success-400" />,   value: val(data?.users.monthlyOnboarded) },
             ].map((card, i) => (
               <motion.div
                 key={card.label}
@@ -191,13 +202,16 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* ── PAYMENTS / SUBSCRIPTIONS ─────────────────────────── */}
+        {/* ── REVENUE ──────────────────────────────────────────── */}
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Payments & Subscriptions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Revenue</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[
-              { label: 'Completed Payments', icon: <CreditCard className="w-6 h-6 text-success-400" />, value: val(data?.financial.payments) },
-              { label: 'Total Revenue (INR)', icon: <TrendingUp className="w-6 h-6 text-success-400" />, value: data?.financial.revenue ? `₹${(data.financial.revenue / 100).toLocaleString()}` : (loading ? '—' : '₹0') },
+              { label: 'Total Revenue',             icon: <TrendingUp className="w-6 h-6 text-success-400" />, value: inr(data?.financial.revenue) },
+              { label: 'Pay-Per-Alpha Revenue',     icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: inr(data?.financial.payPerAlphaRevenue) },
+              { label: 'Premium Revenue',           icon: <TrendingUp className="w-6 h-6 text-warning-400" />,  value: inr(data?.financial.premiumRevenue) },
+              { label: 'PPA Payments',              icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: val(data?.financial.payPerAlphaCount) },
+              { label: 'Premium Payments',          icon: <CreditCard className="w-6 h-6 text-warning-400" />,  value: val(data?.financial.premiumPaymentCount) },
             ].map((card, i) => (
               <motion.div
                 key={card.label}
@@ -216,14 +230,14 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* ── SIGNALS ──────────────────────────────────────────── */}
+        {/* ── SIGNALS ─────────────────────────────────────────── */}
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Signals</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
-              { label: 'Total Signals',  icon: <Signal className="w-6 h-6 text-warning-400" />,   value: val(data?.signals.total) },
-              { label: 'Signals (24h)',  icon: <Clock className="w-6 h-6 text-primary-400" />,    value: val(data?.signals.recent) },
-              { label: 'Win Rate',       icon: <CheckCircle className="w-6 h-6 text-success-400" />, value: pct(data?.signals.winRate) },
+              { label: 'Total Signals',   icon: <Signal className="w-6 h-6 text-warning-400" />,    value: val(data?.signals.total) },
+              { label: 'Diamond Signals', icon: <Diamond className="w-6 h-6 text-primary-400" />,    value: val(data?.signals.diamondCount) },
+              { label: 'Win Rate',        icon: <CheckCircle className="w-6 h-6 text-success-400" />, value: pct(data?.signals.winRate) },
             ].map((card, i) => (
               <motion.div
                 key={card.label}
@@ -240,59 +254,15 @@ export default function AdminDashboardPage() {
               </motion.div>
             ))}
           </div>
-
-          {/* Recent Signals Table */}
-          {!loading && data?.recentSignals && data.recentSignals.length > 0 && (
-            <div className="mt-4 bg-background-card border border-border rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-border">
-                <h3 className="text-sm font-semibold">Recent Signals</h3>
-              </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-muted border-b border-border">
-                    <th className="px-5 py-2 font-medium">Token</th>
-                    <th className="px-5 py-2 font-medium">Sentiment</th>
-                    <th className="px-5 py-2 font-medium">Price Δ</th>
-                    <th className="px-5 py-2 font-medium">Status</th>
-                    <th className="px-5 py-2 font-medium">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentSignals.map((s, i) => (
-                    <tr key={i} className="border-b border-border last:border-0 hover:bg-background/50">
-                      <td className="px-5 py-2 font-mono font-semibold">{s.tokenSymbol}</td>
-                      <td className="px-5 py-2">{s.sentimentScore != null ? s.sentimentScore.toFixed(2) : '—'}</td>
-                      <td className={`px-5 py-2 ${s.priceChangePct != null && s.priceChangePct > 0 ? 'text-success-400' : s.priceChangePct != null && s.priceChangePct < 0 ? 'text-danger-400' : ''}`}>
-                        {s.priceChangePct != null ? `${s.priceChangePct > 0 ? '+' : ''}${s.priceChangePct.toFixed(2)}%` : '—'}
-                      </td>
-                      <td className="px-5 py-2">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${s.performanceStatus === 'winner' ? 'bg-success-900/40 text-success-300' : s.performanceStatus === 'loser' ? 'bg-danger-900/40 text-danger-300' : 'bg-background text-text-muted'}`}>
-                          {s.performanceStatus ?? 'pending'}
-                        </span>
-                      </td>
-                      <td className="px-5 py-2 text-text-muted text-xs">{new Date(s.createdAt).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </section>
 
-        {/* ── MONITORING ───────────────────────────────────────── */}
+        {/* ── SYSTEM ──────────────────────────────────────────── */}
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Monitoring</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">System</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { label: 'Waitlist',      icon: <Users className="w-6 h-6 text-secondary-400" />,  value: val(data?.system.waitlist) },
-              { label: 'Uptime',        icon: <Activity className="w-6 h-6 text-success-400" />, value: loading ? '—' : (data?.system.uptime ?? 'N/A') },
-              {
-                label: 'System Status',
-                icon: data?.system.status === 'HEALTHY'
-                  ? <CheckCircle className="w-6 h-6 text-success-400" />
-                  : <AlertCircle className="w-6 h-6 text-warning-400" />,
-                value: loading ? '—' : (data?.system.status ?? 'UNKNOWN'),
-              },
+              { label: 'Waitlist', icon: <Users className="w-6 h-6 text-secondary-400" />, value: val(data?.system.waitlist) },
+              { label: 'Active Users (7d)', icon: <Activity className="w-6 h-6 text-success-400" />, value: val(data?.users.total) },
             ].map((card, i) => (
               <motion.div
                 key={card.label}
@@ -310,6 +280,45 @@ export default function AdminDashboardPage() {
             ))}
           </div>
         </section>
+
+        {/* ── RECENT USERS TABLE ───────────────────────────────── */}
+        {!loading && data?.recentUsers && data.recentUsers.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Recent Users</h2>
+            <div className="bg-background-card border border-border rounded-xl overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-text-muted border-b border-border">
+                    <th className="px-5 py-3 font-medium">ID</th>
+                    <th className="px-5 py-3 font-medium">Email</th>
+                    <th className="px-5 py-3 font-medium">Status</th>
+                    <th className="px-5 py-3 font-medium">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.recentUsers.map((u, i) => (
+                    <tr key={u.id} className="border-b border-border last:border-0 hover:bg-background/50">
+                      <td className="px-5 py-3 font-mono text-xs text-text-secondary">{u.id.substring(0, 8)}...</td>
+                      <td className="px-5 py-3">{u.email}</td>
+                      <td className="px-5 py-3">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          u.premiumStatus === 'premium' || u.premiumStatus === 'lifetime'
+                            ? 'bg-warning-900/40 text-warning-300'
+                            : u.premiumStatus === 'admin'
+                            ? 'bg-danger-900/40 text-danger-300'
+                            : 'bg-background text-text-muted'
+                        }`}>
+                          {u.premiumStatus}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-text-muted text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
         {/* ── QUICK ACTIONS ────────────────────────────────────── */}
         <div className="bg-background-card border border-border rounded-xl p-6">
