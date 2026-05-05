@@ -1,57 +1,20 @@
 import { NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
+import { getGeneratorStatus } from "@/lib/signal-generator";
 
 export const dynamic = "force-dynamic";
 
-const execAsync = promisify(exec);
-
-async function getSignalGeneratorStatus() {
-  try {
-    const { stdout } = await execAsync('pm2 jlist 2>/dev/null', {
-      timeout: 5000,
-    });
-    
-    const processes = JSON.parse(stdout);
-    const signalProc = processes.find((p: any) => p.name === 'signal-generator');
-    
-    if (!signalProc) {
-      return {
-        service: 'signal-generator',
-        status: 'stopped',
-        pid: null,
-        uptime: null,
-        restarts: 0,
-        healthy: false
-      };
-    }
-    
-    const pm2Status = signalProc.pm2_env?.status ?? 'unknown';
-    const status = pm2Status === 'online' ? 'running' : 
-                   pm2Status === 'stopped' ? 'stopped' : 
-                   pm2Status === 'errored' ? 'errored' : 'unknown';
-    
-    const pm2UptimeMs = signalProc.pm2_env?.pm_uptime;
-    const nowMs = Date.now();
-    
-    return {
-      service: 'signal-generator',
-      status,
-      pid: signalProc.pid ?? null,
-      uptime: pm2UptimeMs ? Math.floor((nowMs - pm2UptimeMs) / 1000) : null,
-      restarts: signalProc.pm2_env?.restart_time ?? 0,
-      healthy: status === 'running'
-    };
-  } catch {
-    return {
-      service: 'signal-generator',
-      status: 'unknown',
-      pid: null,
-      uptime: null,
-      restarts: 0,
-      healthy: false
-    };
-  }
+function getSignalGeneratorStatus() {
+  const state = getGeneratorStatus();
+  return {
+    service: 'signal-generator',
+    status: state.running ? 'running' : (state.lastRun ? 'idle' : 'not_started'),
+    lastRun: state.lastRun?.toISOString() ?? null,
+    healthy: state.lastErrors.length === 0,
+    totalGenerated: state.totalSignalsGenerated,
+    totalDiamonds: state.totalDiamondSignals,
+    lastErrors: state.lastErrors.length > 0 ? state.lastErrors.slice(0, 3) : undefined,
+    note: 'Generates signals on-demand via POST /api/signals/refresh with X-AUTH-SECRET'
+  };
 }
 
 function isConfigured(value?: string) {
@@ -73,16 +36,7 @@ function isPlaceholder(value?: string) {
 
 export async function GET() {
   try {
-    // Signal generator is not part of current Fly.io architecture
-    const signalStatus = {
-      service: 'signal-generator',
-      status: 'not_required',
-      pid: null,
-      uptime: null,
-      restarts: 0,
-      healthy: true,
-      note: 'Service not required in current Fly.io architecture'
-    };
+    const signalStatus = getSignalGeneratorStatus();
     
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -110,9 +64,7 @@ export async function GET() {
 
     const paypalReady = paypal.clientIdConfigured && paypal.clientSecretConfigured;
     const paymentReady = razorpayReady || paypalReady;
-    // Signal generator is a cron job (runs every 6h then exits) — not a daemon.
-    // Being stopped is normal between runs; only treat as degraded if errored.
-    const signalHealthy = signalStatus.status !== 'errored';
+    const signalHealthy = signalStatus.healthy;
     const allSystemsReady = paymentReady && signalHealthy;
     
     return NextResponse.json(
@@ -138,8 +90,8 @@ export async function GET() {
           ? "All systems operational"
           : !paymentReady
             ? "Payment gateway requires configuration updates"
-            : signalStatus.status === 'errored'
-              ? "Signal generator service errored — check logs"
+            : !signalStatus.healthy
+              ? "Signal generator reported errors — check /api/signals/refresh"
               : "All systems operational",
       },
       {
