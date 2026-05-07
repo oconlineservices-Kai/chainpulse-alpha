@@ -7,12 +7,14 @@ import PaymentButton from '@/components/PaymentButton'
 import FadeIn, { FadeInStagger } from '@/components/animations/FadeIn'
 import { HoverScale } from '@/components/animations/ScaleIn'
 import { cn } from '@/lib/utils'
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 
 const plans = [
   {
     id: 'free',
     name: 'Free',
-    price: '₹0',
+    price: '$0',
     period: '',
     description: 'Perfect for getting started',
     icon: Unlock,
@@ -35,7 +37,7 @@ const plans = [
   {
     id: 'premium',
     name: 'Premium',
-    price: '₹4,099',
+    price: '$49',
     period: '/mo',
     description: 'For serious traders',
     icon: Crown,
@@ -60,7 +62,7 @@ const plans = [
   {
     id: 'payper',
     name: 'Pay-Per-Alpha',
-    price: '₹83',
+    price: '$1',
     period: '',
     description: 'Unlock single signals',
     icon: Sparkles,
@@ -85,6 +87,8 @@ const plans = [
 
 export default function PricingClient() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const { data: session, status } = useSession()
+  const isLoggedIn = status === 'authenticated'
 
   return (
     <main className="min-h-screen bg-background">
@@ -113,6 +117,7 @@ export default function PricingClient() {
             </h1>
             <p className="text-text-secondary max-w-2xl mx-auto mb-8">
               Choose the plan that fits your trading style. Upgrade, downgrade, or cancel anytime.
+              All prices include 18% GST as applicable.
             </p>
             
             {/* Billing Toggle */}
@@ -184,7 +189,7 @@ export default function PricingClient() {
                   <div className="flex items-baseline justify-center gap-1 mb-2">
                     <span className="text-4xl font-bold">
                       {billingPeriod === 'yearly' && plan.id === 'premium' 
-                        ? '₹3,267' 
+                        ? '$39' 
                         : plan.price
                       }
                     </span>
@@ -197,7 +202,13 @@ export default function PricingClient() {
                   
                   {billingPeriod === 'yearly' && plan.id === 'premium' && (
                     <div className="text-sm text-success-400">
-                      ₹49,188/year (save ₹10,020)
+                      $468/year (save 20%)
+                    </div>
+                  )}
+
+                  {plan.id === 'premium' && (
+                    <div className="text-xs text-text-muted mt-1">
+                      +18% GST applicable
                     </div>
                   )}
                   
@@ -233,7 +244,7 @@ export default function PricingClient() {
                 {/* CTA Button */}
                 {plan.id === 'premium' ? (
                   <PaymentButton
-                    amount={billingPeriod === 'yearly' ? 39204 : 4099}
+                    amount={billingPeriod === 'yearly' ? 46296 : 5782}
                     plan={billingPeriod === 'yearly' ? 'Premium Yearly' : 'Premium Monthly'}
                     buttonText={plan.cta}
                     className={cn(
@@ -242,7 +253,7 @@ export default function PricingClient() {
                   />
                 ) : plan.id === 'payper' ? (
                   <PaymentButton
-                    amount={83}
+                    amount={100}
                     plan="Pay Per Alpha"
                     buttonText={plan.cta}
                     className={cn(
@@ -250,19 +261,17 @@ export default function PricingClient() {
                     )}
                   />
                 ) : (
-                  <motion.a
-                    href="/signup"
+                  <Link
+                    href={isLoggedIn ? '/dashboard' : '/signup'}
                     className={cn(
                       "w-full py-3 rounded-xl font-semibold transition-all block text-center",
                       plan.popular
                         ? "button-primary"
                         : "button-secondary"
                     )}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     {plan.cta}
-                  </motion.a>
+                  </Link>
                 )}
                 
                 {/* Background Effect */}

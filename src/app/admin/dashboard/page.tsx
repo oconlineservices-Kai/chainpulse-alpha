@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { Users, CreditCard, Signal, TrendingUp, LogOut, Shield, Activity, Clock, CheckCircle, AlertCircle, Diamond, UserPlus } from 'lucide-react'
+import { Users, CreditCard, Signal, TrendingUp, LogOut, Shield, Activity, Clock, CheckCircle, AlertCircle, Diamond, UserPlus, RefreshCw, Zap } from 'lucide-react'
 import Link from 'next/link'
+import AdminNav from '@/components/admin/AdminNav'
 
 interface RecentUser {
   id: string
@@ -39,8 +40,19 @@ interface DashboardData {
   system: {
     waitlist: number
   }
+  activeUsers: number
   recentUsers: RecentUser[]
 }
+
+// Helper functions — moved outside component to avoid re-creation on every render (Issue 9)
+const val = (n: number | undefined | null, loading: boolean) =>
+  loading ? '—' : (n ?? 0).toLocaleString()
+
+const pct = (n: number | undefined | null, loading: boolean) =>
+  loading ? '—' : `${n ?? 0}%`
+
+const inr = (n: number | undefined | null, loading: boolean) =>
+  loading ? '—' : `₹${(n ?? 0).toLocaleString()}`
 
 export default function AdminDashboardPage() {
   const router = useRouter()
@@ -48,6 +60,10 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [demoTriggered, setDemoTriggered] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Client-side guard: redirect non-admins
   useEffect(() => {
@@ -61,14 +77,11 @@ export default function AdminDashboardPage() {
     }
   }, [status, session, router])
 
-  useEffect(() => {
-    if (status === 'authenticated') fetchStats()
-  }, [status])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true)
-      let res = await fetch('/api/admin/enhanced-stats')
+      setError(null)
+      const res = await fetch('/api/admin/enhanced-stats')
       if (res.ok) {
         const enhanced = await res.json()
         setData({
@@ -96,26 +109,53 @@ export default function AdminDashboardPage() {
           system: {
             waitlist: enhanced.waitlistCount ?? 0,
           },
+          activeUsers: enhanced.activeUsers ?? 0,
           recentUsers: enhanced.recentUsers ?? [],
         })
-        return
+        setLastUpdated(new Date())
+      } else {
+        const body = await res.json().catch(() => ({}))
+        setError(body.error || 'Failed to load admin stats')
       }
-
-      // Fall back to public-test endpoint (no auth required)
-      res = await fetch('/api/admin/public-test')
-      if (res.ok) {
-        const json = await res.json()
-        const d = json.data ?? json.mockData
-        setData(d)
-        return
-      }
-
-      setError('Failed to load admin stats')
     } catch (err) {
       console.error('Failed to fetch stats:', err)
       setError('Network error — check server logs')
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  // Fetch on auth
+  useEffect(() => {
+    if (status === 'authenticated') fetchStats()
+  }, [status, fetchStats])
+
+  // Auto-refresh every 30 seconds (Issue 15)
+  useEffect(() => {
+    refreshIntervalRef.current = setInterval(() => {
+      if (status === 'authenticated') {
+        fetchStats()
+      }
+    }, 30_000)
+    return () => {
+      if (refreshIntervalRef.current) clearInterval(refreshIntervalRef.current)
+    }
+  }, [status, fetchStats])
+
+  const triggerDemoData = async () => {
+    setDemoLoading(true)
+    try {
+      const res = await fetch('/api/admin/demo-data', { method: 'POST' })
+      if (res.ok) {
+        setDemoTriggered(true)
+        await fetchStats()
+      } else {
+        setError('Failed to generate demo data')
+      }
+    } catch {
+      setError('Network error generating demo data')
+    } finally {
+      setDemoLoading(false)
     }
   }
 
@@ -124,12 +164,46 @@ export default function AdminDashboardPage() {
     await signOut({ callbackUrl: '/admin/login' })
   }
 
-  const val = (n: number | undefined | null) => loading ? '—' : (n ?? 0).toLocaleString()
-  const pct = (n: number | undefined | null) => loading ? '—' : `${n ?? 0}%`
-  const inr = (n: number | undefined | null) => loading ? '—' : `₹${((n ?? 0) / 100).toLocaleString()}`
+  // Loading skeleton (Issue 8)
+  const SkeletonCard = () => (
+    <div className="bg-background-card border border-border rounded-xl p-5 animate-pulse">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-background/50" />
+        <div className="flex-1">
+          <div className="h-7 w-16 bg-background/50 rounded mb-1" />
+          <div className="h-3 w-20 bg-background/50 rounded" />
+        </div>
+      </div>
+    </div>
+  )
+
+  const SkeletonTable = () => (
+    <div className="bg-background-card border border-border rounded-xl overflow-hidden animate-pulse">
+      <div className="p-5 space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex gap-4">
+            <div className="h-4 w-1/4 bg-background/50 rounded" />
+            <div className="h-4 w-1/4 bg-background/50 rounded" />
+            <div className="h-4 w-1/6 bg-background/50 rounded" />
+            <div className="h-4 w-1/6 bg-background/50 rounded" />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
+  const getLastUpdatedText = () => {
+    if (!lastUpdated) return ''
+    const diff = Math.floor((Date.now() - lastUpdated.getTime()) / 1000)
+    if (diff < 60) return `${diff}s ago`
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+    return `${Math.floor(diff / 3600)}h ago`
+  }
 
   return (
     <div className="min-h-screen bg-background pt-16 lg:pt-20">
+      <AdminNav />
+
       {/* Header */}
       <header className="border-b border-border bg-background-card">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -139,24 +213,38 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <h1 className="font-bold text-lg">Admin Dashboard</h1>
-              <p className="text-xs text-text-muted">ChainPulse Alpha</p>
+              <p className="text-xs text-text-muted">
+                ChainPulse Alpha
+                {lastUpdated && <span className="ml-2">· Updated {getLastUpdatedText()}</span>}
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Demo data trigger (Issue 6) */}
+            <button
+              onClick={triggerDemoData}
+              disabled={demoLoading}
+              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg bg-warning-500/10 text-warning-400 hover:bg-warning-500/20 transition-colors disabled:opacity-50"
+            >
+              <Zap className={`w-4 h-4 ${demoLoading ? 'animate-spin' : ''}`} />
+              {demoLoading ? 'Generating...' : 'Trigger Demo Data'}
+            </button>
+
             <button
               onClick={fetchStats}
-              className="text-sm text-text-secondary hover:text-text-primary"
+              className="flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary"
               title="Refresh stats"
             >
-              ↻ Refresh
+              <RefreshCw className="w-4 h-4" />
+              Refresh
             </button>
             <Link href="/" className="text-sm text-text-secondary hover:text-text-primary">
               View Site
             </Link>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-danger-400 hover:text-danger-300"
+              className="flex items-center gap-1.5 text-sm text-danger-400 hover:text-danger-300"
             >
               <LogOut className="w-4 h-4" />
               Logout
@@ -165,8 +253,29 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
+      {/* System Banner (Issue 6) */}
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <div className="p-3 rounded-lg bg-primary-500/5 border border-primary-500/20 text-sm text-text-secondary flex items-center gap-2">
+          <Activity className="w-4 h-4 text-primary-400 shrink-0" />
+          <span>
+            System deployed. Signal generation runs every hour.{' '}
+            {demoTriggered ? (
+              <span className="text-success-400 font-medium">✓ Demo data generated.</span>
+            ) : (
+              <span>Click <strong>Trigger Demo Data</strong> to seed initial data, or wait for the next automated run.</span>
+            )}
+          </span>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {demoTriggered && (
+          <div className="mb-6 p-4 bg-success-900/30 border border-success-500 rounded-xl flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-success-400 shrink-0" />
+            <p className="text-sm text-success-300">Demo data generated successfully!</p>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-4 bg-danger-900/30 border border-danger-500 rounded-xl flex items-center gap-3">
@@ -179,26 +288,35 @@ export default function AdminDashboardPage() {
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Users</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: 'Total Users',          icon: <Users className="w-6 h-6 text-primary-400" />,     value: val(data?.users.total) },
-              { label: 'Free Users',           icon: <Users className="w-6 h-6 text-text-muted" />,      value: val(data?.users.free) },
-              { label: 'Premium Users',        icon: <TrendingUp className="w-6 h-6 text-warning-400" />, value: val(data?.users.premium) },
-              { label: 'Monthly Onboarded',    icon: <UserPlus className="w-6 h-6 text-success-400" />,   value: val(data?.users.monthlyOnboarded) },
-            ].map((card, i) => (
-              <motion.div
-                key={card.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
-              >
-                {card.icon}
-                <div>
-                  <p className="text-2xl font-bold">{card.value}</p>
-                  <p className="text-xs text-text-muted">{card.label}</p>
-                </div>
-              </motion.div>
-            ))}
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              [
+                { label: 'Total Users',          icon: <Users className="w-6 h-6 text-primary-400" />,     value: val(data?.users.total, false) },
+                { label: 'Free Users',           icon: <Users className="w-6 h-6 text-text-muted" />,      value: val(data?.users.free, false) },
+                { label: 'Premium Users',        icon: <TrendingUp className="w-6 h-6 text-warning-400" />, value: val(data?.users.premium, false) },
+                { label: 'Monthly Onboarded',    icon: <UserPlus className="w-6 h-6 text-success-400" />,   value: val(data?.users.monthlyOnboarded, false) },
+              ].map((card, i) => (
+                <motion.div
+                  key={card.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
+                >
+                  {card.icon}
+                  <div>
+                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className="text-xs text-text-muted">{card.label}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
@@ -206,27 +324,37 @@ export default function AdminDashboardPage() {
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Revenue</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {[
-              { label: 'Total Revenue',             icon: <TrendingUp className="w-6 h-6 text-success-400" />, value: inr(data?.financial.revenue) },
-              { label: 'Pay-Per-Alpha Revenue',     icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: inr(data?.financial.payPerAlphaRevenue) },
-              { label: 'Premium Revenue',           icon: <TrendingUp className="w-6 h-6 text-warning-400" />,  value: inr(data?.financial.premiumRevenue) },
-              { label: 'PPA Payments',              icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: val(data?.financial.payPerAlphaCount) },
-              { label: 'Premium Payments',          icon: <CreditCard className="w-6 h-6 text-warning-400" />,  value: val(data?.financial.premiumPaymentCount) },
-            ].map((card, i) => (
-              <motion.div
-                key={card.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 + i * 0.05 }}
-                className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
-              >
-                {card.icon}
-                <div>
-                  <p className="text-2xl font-bold">{card.value}</p>
-                  <p className="text-xs text-text-muted">{card.label}</p>
-                </div>
-              </motion.div>
-            ))}
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              [
+                { label: 'Total Revenue (INR)',         icon: <TrendingUp className="w-6 h-6 text-success-400" />, value: inr(data?.financial.revenue, false) },
+                { label: 'PPA Revenue (INR)',           icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: inr(data?.financial.payPerAlphaRevenue, false) },
+                { label: 'Premium Revenue (INR)',       icon: <TrendingUp className="w-6 h-6 text-warning-400" />,  value: inr(data?.financial.premiumRevenue, false) },
+                { label: 'PPA Payments',                icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: val(data?.financial.payPerAlphaCount, false) },
+                { label: 'Premium Payments',           icon: <CreditCard className="w-6 h-6 text-warning-400" />,  value: val(data?.financial.premiumPaymentCount, false) },
+              ].map((card, i) => (
+                <motion.div
+                  key={card.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + i * 0.05 }}
+                  className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
+                >
+                  {card.icon}
+                  <div>
+                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className="text-xs text-text-muted">{card.label}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
@@ -234,25 +362,33 @@ export default function AdminDashboardPage() {
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Signals</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              { label: 'Total Signals',   icon: <Signal className="w-6 h-6 text-warning-400" />,    value: val(data?.signals.total) },
-              { label: 'Diamond Signals', icon: <Diamond className="w-6 h-6 text-primary-400" />,    value: val(data?.signals.diamondCount) },
-              { label: 'Win Rate',        icon: <CheckCircle className="w-6 h-6 text-success-400" />, value: pct(data?.signals.winRate) },
-            ].map((card, i) => (
-              <motion.div
-                key={card.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 + i * 0.05 }}
-                className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
-              >
-                {card.icon}
-                <div>
-                  <p className="text-2xl font-bold">{card.value}</p>
-                  <p className="text-xs text-text-muted">{card.label}</p>
-                </div>
-              </motion.div>
-            ))}
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              [
+                { label: 'Total Signals',   icon: <Signal className="w-6 h-6 text-warning-400" />,    value: val(data?.signals.total, false) },
+                { label: 'Diamond Signals', icon: <Diamond className="w-6 h-6 text-primary-400" />,    value: val(data?.signals.diamondCount, false) },
+                { label: 'Win Rate',        icon: <CheckCircle className="w-6 h-6 text-success-400" />, value: pct(data?.signals.winRate, false) },
+              ].map((card, i) => (
+                <motion.div
+                  key={card.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 + i * 0.05 }}
+                  className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
+                >
+                  {card.icon}
+                  <div>
+                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className="text-xs text-text-muted">{card.label}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
@@ -260,24 +396,31 @@ export default function AdminDashboardPage() {
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">System</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { label: 'Waitlist', icon: <Users className="w-6 h-6 text-secondary-400" />, value: val(data?.system.waitlist) },
-              { label: 'Active Users (7d)', icon: <Activity className="w-6 h-6 text-success-400" />, value: val(data?.users.total) },
-            ].map((card, i) => (
-              <motion.div
-                key={card.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 + i * 0.05 }}
-                className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
-              >
-                {card.icon}
-                <div>
-                  <p className="text-2xl font-bold">{card.value}</p>
-                  <p className="text-xs text-text-muted">{card.label}</p>
-                </div>
-              </motion.div>
-            ))}
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : (
+              [
+                { label: 'Waitlist', icon: <Users className="w-6 h-6 text-secondary-400" />, value: val(data?.system.waitlist, false) },
+                { label: 'Active Users (7d)', icon: <Activity className="w-6 h-6 text-success-400" />, value: val(data?.activeUsers, false) },
+              ].map((card, i) => (
+                <motion.div
+                  key={card.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 + i * 0.05 }}
+                  className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
+                >
+                  {card.icon}
+                  <div>
+                    <p className="text-2xl font-bold">{card.value}</p>
+                    <p className="text-xs text-text-muted">{card.label}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </section>
 
@@ -286,36 +429,38 @@ export default function AdminDashboardPage() {
           <section className="mb-8">
             <h2 className="text-sm font-semibold text-text-muted uppercase tracking-widest mb-4">Recent Users</h2>
             <div className="bg-background-card border border-border rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-muted border-b border-border">
-                    <th className="px-5 py-3 font-medium">ID</th>
-                    <th className="px-5 py-3 font-medium">Email</th>
-                    <th className="px-5 py-3 font-medium">Status</th>
-                    <th className="px-5 py-3 font-medium">Joined</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.recentUsers.map((u, i) => (
-                    <tr key={u.id} className="border-b border-border last:border-0 hover:bg-background/50">
-                      <td className="px-5 py-3 font-mono text-xs text-text-secondary">{u.id.substring(0, 8)}...</td>
-                      <td className="px-5 py-3">{u.email}</td>
-                      <td className="px-5 py-3">
-                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          u.premiumStatus === 'premium' || u.premiumStatus === 'lifetime'
-                            ? 'bg-warning-900/40 text-warning-300'
-                            : u.premiumStatus === 'admin'
-                            ? 'bg-danger-900/40 text-danger-300'
-                            : 'bg-background text-text-muted'
-                        }`}>
-                          {u.premiumStatus}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-text-muted text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+              <div className="overflow-x-auto"> {/* Issue 22 */}
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-text-muted border-b border-border">
+                      <th className="px-5 py-3 font-medium">ID</th>
+                      <th className="px-5 py-3 font-medium">Email</th>
+                      <th className="px-5 py-3 font-medium">Status</th>
+                      <th className="px-5 py-3 font-medium">Joined</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data.recentUsers.map((u, i) => (
+                      <tr key={u.id} className="border-b border-border last:border-0 hover:bg-background/50">
+                        <td className="px-5 py-3 font-mono text-xs text-text-secondary">{u.id.substring(0, 8)}...</td>
+                        <td className="px-5 py-3">{u.email}</td>
+                        <td className="px-5 py-3">
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                            u.premiumStatus === 'premium' || u.premiumStatus === 'lifetime'
+                              ? 'bg-warning-900/40 text-warning-300'
+                              : u.premiumStatus === 'admin'
+                              ? 'bg-danger-900/40 text-danger-300'
+                              : 'bg-background text-text-muted'
+                          }`}>
+                            {u.premiumStatus}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-text-muted text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         )}
@@ -333,22 +478,20 @@ export default function AdminDashboardPage() {
             </Link>
 
             <Link
+              href="/admin/signals"
+              className="p-4 bg-background border border-border rounded-lg hover:border-primary-500 transition-colors"
+            >
+              <p className="font-medium">Signal Review</p>
+              <p className="text-sm text-text-muted mt-1">Approve, reject, or delete signals</p>
+            </Link>
+
+            <Link
               href="/dashboard"
               className="p-4 bg-background border border-border rounded-lg hover:border-primary-500 transition-colors"
             >
               <p className="font-medium">View User Dashboard</p>
               <p className="text-sm text-text-muted mt-1">Preview user experience</p>
             </Link>
-
-            <a
-              href="https://dashboard.razorpay.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-4 bg-background border border-border rounded-lg hover:border-success-500 transition-colors"
-            >
-              <p className="font-medium">Razorpay Dashboard</p>
-              <p className="text-sm text-text-muted mt-1">Manage payments</p>
-            </a>
 
             <a
               href="https://console.neon.tech"

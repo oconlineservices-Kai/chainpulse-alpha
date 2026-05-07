@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Activity, LogIn, UserPlus, Menu, X, LayoutDashboard, Shield } from 'lucide-react'
+import { Activity, UserPlus, Menu, X, LayoutDashboard, Shield } from 'lucide-react'
 
 export default function PremiumNavigationSimple() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -58,17 +58,12 @@ export default function PremiumNavigationSimple() {
                 <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
               </Link>
             ) : (
-              <>
-                <Link href="/login" className="text-gray-300 hover:text-white transition flex items-center gap-2">
-                  <LogIn className="w-4 h-4" /> Login
-                </Link>
-                <Link 
-                  href="/signup" 
-                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-2"
-                >
-                  <UserPlus className="w-4 h-4" /> Get Started
-                </Link>
-              </>
+              <Link 
+                href="/signup" 
+                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" /> Get Started
+              </Link>
             )}
           </div>
 
@@ -100,10 +95,7 @@ export default function PremiumNavigationSimple() {
                   <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
                 </Link>
               ) : (
-                <div className="pt-4 border-t border-gray-800 space-y-3">
-                  <Link href="/login" className="block text-gray-300 hover:text-white py-2 flex items-center gap-2">
-                    <LogIn className="w-4 h-4" /> Login
-                  </Link>
+                <div className="pt-4 border-t border-gray-800">
                   <Link 
                     href="/signup" 
                     className="block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-lg text-center"

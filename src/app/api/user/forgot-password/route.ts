@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import crypto from 'crypto'
+import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
+import { sendPasswordResetEmail } from '@/lib/email'
 
 export async function POST(req: NextRequest) {
+  // Rate limiting: 5 forgot-password requests per IP per 15 minutes
+  const ip = getClientIP(req as unknown as Request)
+  const key = getRateLimitKey(ip, 'forgot-password')
+  if (!checkRateLimit(key, 5, 15 * 60 * 1000)) {
+    return NextResponse.json(
+      { message: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': '900' } }
+    )
+  }
   try {
     const { email } = await req.json()
 
@@ -44,10 +55,13 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // In production, send email here
-    // For now, just log the reset link
-    const resetUrl = `${process.env.APP_URL || 'https://chainpulsealpha.com'}/reset-password?token=${token}`
-    console.log('Password reset URL:', resetUrl)
+    // Send password reset email via configured provider
+    const emailResult = await sendPasswordResetEmail(email.toLowerCase(), token)
+    if (!emailResult.success) {
+      console.error('Failed to send reset email:', emailResult.error)
+    } else {
+      console.log(`Password reset email sent via ${emailResult.provider} to ${email.toLowerCase()}`)
+    }
 
     return NextResponse.json(
       { message: 'If an account exists with this email, you will receive a password reset link.' },

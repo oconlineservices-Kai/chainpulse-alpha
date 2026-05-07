@@ -4,10 +4,19 @@ import { prisma } from '@/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
+// Simple in-memory cache with 30-second TTL to reduce DB queries (Issue 20)
+let cache: { data: any; timestamp: number } | null = null
+const CACHE_TTL = 30_000 // 30 seconds
+
 export const GET = auth(async (req) => {
   // Check if user is admin
   if (!req.auth?.user?.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Return cached data if fresh
+  if (cache && Date.now() - cache.timestamp < CACHE_TTL) {
+    return NextResponse.json(cache.data)
   }
 
   try {
@@ -164,23 +173,11 @@ export const GET = auth(async (req) => {
       }
     })
 
-    // Fetch user list for admin user management page
-    const adminEmail = process.env.ADMIN_EMAIL ?? ''
-    const userList = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 100,
-      select: {
-        id: true,
-        email: true,
-        premiumStatus: true,
-        credits: true,
-        createdAt: true,
-        updatedAt: true,
-        premiumExpiresAt: true,
-      }
-    })
+    // Use .toString() for Decimal to avoid overflow (Issue 21), format as number on client
+    const toFixedStr = (val: any): string => val?.toString() ?? '0'
+    const toNum = (val: any): number => parseFloat(val?.toString() ?? '0')
 
-    return NextResponse.json({
+    const responseData = {
       // User Metrics
       totalUsers,
       activeUsers,
@@ -192,15 +189,15 @@ export const GET = auth(async (req) => {
 
       // Financial Metrics
       totalPayments,
-      totalRevenue: totalRevenueResult._sum.amount?.toNumber() || 0,
-      monthlyRevenue: monthlyRevenueResult._sum.amount?.toNumber() || 0,
-      avgTransaction: avgTransactionResult._avg.amount?.toNumber() || 0,
+      totalRevenue: toNum(totalRevenueResult._sum.amount),
+      monthlyRevenue: toNum(monthlyRevenueResult._sum.amount),
+      avgTransaction: toNum(avgTransactionResult._avg.amount),
 
-      // New revenue breakdown
+      // Revenue breakdown
       payPerAlphaCount: payPerAlphaTransactions,
       premiumPaymentCount: premiumTransactions,
-      payPerAlphaRevenue: payPerAlphaRevenueResult._sum.amount?.toNumber() || 0,
-      premiumRevenue: premiumRevenueResult._sum.amount?.toNumber() || 0,
+      payPerAlphaRevenue: toNum(payPerAlphaRevenueResult._sum.amount),
+      premiumRevenue: toNum(premiumRevenueResult._sum.amount),
 
       // Signal Metrics
       totalSignals,
@@ -231,16 +228,12 @@ export const GET = auth(async (req) => {
         bestGain: performanceData._max.priceChangePct ? parseFloat(performanceData._max.priceChangePct.toFixed(2)) : 0,
         worstLoss: performanceData._min.priceChangePct ? parseFloat(performanceData._min.priceChangePct.toFixed(2)) : 0
       },
+    }
 
-      // User list for user management page (isAdmin computed from ADMIN_EMAIL env var)
-      users: userList.map(u => ({
-        ...u,
-        isAdmin: u.email === adminEmail,
-        createdAt: u.createdAt.toISOString(),
-        updatedAt: u.updatedAt.toISOString(),
-        premiumExpiresAt: u.premiumExpiresAt?.toISOString() ?? null,
-      }))
-    })
+    // Update cache
+    cache = { data: responseData, timestamp: Date.now() }
+
+    return NextResponse.json(responseData)
 
   } catch (error) {
     console.error('Enhanced admin stats error:', error)
@@ -250,16 +243,3 @@ export const GET = auth(async (req) => {
     )
   }
 })
-
-function formatTimeAgo(date: Date): string {
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / (1000 * 60))
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-  if (diffHours > 0) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-  if (diffMins > 0) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`
-  return 'Just now'
-}

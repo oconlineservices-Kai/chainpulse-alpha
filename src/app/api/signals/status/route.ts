@@ -162,7 +162,7 @@ export async function GET() {
       recentErrors: errorInfo.recent,
       lastRun,
       healthy:
-        pm2Status.status === 'running' && errorInfo.count === 0,
+        (pm2Status.status === 'running' || pm2Status.status === 'stopped') && errorInfo.count === 0,
     },
   }
 

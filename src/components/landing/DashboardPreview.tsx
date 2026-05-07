@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { TrendingUp, TrendingDown, Eye, Wallet, Diamond } from 'lucide-react'
 
 const mockSignals = [
@@ -180,19 +181,21 @@ export default function DashboardPreview() {
                       <div className="text-xs text-text-muted">Whale</div>
                     </div>
                     
-                    <motion.button
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] flex items-center justify-center ${
-                        signal.recommendation === 'Strong Buy' 
-                          ? 'bg-success-500 text-white hover:bg-success-600'
-                          : signal.recommendation === 'Buy'
-                          ? 'bg-primary-500 text-white hover:bg-primary-600'
-                          : 'bg-background-hover text-text-secondary hover:bg-background-card'
-                      }`}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {signal.recommendation}
-                    </motion.button>
+                    <Link href="/signup">
+                      <motion.button
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] flex items-center justify-center ${
+                          signal.recommendation === 'Strong Buy' 
+                            ? 'bg-success-500 text-white hover:bg-success-600'
+                            : signal.recommendation === 'Buy'
+                            ? 'bg-primary-500 text-white hover:bg-primary-600'
+                            : 'bg-background-hover text-text-secondary hover:bg-background-card'
+                        }`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {signal.recommendation}
+                      </motion.button>
+                    </Link>
                   </div>
                 </div>
               </motion.div>

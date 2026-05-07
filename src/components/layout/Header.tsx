@@ -11,9 +11,7 @@ const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Features', href: '/#features' },
   { name: 'Pricing', href: '/#pricing' },
-  { name: 'About', href: '/about' },
-  { name: 'Signals', href: '/signals' },
-  { name: 'Dashboard', href: '/dashboard' }
+  { name: 'Signals', href: '/signals' }
 ]
 
 export default function Header() {
@@ -48,8 +46,14 @@ export default function Header() {
 
   const handleNavClick = (href: string, e: React.MouseEvent) => {
     if (href.startsWith('/#')) {
-      e.preventDefault()
-      scrollToSection(href)
+      // Only smooth-scroll if we're already on the home page
+      if (pathname === '/') {
+        e.preventDefault()
+        scrollToSection(href)
+        setIsOpen(false)
+      }
+      // Otherwise, let the browser navigate normally to /#section
+    } else {
       setIsOpen(false)
     }
   }

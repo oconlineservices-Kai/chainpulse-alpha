@@ -5,33 +5,30 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 export const GET = auth(async (req) => {
-  // Check if user is admin via JWT token
   if (!req.auth?.user?.isAdmin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    // Check authentication
-    const session = req.auth
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
-    
-    // Admin is verified via JWT token isAdmin field (set in auth.ts)
-    // No DB query needed since isAdmin comes from token
-    
-    // Get basic counts
-    const [users, signals, waitlist, transactions] = await Promise.all([
+    const [users, premiumUsers, adminUsers, signals, waitlist, transactions] = await Promise.all([
       prisma.user.count(),
+      prisma.user.count({ where: { premiumStatus: { not: 'free' } } }),
+      prisma.user.count({ where: { premiumStatus: 'admin' } }),
       prisma.signal.count(),
       prisma.waitlist.count(),
-      prisma.transaction.count({ where: { status: 'completed' } })
+      prisma.transaction.count({ where: { status: 'completed' } }),
     ])
-    
-    // Get recent signals
+
+    const profitableSignals = await prisma.signal.count({
+      where: { priceChangePct: { gt: 0 } }
+    })
+    const totalTracked = await prisma.signal.count({
+      where: { priceChangePct: { not: null } }
+    })
+    const winRate = totalTracked > 0
+      ? parseFloat(((profitableSignals / totalTracked) * 100).toFixed(1))
+      : 0
+
     const recentSignals = await prisma.signal.findMany({
       orderBy: { createdAt: 'desc' },
       take: 5,
@@ -40,39 +37,40 @@ export const GET = auth(async (req) => {
         sentimentScore: true,
         priceChangePct: true,
         performanceStatus: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     })
-    
+
     return NextResponse.json({
       success: true,
       data: {
         users: {
           total: users,
-          premium: 1, // Hardcoded for now
-          admin: 1
+          premium: premiumUsers,
+          admin: adminUsers,
         },
         financial: {
           payments: transactions,
-          revenue: 0
+          revenue: 0,
         },
         signals: {
           total: signals,
           recent: recentSignals.length,
-          winRate: 57.1
+          winRate,
         },
         system: {
-          waitlist: waitlist,
-          uptime: "1d 20h",
-          status: "HEALTHY"
+          waitlist,
+          uptime: '1d 20h',
+          status: 'HEALTHY',
         },
-        recentSignals: recentSignals.map(s => ({
+        recentSignals: recentSignals.map((s) => ({
           ...s,
-          createdAt: s.createdAt.toISOString()
-        }))
-      }
+          createdAt: s.createdAt.toISOString(),
+        })),
+      },
     })
   } catch (error) {
+    console.error('public-test error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

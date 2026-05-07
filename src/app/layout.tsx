@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import Navigation from '@/components/layout/Navigation'
 import SessionProvider from '@/components/providers/SessionProvider'
+import CookieConsent from '@/components/CookieConsent'
 
 // Force dynamic rendering for all pages - the app uses client-side session hooks
 // in Navigation (via SessionProvider) which cannot be statically pre-rendered
@@ -214,6 +215,7 @@ export default function RootLayout({
             <main id="main-content">
               {children}
             </main>
+            <CookieConsent />
           </SessionProvider>
         </div>
         
