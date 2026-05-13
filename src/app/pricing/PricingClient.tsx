@@ -29,8 +29,6 @@ const basePlans = [
       'Whale wallet deep dives',
       'Historical data access',
       'Advanced filtering',
-      'Portfolio tracking',
-      'API access (beta)',
       'Priority support',
     ],
     limitations: [],
@@ -55,7 +53,6 @@ const basePlans = [
     ],
     limitations: [
       'No bulk discounts',
-      'No API access',
     ],
     cta: 'Buy Credits',
     popular: false,

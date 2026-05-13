@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import { 
-  Activity, 
   Eye, 
   TrendingUp, 
   MessageSquare, 
@@ -76,7 +75,6 @@ const features = [
     details: [
       'Live alpha feed with sorting & filtering',
       'Signal performance tracking',
-      'Portfolio PnL calculator',
       'CSV export for tax reporting',
     ]
   },
@@ -104,18 +102,7 @@ const features = [
       'Market condition correlation',
     ]
   },
-  {
-    icon: Activity,
-    title: 'API Access (Beta)',
-    description: 'Integrate ChainPulse signals directly into your trading bot or custom dashboard via our REST API.',
-    color: 'from-teal-500 to-cyan-500',
-    details: [
-      'RESTful API endpoints',
-      'WebSocket real-time stream',
-      'Rate limits: 1000 req/hour',
-      'Full API documentation',
-    ]
-  },
+
 ]
 
 const stats = [
