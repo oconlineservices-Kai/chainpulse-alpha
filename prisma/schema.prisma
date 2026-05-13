@@ -14,11 +14,15 @@ model User {
   premiumStatus    String          @default("free") @map("premium_status")
   premiumExpiresAt DateTime?       @map("premium_expires_at")
   credits          Int             @default(0)
+  // telegramChatId removed — Telegram bot decommissioned
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @default(now()) @map("updated_at")
-  password         String?
-  alphaPurchases   AlphaPurchase[]
-  transactions     Transaction[]
+  password            String?
+  emailVerified       Boolean         @default(false) @map("email_verified")
+  verificationToken   String?         @map("verification_token")
+  verificationExpires DateTime?       @map("verification_expires")
+  alphaPurchases      AlphaPurchase[]
+  transactions        Transaction[]
 
   @@map("users")
 }
@@ -51,6 +55,7 @@ model AlphaPurchase {
   signalId      String       @map("signal_id")
   creditsUsed   Int          @default(1) @map("credits_used")
   purchasedAt   DateTime     @default(now()) @map("purchased_at")
+  expiresAt     DateTime?    @map("expires_at")
   transaction   Transaction? @relation(fields: [transactionId], references: [id])
   user          User         @relation(fields: [userId], references: [id])
 

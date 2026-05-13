@@ -458,21 +458,6 @@ export default function ProfileClient() {
                 </div>
               </div>
 
-              <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Active Sessions</h3>
-                <p className="text-slate-400 text-sm mb-4">Manage your active sessions and devices.</p>
-                <button className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition">
-                  View Sessions
-                </button>
-              </div>
-
-              <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">API Keys</h3>
-                <p className="text-slate-400 text-sm mb-4">Manage API keys for programmatic access.</p>
-                <button className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition">
-                  Manage API Keys
-                </button>
-              </div>
             </div>
           )}
         </motion.div>
@@ -480,3 +465,5 @@ export default function ProfileClient() {
     </div>
   )
 }
+
+// ── Telegram removed — notifications handled in-app only

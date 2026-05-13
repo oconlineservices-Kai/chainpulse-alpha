@@ -2,6 +2,7 @@ app = 'chainpulse-alpha'
 primary_region = 'ams'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [env]
   NODE_ENV = 'production'

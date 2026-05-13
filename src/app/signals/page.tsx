@@ -34,6 +34,7 @@ interface LiveSignal {
 
 interface SignalMeta {
   authenticated: boolean
+  isPremium?: boolean
   isRealTime: boolean
   delayHours: number
   signalsVisible: number
@@ -164,7 +165,9 @@ export default function SignalsPage() {
             <p className="text-text-secondary max-w-2xl mx-auto">
               {meta?.isRealTime
                 ? 'Real-time AI-generated signals from on-chain data and market momentum analysis.'
-                : 'A preview of signals our system generates. Signals shown with 24hr delay. Login and upgrade for real-time access.'}
+                : meta?.authenticated
+                  ? 'You are logged in on the Free plan. Upgrade to Premium for real-time signals with zero delay.'
+                  : 'A preview of signals our system generates. Signals shown with 24hr delay. Login and upgrade for real-time access.'}
             </p>
             {lastUpdated && (
               <p className="text-text-muted text-xs mt-3">
@@ -408,16 +411,27 @@ export default function SignalsPage() {
                   <Lock className="w-8 h-8 text-primary-400 mx-auto mb-3" />
                   <h3 className="text-lg font-bold mb-2">{meta?.totalAvailable ? meta.totalAvailable - 3 : 'More'} signals locked</h3>
                   <p className="text-text-secondary text-sm mb-4">
-                    Login for free access, or upgrade to Premium for real-time signals and full access.
+                    {meta?.authenticated
+                      ? 'You are logged in on the Free plan. Upgrade to Premium for real-time signals, unlimited access, and Diamond tier.'
+                      : 'Login for free access, or upgrade to Premium for real-time signals and full access.'}
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link href="/login" className="button-secondary px-6 py-2.5 rounded-xl text-sm font-semibold">
-                      Login Free
-                    </Link>
-                    <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                      <Zap className="w-4 h-4" />
-                      Upgrade to Premium
-                    </Link>
+                    {meta?.authenticated ? (
+                      <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
+                        <Zap className="w-4 h-4" />
+                        Upgrade to Premium
+                      </Link>
+                    ) : (
+                      <>
+                        <Link href="/login" className="button-secondary px-6 py-2.5 rounded-xl text-sm font-semibold">
+                          Login Free
+                        </Link>
+                        <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Upgrade to Premium
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </div>
               </FadeIn>
@@ -431,22 +445,34 @@ export default function SignalsPage() {
             <Crown className="w-10 h-10 text-yellow-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-3">Unlock all Premium signals</h2>
             <p className="text-text-secondary mb-6 max-w-md mx-auto">
-              Free users see 3 signals with 24hr delay. Premium members get 
-              all signals in real-time including Diamond tier — generated hourly from live market data.
+              {meta?.authenticated
+                ? 'Your current plan limits you to preview signals. Upgrade to Premium for real-time access to all signals, Diamond tier, and whale deep dives.'
+                : 'Free users see 3 signals with 24hr delay. Premium members get all signals in real-time including Diamond tier.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/signup"
-                className="button-secondary px-8 py-3 rounded-xl font-semibold"
-              >
-                Start Free
-              </Link>
-              <Link
-                href="/pricing"
-                className="button-primary px-8 py-3 rounded-xl font-semibold"
-              >
-                Upgrade to Premium →
-              </Link>
+              {meta?.authenticated ? (
+                <Link
+                  href="/pricing"
+                  className="button-primary px-8 py-3 rounded-xl font-semibold"
+                >
+                  Upgrade to Premium →
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/signup"
+                    className="button-secondary px-8 py-3 rounded-xl font-semibold"
+                  >
+                    Start Free
+                  </Link>
+                  <Link
+                    href="/pricing"
+                    className="button-primary px-8 py-3 rounded-xl font-semibold"
+                  >
+                    Upgrade to Premium →
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </FadeIn>

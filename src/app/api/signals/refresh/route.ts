@@ -3,10 +3,14 @@
  *
  * Requires X-AUTH-SECRET header to match AUTH_SECRET env var.
  * Regenerates signals from live CoinGecko data and stores in DB.
+ *
+ * Called by PM2 cron every 6 hours.
+ * Also callable manually for on-demand refresh.
  */
 
 import { NextResponse, NextRequest } from 'next/server'
 import { generateSignals, updateGeneratorState } from '@/lib/signal-generator'
+import { logApiResponse } from '@/lib/api/response-logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,13 +21,14 @@ export async function POST(req: NextRequest) {
     const expectedSecret = process.env.AUTH_SECRET
 
     if (!authSecret || !expectedSecret || authSecret !== expectedSecret) {
+      logApiResponse('POST', '/api/signals/refresh', 401, { error: 'Unauthorized' })
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Provide valid X-AUTH-SECRET header.' },
         { status: 401 }
       )
     }
 
-    // Start generation (non-blocking for the caller's response time)
+    // Generate signals using the authoritative lib/signal-generator
     const result = await generateSignals(50)
 
     updateGeneratorState({
@@ -32,6 +37,10 @@ export async function POST(req: NextRequest) {
       totalSignalsGenerated: result.generated,
       totalDiamondSignals: result.diamonds,
       lastErrors: result.errors,
+    })
+
+    logApiResponse('POST', '/api/signals/refresh', 200, {
+      extras: { generated: result.generated, diamonds: result.diamonds, errors: result.errors.length },
     })
 
     return NextResponse.json({
@@ -44,11 +53,10 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
+    const msg = error instanceof Error ? error.message : 'Signal generation failed'
+    logApiResponse('POST', '/api/signals/refresh', 500, { error: msg })
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Signal generation failed',
-      },
+      { success: false, error: msg },
       { status: 500 }
     )
   }

@@ -26,6 +26,9 @@ export default function DashboardPage() {
 
   // Pull premiumStatus from session — refreshed after payment via JWT callback
   const isPremium = (session?.user as any)?.premiumStatus === 'premium'
+  const premiumExpiresAt = (session?.user as any)?.premiumExpiresAt
+  const isPremiumActive = isPremium && premiumExpiresAt && new Date(premiumExpiresAt) > new Date()
+  const userCredits = (session?.user as any)?.credits ?? 0
 
   const fetchData = async () => {
     try {
@@ -33,19 +36,24 @@ export default function DashboardPage() {
       setError(null)
       const data = await fetchTopCoins(20)
 
-      // Apply free-tier restriction: free users see only 5 signals with 15min delay indicator
-      if (!isPremium) {
+      if (isPremiumActive) {
+        // Premium: show all signals with full data
+        setSignals(data)
+      } else {
+        // Free tier: show only 5 signals, mark Diamond/correlated as 'Locked'
         setSignals(data.slice(0, 5).map(s => ({
           ...s,
           status: (s.correlationScore >= 85 ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
         })))
-      } else {
-        setSignals(data)
       }
     } catch (err) {
       console.error('Failed to fetch crypto data:', err)
       setError('Live market data temporarily unavailable. Showing fallback signals.')
-      setSignals(isPremium ? mockSignals : mockSignals.slice(0, 5))
+      const fallback = (isPremiumActive ? mockSignals : mockSignals.slice(0, 5)).map(s => ({
+        ...s,
+        signalSource: 'cached' as const,
+      }))
+      setSignals(fallback)
     } finally {
       setIsLoading(false)
     }
@@ -57,7 +65,7 @@ export default function DashboardPage() {
       const interval = setInterval(fetchData, 60000)
       return () => clearInterval(interval)
     }
-  }, [status, isPremium])
+  }, [status, isPremiumActive])
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/' })
@@ -81,7 +89,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse shrink-0" />
             <span className="text-sm font-medium text-text-secondary truncate">
-              {isPremium ? '⚡ Premium — Live Alpha Feed' : 'Alpha Feed (Free Tier)'}
+              {isPremiumActive ? '⚡ Premium — Live Alpha Feed' : 'Alpha Feed'}
             </span>
           </div>
 
@@ -115,7 +123,7 @@ export default function DashboardPage() {
       <ErrorBoundary>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Premium User Banner */}
-          {isPremium && (
+          {isPremiumActive && (
             <div className="mb-6 p-4 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
@@ -134,35 +142,41 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Free User Upgrade Banner */}
-          {!isPremium && (
+          {/* Free User Upgrade Banner (single, focused CTA — no redundant Free-tier marketing) */}
+          {!isPremiumActive && (
             <div className="mb-6 p-4 rounded-xl border border-primary-500/30 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-text-primary">You're on the Free plan</p>
+                  <p className="text-sm font-semibold text-text-primary">Unlock Full Potential</p>
                   <p className="text-xs text-text-muted">
-                    Seeing 5 of {signals.length > 5 ? '20+' : 'many'} signals. Diamond signals locked. Upgrade for real-time access.
+                    {userCredits > 0
+                      ? `You have ${userCredits} credit${userCredits > 1 ? 's' : ''}. Use them to unlock premium signals individually.`
+                      : 'Top 5 signals shown. Upgrade to Premium for real-time access to all 20+ signals.'}
                   </p>
                 </div>
               </div>
-              <Link
-                href="/pricing"
-                className="button-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap flex-shrink-0"
-              >
-                <Zap className="w-4 h-4" />
-                Upgrade to Premium
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/pricing"
+                  className="button-primary px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+                >
+                  <Zap className="w-4 h-4" />
+                  {userCredits > 0 ? 'Get Credits' : 'Upgrade'}
+                </Link>
+              </div>
             </div>
           )}
 
-          {/* Free tier: show locked signals teaser */}
-          {!isPremium && (
-            <div className="mb-6 p-4 rounded-xl border border-dashed border-border text-center">
-              <Lock className="w-6 h-6 text-text-muted mx-auto mb-2" />
-              <p className="text-sm text-text-muted">
-                <strong className="text-text-secondary">15+ more signals</strong> including Diamond tier are locked.{' '}
-                <Link href="/pricing" className="text-primary-400 hover:text-primary-300">Upgrade →</Link>
+          {/* Premium-locked signals count — clean, minimal */}
+          {!isPremiumActive && signals.length > 0 && (
+            <div className="mb-6 text-center">
+              <p className="text-xs text-text-muted">
+                <span className="text-text-secondary font-medium">{signals.length}</span> free signals shown.
+                Premium unlocks <span className="text-text-secondary font-medium">real-time</span> access to all signals plus{' '}
+                <span className="text-text-secondary font-medium">Diamond tier</span> and{' '}
+                <span className="text-text-secondary font-medium">whale analytics</span>.
+                {' '}<Link href="/pricing" className="text-primary-400 hover:text-primary-300 underline underline-offset-2">Upgrade →</Link>
               </p>
             </div>
           )}

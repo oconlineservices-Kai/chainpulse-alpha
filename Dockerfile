@@ -1,12 +1,13 @@
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Install dependencies (including devDeps for build tools like tailwindcss)
 FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
-# Install ALL dependencies (needed for tailwindcss at build time)
-RUN npm ci
+COPY prisma/ ./prisma/
+# Install ALL dependencies
+RUN npm install --legacy-peer-deps --build-from-source
 
 # Rebuild the source code
 FROM base AS builder
@@ -24,10 +25,11 @@ ENV NODE_ENV=production
 ENV NEON_DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV AUTH_SECRET="build-time-secret"
-ENV AUTH_URL="https://chainpulse-alpha.fly.dev"
+ENV AUTH_URL="https://chainpulsealpha.com"
 ENV NEXTAUTH_SECRET="build-time-secret"
-ENV NEXTAUTH_URL="https://chainpulse-alpha.fly.dev"
+ENV NEXTAUTH_URL="https://chainpulsealpha.com"
 
+ENV NEXT_SHARP_PATH=/tmp/sharp
 RUN npm run build
 
 # Production image — only production deps

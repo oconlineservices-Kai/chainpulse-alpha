@@ -53,7 +53,7 @@ const steps = [
     color: 'from-green-500 to-emerald-500',
     details: [
       'Real-time notifications',
-      'Telegram integration',
+      'Real-time push alerts',
       'Mobile-first alerts',
       'Actionable insights'
     ]

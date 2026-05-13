@@ -15,6 +15,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { logApiResponse } from '@/lib/api/response-logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -213,6 +214,7 @@ export const GET = auth(async (req) => {
                    '127.0.0.1'
 
   if (!checkRateLimit(clientIp)) {
+    logApiResponse('GET', '/api/signals', 429, { error: 'Rate limit exceeded' })
     return NextResponse.json(
       { error: 'Rate limit exceeded. Please try again later.' },
       { status: 429 }
@@ -228,7 +230,13 @@ export const GET = auth(async (req) => {
   // Auth check — determine user access level
   const isAdmin = req.auth?.user?.isAdmin === true
   const isAuthenticated = !!req.auth?.user
-  const isFree = !isAuthenticated
+  // BUGFIX: 'isFree' was previously `!isAuthenticated`, which gave ALL logged-in users
+  // (even free-tier) full real-time access. Now we check DB premiumStatus.
+  const userPremiumStatus = (req.auth?.user as any)?.premiumStatus as string | undefined
+  const premiumExpiresAt = (req.auth?.user as any)?.premiumExpiresAt as string | undefined
+  const isPremium = isAuthenticated && userPremiumStatus === 'premium'
+  const isPremiumActive = isPremium && premiumExpiresAt && new Date(premiumExpiresAt) > new Date()
+  const isFree = !isPremiumActive
 
   try {
     // Build filter for DB query
@@ -283,7 +291,7 @@ export const GET = auth(async (req) => {
 
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
 
-    // Free/unauthenticated users: limit to 3 signals, strip sensitive data
+    // Free users (not authenticated OR logged-in as free, or expired premium): limit to 3 signals, strip sensitive data
     if (isFree) {
       allSignals = allSignals.slice(0, 3).map(s => ({
         ...s,
@@ -292,8 +300,8 @@ export const GET = auth(async (req) => {
       }))
     }
 
-    // Strip wallet addresses for non-admin users
-    if (!isAdmin && !isFree) {
+    // Strip wallet addresses for non-admin, non-premium users
+    if (!isAdmin && !isPremiumActive) {
       allSignals = allSignals.map(s => ({
         ...s,
         whaleWallets: s.isDiamondSignal ? ['[Premium metadata]'] : [],
@@ -313,19 +321,22 @@ export const GET = auth(async (req) => {
         meta: {
           authenticated: isAuthenticated,
           isAdmin,
-          isRealTime: true,
+          isPremium,
+          isPremiumActive,
+          isRealTime: isPremiumActive,
           delayHours: isFree ? 24 : 0,
           signalSource: dbSignals.length > 0 ? 'live' : 'demo',
           signalsVisible: allSignals.length,
           totalAvailable: totalCount,
         },
-        performance: isAuthenticated
+        performance: isPremiumActive
           ? PERFORMANCE_STATS
           : { overall: { winRate: PERFORMANCE_STATS.overall.winRate, totalSignals: PERFORMANCE_STATS.overall.totalSignals } },
         updatedAt: new Date().toISOString(),
       },
     }
 
+    logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined })
     return NextResponse.json(responseData, {
       headers: {
         'Cache-Control': isAuthenticated ? 'no-store' : 'public, s-maxage=300, stale-while-revalidate=600',
@@ -345,6 +356,7 @@ export const GET = auth(async (req) => {
 
     if (isFree) demoSignals = demoSignals.slice(0, 3)
 
+    logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined, extras: { source: 'demo-fallback', count: demoSignals.length } })
     return NextResponse.json({
       success: true,
       data: {
@@ -353,7 +365,9 @@ export const GET = auth(async (req) => {
         meta: {
           authenticated: isAuthenticated,
           isAdmin: false,
-          isRealTime: true,
+          isPremium,
+          isPremiumActive,
+          isRealTime: isPremiumActive,
           delayHours: isFree ? 24 : 0,
           signalsVisible: demoSignals.length,
           totalAvailable: demoSignals.length,
@@ -366,6 +380,7 @@ export const GET = auth(async (req) => {
       headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
     })
   }
+  logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined })
 })
 
 // ── OPTIONS (CORS preflight) ───────────────────────────────────────────────────

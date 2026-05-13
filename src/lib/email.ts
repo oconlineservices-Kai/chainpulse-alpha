@@ -134,3 +134,45 @@ export async function sendPasswordResetEmail(email: string, resetToken: string):
     `,
   })
 }
+
+/**
+ * Send an email verification email
+ */
+export async function sendVerificationEmail(email: string, verificationToken: string): Promise<{ success: boolean; provider: string; error?: string }> {
+  const verifyUrl = `${APP_URL}/api/auth/verify-email?token=${verificationToken}`
+
+  return sendEmail({
+    to: email,
+    subject: 'Verify your ChainPulse Alpha email address',
+    html: `
+      <div style="max-width:600px;margin:40px auto;padding:32px;background:#0f0f1a;border-radius:16px;border:1px solid #1e293b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h1 style="color:#fff;font-size:24px;margin:0;">🔺 ChainPulse Alpha</h1>
+        </div>
+        <h2 style="color:#fff;font-size:20px;margin-bottom:16px;">Verify Your Email</h2>
+        <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin-bottom:8px;">
+          Thanks for signing up. Please verify your email address to get started.
+        </p>
+        <p style="color:#94a3b8;font-size:15px;line-height:1.6;margin-bottom:24px;">
+          Click the button below to verify your email. This link expires in <strong>24 hours</strong>.
+        </p>
+        <div style="text-align:center;margin-bottom:24px;">
+          <a href="${verifyUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">
+            Verify Email Address
+          </a>
+        </div>
+        <p style="color:#64748b;font-size:13px;line-height:1.5;margin-bottom:8px;">
+          If you did not sign up for ChainPulse Alpha, please ignore this email.
+        </p>
+        <p style="color:#64748b;font-size:13px;line-height:1.5;">
+          Or copy this link into your browser:<br/>
+          <a href="${verifyUrl}" style="color:#60a5fa;word-break:break-all;">${verifyUrl}</a>
+        </p>
+        <hr style="border:none;border-top:1px solid #1e293b;margin:24px 0;" />
+        <p style="color:#475569;font-size:12px;text-align:center;margin:0;">
+          ChainPulse Alpha &bull; AI-powered crypto signals
+        </p>
+      </div>
+    `,
+  })
+}

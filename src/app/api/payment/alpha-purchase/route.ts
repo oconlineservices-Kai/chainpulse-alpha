@@ -5,28 +5,34 @@
  * Users pay a small fee to unlock a single Diamond/Whale signal
  * without subscribing to premium.
  *
+ * Signal pricing is in USD, converted to INR at checkout via live exchange rate.
+ *
  * Flow:
  *   1. POST with { signalId, signalType } → get Razorpay orderId
  *   2. User completes payment via Razorpay UI
  *   3. POST /api/payment/alpha-verify with razorpay_* fields → signal unlocked
+ *   OR: User has credits → 1 credit deducted → signal unlocked immediately
  */
 
 import Razorpay from 'razorpay'
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { convertToINR } from '@/lib/exchange-rate'
+import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
+import { logApiResponse } from '@/lib/api/response-logger'
 
 export const dynamic = 'force-dynamic'
 
-// Signal tier pricing (in INR paise — 1 INR = 100 paise)
-const SIGNAL_PRICES: Record<string, { amountPaise: number; label: string }> = {
-  diamond: { amountPaise: 29900, label: '💎 Diamond Signal — ₹299' },  // ₹299
-  whale:   { amountPaise: 19900, label: '🐋 Whale Signal — ₹199' },    // ₹199
-  default: { amountPaise: 9900,  label: '📊 Alpha Signal — ₹99' },     // ₹99
+// Signal tier pricing in USD
+const SIGNAL_PRICES_USD: Record<string, { usd: number; label: string }> = {
+  diamond: { usd: 3.50, label: '💎 Diamond Signal — $3.50' },
+  whale:   { usd: 2.50, label: '🐋 Whale Signal — $2.50' },
+  default: { usd: 1.00, label: '📊 Alpha Signal — $1.00' },
 }
 
 function getRazorpay() {
-  const keyId     = process.env.RAZORPAY_KEY_ID
+  const keyId = process.env.RAZORPAY_KEY_ID
   const keySecret = process.env.RAZORPAY_KEY_SECRET
   if (!keyId || !keySecret) throw new Error('Razorpay credentials not configured')
   return new Razorpay({ key_id: keyId, key_secret: keySecret })
@@ -34,7 +40,16 @@ function getRazorpay() {
 
 // ── POST /api/payment/alpha-purchase ─────────────────────────────────────────
 export const POST = auth(async (req) => {
+  // Rate limiting: 10 requests per IP per minute
+  const clientIp = getClientIP(req)
+  const rateKey = getRateLimitKey(clientIp, 'payment:alpha-purchase')
+  if (!checkRateLimit(rateKey, 10, 60 * 1000)) {
+    logApiResponse('POST', '/api/payment/alpha-purchase', 429, { error: 'Rate limit exceeded' })
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
+
   if (!req.auth?.user?.email) {
+    logApiResponse('POST', '/api/payment/alpha-purchase', 401, { error: 'Authentication required' })
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
 
@@ -46,13 +61,16 @@ export const POST = auth(async (req) => {
     }
 
     if (!signalId) {
+      logApiResponse('POST', '/api/payment/alpha-purchase', 400, { error: 'signalId required' })
       return NextResponse.json({ error: 'signalId is required' }, { status: 400 })
     }
 
+    const userEmail = req.auth.user.email
     const user = await prisma.user.findUnique({
-      where: { email: req.auth.user.email },
+      where: { email: userEmail },
     })
     if (!user) {
+      logApiResponse('POST', '/api/payment/alpha-purchase', 404, { error: 'User not found' })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
@@ -61,15 +79,19 @@ export const POST = auth(async (req) => {
       where: { userId: user.id, signalId },
     })
     if (existing) {
+      logApiResponse('POST', '/api/payment/alpha-purchase', 409, { error: 'Already purchased', extras: { signalId } })
       return NextResponse.json(
         { error: 'Signal already purchased', alreadyOwned: true },
-        { status: 409 }
+        { status: 409 },
       )
     }
 
     // Check if user has enough credits (1 credit = free purchase)
     if (user.credits >= 1) {
-      // Deduct 1 credit and unlock signal immediately
+      // Deduct 1 credit and unlock signal immediately (valid for 30 days)
+      const thirtyDaysFromNow = new Date()
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+
       await prisma.$transaction([
         prisma.user.update({
           where: { id: user.id },
@@ -80,10 +102,12 @@ export const POST = auth(async (req) => {
             userId: user.id,
             signalId,
             creditsUsed: 1,
+            expiresAt: thirtyDaysFromNow,
           },
         }),
       ])
 
+      logApiResponse('POST', '/api/payment/alpha-purchase', 200, { extras: { method: 'credits', signalId } })
       return NextResponse.json({
         success: true,
         method: 'credits',
@@ -92,44 +116,63 @@ export const POST = auth(async (req) => {
       })
     }
 
-    // No credits — create a Razorpay payment order
-    const pricing = SIGNAL_PRICES[signalType] ?? SIGNAL_PRICES.default
+    // No credits — create a Razorpay payment order with live INR conversion
+    const pricing = SIGNAL_PRICES_USD[signalType] ?? SIGNAL_PRICES_USD.default
+    const { totalPaise, totalINR, rate } = await convertToINR(pricing.usd)
+
     const razorpay = getRazorpay()
 
     const order = await razorpay.orders.create({
-      amount:   pricing.amountPaise,
+      amount:   totalPaise,
       currency: 'INR',
       receipt:  `alpha_${signalId.slice(0, 8)}_${Date.now()}`,
-      notes:    { userId: user.id, signalId, signalType, purchaseType: 'alpha' },
+      notes: {
+        userId:     user.id,
+        signalId,
+        signalType,
+        purchaseType: 'alpha',
+        baseUSD:      String(pricing.usd),
+        exchangeRate: String(rate),
+      },
     })
 
     // Record pending transaction
     const txn = await prisma.transaction.create({
       data: {
-        userId:          user.id,
-        provider:        'razorpay',
-        transactionType: 'alpha_purchase',
-        providerPaymentId: order.id,
-        amount:          pricing.amountPaise / 100,
-        currency:        'INR',
-        status:          'pending',
-        metadata:        { signalId, signalType },
+        userId:            user.id,
+        provider:          'razorpay',
+        transactionType:   'alpha_purchase',
+        providerPaymentId:  order.id,
+        amount:            totalINR, // Store in INR rupees
+        currency:          'INR',
+        status:            'pending',
+        metadata: {
+          signalId,
+          signalType,
+          baseUSD: pricing.usd,
+          exchangeRate: rate,
+        },
       },
     })
 
+    logApiResponse('POST', '/api/payment/alpha-purchase', 200, {
+      email: userEmail,
+      extras: { method: 'payment', signalId, orderId: order.id.slice(0, 12) },
+    })
     return NextResponse.json({
-      success:     true,
-      method:      'payment',
-      orderId:     order.id,
-      amount:      order.amount,
-      currency:    order.currency,
-      keyId:       process.env.RAZORPAY_KEY_ID,
-      label:       pricing.label,
+      success:    true,
+      method:     'payment',
+      orderId:    order.id,
+      amount:     order.amount,
+      currency:   order.currency,
+      keyId:      process.env.RAZORPAY_KEY_ID,
+      label:      pricing.label,
       transactionId: txn.id,
       signalId,
     })
   } catch (error) {
-    console.error('[alpha-purchase] Error:', error)
-    return NextResponse.json({ error: 'Failed to create purchase order' }, { status: 500 })
+    const msg = error instanceof Error ? error.message : 'Failed to create purchase order'
+    logApiResponse('POST', '/api/payment/alpha-purchase', 500, { error: msg })
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 })

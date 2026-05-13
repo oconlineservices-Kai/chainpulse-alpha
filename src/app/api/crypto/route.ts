@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logApiResponse } from '@/lib/api/response-logger'
 
 // Force dynamic rendering (required for request.headers access)
 export const dynamic = 'force-dynamic'
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
     
     // Rate limiting
     if (!checkRateLimit(ip)) {
+      logApiResponse('GET', '/api/crypto', 429, { error: 'Rate limited' })
       return NextResponse.json(
         { error: 'Rate limit exceeded' },
         { status: 429 }
@@ -44,6 +46,7 @@ export async function GET(request: Request) {
     const cacheKey = 'crypto-data'
     const cached = cache.get(cacheKey)
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      logApiResponse('GET', '/api/crypto', 200, { extras: { fromCache: true } })
       return NextResponse.json(cached.data)
     }
     
@@ -69,6 +72,7 @@ export async function GET(request: Request) {
     // Update cache
     cache.set(cacheKey, { data, timestamp: Date.now() })
     
+    logApiResponse('GET', '/api/crypto', 200, { extras: { coins: data.length } })
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
@@ -76,7 +80,8 @@ export async function GET(request: Request) {
     })
     
   } catch (error) {
-    console.error('Crypto API error:', error)
+    const msg = error instanceof Error ? error.message : 'Failed to fetch crypto data'
+    logApiResponse('GET', '/api/crypto', 500, { error: msg })
     
     // Return a structured fallback so the client can degrade gracefully
     return NextResponse.json(

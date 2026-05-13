@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { logApiResponse } from '@/lib/api/response-logger';
 
 const waitlistSchema = z.object({
   email: z.string().email(),
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
 
     // Check if email already exists
     if (waitlist.includes(email)) {
+      logApiResponse('POST', '/api/waitlist', 409, { email, error: 'Already registered' })
       return NextResponse.json(
         { error: 'Email already registered' },
         { status: 409 }
@@ -23,20 +25,22 @@ export async function POST(req: NextRequest) {
 
     // Add to waitlist
     waitlist.push(email);
-
+    logApiResponse('POST', '/api/waitlist', 201, { email })
     return NextResponse.json(
       { message: 'Successfully joined waitlist', email },
       { status: 201 }
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
+      logApiResponse('POST', '/api/waitlist', 400, { error: 'Invalid email' })
       return NextResponse.json(
         { error: 'Invalid email address' },
         { status: 400 }
       );
     }
 
-    console.error('Waitlist error:', error);
+    const msg = error instanceof Error ? error.message : 'Internal server error'
+    logApiResponse('POST', '/api/waitlist', 500, { error: msg })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

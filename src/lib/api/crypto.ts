@@ -28,6 +28,7 @@ export interface Signal {
   volume24h: number
   marketCap: number
   image?: string
+  signalSource?: 'live' | 'cached' | 'demo'
 }
 
 // Generate AI scores based on real market data

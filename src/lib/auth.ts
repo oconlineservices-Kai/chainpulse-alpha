@@ -43,7 +43,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.email.split('@')[0],
           isAdmin: user.email === process.env.ADMIN_EMAIL,
-          premiumStatus: user.premiumStatus ?? 'free'
+          premiumStatus: user.premiumStatus ?? 'free',
+          credits: user.credits ?? 0,
+          emailVerified: user.emailVerified ?? false
         }
       }
     })
@@ -54,6 +56,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id
         token.isAdmin = user.isAdmin
         token.premiumStatus = (user as any).premiumStatus ?? 'free'
+        token.credits = (user as any).credits ?? 0
+        token.emailVerified = (user as any).emailVerified ?? false
         token.email = user.email
       }
 
@@ -72,7 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email as string },
-            select: { premiumStatus: true, credits: true, premiumExpiresAt: true }
+            select: { premiumStatus: true, credits: true, premiumExpiresAt: true, emailVerified: true }
           })
           if (dbUser) {
             // Check if premium has expired
@@ -90,6 +94,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               })
             }
             token.premiumStatus = status
+            token.emailVerified = dbUser.emailVerified
             token.credits = dbUser.credits
             token.premiumStatusCheckedAt = now
           }
@@ -105,7 +110,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string
         session.user.isAdmin = token.isAdmin as boolean
         ;(session.user as any).premiumStatus = token.premiumStatus as string
-        ;(session.user as any).credits = token.credits as number ?? 0
+        ;(session.user as any).emailVerified = token.emailVerified as boolean ?? false
+        ;(session.user as any).credits = (token.credits as number) ?? 0
       }
       return session
     }

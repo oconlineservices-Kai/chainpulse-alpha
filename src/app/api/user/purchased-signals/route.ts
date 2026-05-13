@@ -1,6 +1,7 @@
 /**
  * GET /api/user/purchased-signals
  * Returns a list of signal IDs the current user has purchased via pay-per-alpha.
+ * Purchases expire after 30 days by default.
  */
 
 import { NextResponse } from 'next/server'
@@ -21,7 +22,7 @@ export const GET = auth(async (req) => {
         id: true,
         credits: true,
         alphaPurchases: {
-          select: { signalId: true, purchasedAt: true },
+          select: { signalId: true, purchasedAt: true, expiresAt: true },
           orderBy: { purchasedAt: 'desc' },
         },
       },
@@ -31,10 +32,21 @@ export const GET = auth(async (req) => {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Filter out expired purchases (30-day validity)
+    const now = new Date()
+    const validPurchases = user.alphaPurchases.filter((p) => {
+      // If no explicit expiresAt, check 30 days from purchase
+      if (p.expiresAt) return p.expiresAt > now
+      const thirtyDays = new Date(p.purchasedAt)
+      thirtyDays.setDate(thirtyDays.getDate() + 30)
+      return thirtyDays > now
+    })
+
     return NextResponse.json({
-      purchasedSignalIds: user.alphaPurchases.map((p) => p.signalId),
+      purchasedSignalIds: validPurchases.map((p) => p.signalId),
       credits: user.credits,
       purchaseCount: user.alphaPurchases.length,
+      expiredCount: user.alphaPurchases.length - validPurchases.length,
     })
   } catch (error) {
     console.error('[purchased-signals] Error:', error)

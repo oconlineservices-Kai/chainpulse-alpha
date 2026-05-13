@@ -58,14 +58,14 @@ const features = [
   },
   {
     icon: Bell,
-    title: 'Real-Time Telegram Alerts',
-    description: 'Get Diamond Signals delivered instantly to your Telegram. Never miss a high-confidence opportunity again — zero delay on premium.',
+    title: 'Real-Time Push Alerts',
+    description: 'Get Diamond Signals delivered instantly. Never miss a high-confidence opportunity again — zero delay on premium.',
     color: 'from-green-500 to-emerald-500',
     details: [
-      'Instant Telegram notifications',
+      'Instant push notifications',
       'Customizable alert filters',
       'Priority Diamond Signal queue',
-      'Mobile-first notification design',
+      'Real-time signal delivery',
     ]
   },
   {

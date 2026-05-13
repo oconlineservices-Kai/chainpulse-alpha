@@ -12,6 +12,11 @@ export default function PaymentSuccess() {
   const [sessionRefreshed, setSessionRefreshed] = useState(false)
 
   useEffect(() => {
+    // Set page title
+    document.title = 'Payment Successful | ChainPulse Alpha'
+  }, [])
+
+  useEffect(() => {
     // Force session refresh so JWT picks up new premiumStatus from DB
     const refreshAndRedirect = async () => {
       try {
@@ -89,7 +94,7 @@ export default function PaymentSuccess() {
                 {[
                   'Real-time signals — 0 delay',
                   'All Diamond & Gold tier signals',
-                  'Telegram bot integration',
+                  'Real-time push alerts',
                   'Full historical data access',
                   'Advanced whale wallet analysis',
                   'Priority support',

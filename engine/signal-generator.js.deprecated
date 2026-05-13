@@ -1,5 +1,12 @@
 /**
- * ChainPulse Signal Engine v2
+ * ⚠ DEPRECATED — Use /api/signals/refresh (server) instead.
+ * 
+ * ChainPulse Signal Engine v2 (standalone legacy)
+ * Kept for backward compatibility. The authoritative signal generator
+ * is now src/lib/signal-generator.ts, called via POST /api/signals/refresh.
+ * 
+ * This engine.js duplicates that logic and can cause race conditions.
+ * Remove once PM2 cron_restart is switched to curl POST /api/signals/refresh.
  * 
  * Generates real crypto signals using:
  * - CoinGecko API for market data (price momentum, volume, market cap)

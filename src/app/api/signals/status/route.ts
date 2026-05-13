@@ -61,7 +61,16 @@ async function getPm2Status(): Promise<SignalStatus> {
     )
 
     if (!signalProc) {
-      return { ...defaultStatus, status: 'unknown' }
+      // PM2 exists but process not found — check log files as fallback
+      const logLastRun = await getLastRunFromLog('/var/log/chainpulse/signals.log')
+      const logErrorCount = await getErrorCount('/var/log/chainpulse/signals-error.log')
+      return {
+        ...defaultStatus,
+        status: 'stopped',
+        lastRun: logLastRun,
+        errorCount: logErrorCount.count,
+        recentErrors: logErrorCount.recent,
+      }
     }
 
     const pm2Status = signalProc.pm2_env?.status ?? 'unknown'
@@ -88,7 +97,18 @@ async function getPm2Status(): Promise<SignalStatus> {
         : null,
     }
   } catch {
-    return { ...defaultStatus, status: 'unknown' }
+    // PM2 not installed or inaccessible (e.g. Docker container).
+    // Signal generator is a one-shot script running on the VPS host via cron.
+    // In Docker env, no PM2 or log files exist — report as 'stopped' (designed behavior).
+    const logLastRun = await getLastRunFromLog('/var/log/chainpulse/signals.log').catch(() => null)
+    const logErrorCountArr = await getErrorCount('/var/log/chainpulse/signals-error.log').catch(() => ({ count: 0, recent: [] as string[] }))
+    return {
+      ...defaultStatus,
+      status: 'stopped',
+      lastRun: logLastRun,
+      errorCount: logErrorCountArr.count,
+      recentErrors: logErrorCountArr.recent,
+    }
   }
 }
 
@@ -162,7 +182,7 @@ export async function GET() {
       recentErrors: errorInfo.recent,
       lastRun,
       healthy:
-        (pm2Status.status === 'running' || pm2Status.status === 'stopped') && errorInfo.count === 0,
+        (pm2Status.status === 'stopped' || pm2Status.status === 'running') && errorInfo.count === 0,
     },
   }
 

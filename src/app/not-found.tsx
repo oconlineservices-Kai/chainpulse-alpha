@@ -2,36 +2,80 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Page Not Found — ChainPulse Alpha',
-  description: 'The page you are looking for does not exist or has been moved.',
+  title: '404 — Block Not Found | ChainPulse Alpha',
+  description: 'This page doesn\'t exist — it might have been rugged, no-coined, or never mined. Head back to the mempool.',
 }
 
 export default function NotFound() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
-      <div className="container mx-auto px-4 py-16 max-w-lg text-center">
-        <div className="text-8xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-6">
-          404
+    <main className="min-h-screen bg-background flex items-center justify-center p-4">
+      {/* Subtle grid pattern background */}
+      <div className="fixed inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
+
+      <div className="relative container mx-auto max-w-lg text-center animate-fade-in">
+        {/* Large 404 with crypto flair */}
+        <div className="mb-8">
+          <div className="text-9xl font-bold bg-gradient-to-r from-primary-400 via-secondary-500 to-accent-400 bg-clip-text text-transparent leading-none select-none">
+            404
+          </div>
+          <div className="mt-2 inline-block px-4 py-1.5 rounded-full bg-background-card border border-border text-text-muted text-xs font-mono tracking-wider uppercase">
+            ⛏️ Block Not Mined
+          </div>
         </div>
-        <h1 className="text-3xl font-bold text-white mb-4">Page Not Found</h1>
-        <p className="text-slate-400 mb-8 leading-relaxed">
-          The page you are looking for does not exist or has been moved. 
-          Check the URL or head back to the homepage.
+
+        {/* Glass card body */}
+        <div className="glass-card p-8 md:p-10 space-y-6">
+          <h1 className="text-3xl font-bold text-text-primary">
+            Page Not Found
+          </h1>
+
+          <p className="text-text-secondary leading-relaxed">
+            This page doesn&apos;t exist on the ledger. It might have been{' '}
+            <span className="text-danger-400 font-medium">rugged</span>,{' '}
+            <span className="text-warning-400 font-medium">no-coined</span>, or{' '}
+            <span className="text-text-muted font-medium">never mined</span>.
+          </p>
+
+          {/* Crypo-themed hint block */}
+          <div className="bg-background-muted/60 rounded-xl p-4 border border-border text-left">
+            <div className="flex items-center gap-2 text-xs font-mono text-text-muted mb-2">
+              <span className="w-2 h-2 rounded-full bg-danger-500 animate-pulse" />
+              <span>mempool.log</span>
+            </div>
+            <p className="text-sm font-mono text-text-muted">
+              <span className="text-primary-400">$</span> curl -s /this/page
+            </p>
+            <p className="text-sm font-mono text-text-muted">
+              <span className="text-danger-400">→</span> HTTP/1.1{' '}
+              <span className="text-warning-400">404</span> Not Found
+            </p>
+            <p className="text-sm font-mono text-text-muted">
+              <span className="text-accent-400">tx</span> status:{' '}
+              <span className="text-danger-400">reverted</span>
+            </p>
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Link
+              href="/"
+              className="button-primary flex-1"
+            >
+              ← Back to Homepage
+            </Link>
+            <Link
+              href="/signals"
+              className="button-secondary flex-1"
+            >
+              View Signals
+            </Link>
+          </div>
+        </div>
+
+        {/* Footer hint */}
+        <p className="mt-8 text-xs text-text-muted/60 font-mono">
+          error_code: ERR_PAGE_NOT_FOUND — try a different block height
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            href="/"
-            className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-500"
-          >
-            Back to Homepage
-          </Link>
-          <Link
-            href="/signals"
-            className="rounded-lg border border-slate-600 px-6 py-3 font-semibold text-slate-300 transition hover:border-slate-400 hover:text-white"
-          >
-            View Signals
-          </Link>
-        </div>
       </div>
     </main>
   )

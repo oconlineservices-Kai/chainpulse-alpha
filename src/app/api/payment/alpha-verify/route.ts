@@ -9,11 +9,24 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
+import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
+import { logApiResponse } from '@/lib/api/response-logger'
 
 export const dynamic = 'force-dynamic'
 
 export const POST = auth(async (req) => {
-  if (!req.auth?.user?.email) {
+  const email = req.auth?.user?.email as string | undefined
+
+  // Rate limiting: 10 requests per IP per minute
+  const clientIp = getClientIP(req)
+  const rateKey = getRateLimitKey(clientIp, 'payment:alpha-verify')
+  if (!checkRateLimit(rateKey, 10, 60 * 1000)) {
+    logApiResponse('POST', '/api/payment/alpha-verify', 429, { email: email ?? undefined, error: 'Rate limit exceeded' })
+    return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+  }
+
+  if (!email) {
+    logApiResponse('POST', '/api/payment/alpha-verify', 401, { error: 'Unauthorized' })
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -27,6 +40,7 @@ export const POST = auth(async (req) => {
     } = await req.json()
 
     if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !signalId) {
+      logApiResponse('POST', '/api/payment/alpha-verify', 400, { error: 'Missing required fields' })
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -38,13 +52,16 @@ export const POST = auth(async (req) => {
       .digest('hex')
 
     if (expectedSig !== razorpay_signature) {
+      logApiResponse('POST', '/api/payment/alpha-verify', 400, { error: 'Invalid signature' })
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 
+    const email = req.auth!.user.email!
     const user = await prisma.user.findUnique({
-      where: { email: req.auth.user.email },
+      where: { email },
     })
     if (!user) {
+      logApiResponse('POST', '/api/payment/alpha-verify', 404, { email, error: 'User not found' })
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
@@ -53,6 +70,7 @@ export const POST = auth(async (req) => {
       where: { userId: user.id, signalId },
     })
     if (existing) {
+      logApiResponse('POST', '/api/payment/alpha-verify', 200, { email, extras: { signalId, alreadyOwned: true } })
       return NextResponse.json({ success: true, alreadyOwned: true })
     }
 
@@ -78,7 +96,10 @@ export const POST = auth(async (req) => {
         })
       }
 
-      // Create alpha purchase record
+      // Create alpha purchase record (valid for 30 days)
+      const thirtyDaysFromNow = new Date()
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+
       const txRecord = transactionId
         ? await tx.transaction.findUnique({ where: { id: transactionId } })
         : null
@@ -89,17 +110,23 @@ export const POST = auth(async (req) => {
           transactionId: txRecord?.id ?? null,
           signalId,
           creditsUsed:   0, // paid, not credit-based
+          expiresAt:     thirtyDaysFromNow,
         },
       })
     })
 
+    logApiResponse('POST', '/api/payment/alpha-verify', 200, {
+      email,
+      extras: { signalId, transactionId: transactionId?.slice(0, 8) },
+    })
     return NextResponse.json({
       success: true,
       message: 'Signal unlocked successfully!',
       signalId,
     })
   } catch (error) {
-    console.error('[alpha-verify] Error:', error)
+    const msg = error instanceof Error ? error.message : 'Verification failed'
+    logApiResponse('POST', '/api/payment/alpha-verify', 500, { email, error: msg })
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
   }
 })

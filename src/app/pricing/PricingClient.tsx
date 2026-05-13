@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Zap, Crown, Sparkles, Lock, Unlock, ArrowLeft } from 'lucide-react'
 import PaymentButton from '@/components/PaymentButton'
@@ -10,41 +10,20 @@ import { cn } from '@/lib/utils'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
-const plans = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: '$0',
-    period: '',
-    description: 'Perfect for getting started',
-    icon: Unlock,
-    color: 'from-success-500 to-emerald-500',
-    features: [
-      'Top 5 daily signals',
-      '15-minute delay',
-      'Basic sentiment scores',
-      'Web dashboard access',
-      'Community Discord',
-    ],
-    limitations: [
-      'Limited historical data',
-      'No Telegram integration'
-    ],
-    cta: 'Get Started',
-    popular: false,
-    comingSoon: false
-  },
+// Base plans always shown (no Free plan in the main display)
+const basePlans = [
   {
     id: 'premium',
     name: 'Premium',
     price: '$49',
+    yearlyPrice: '$39',
     period: '/mo',
     description: 'For serious traders',
     icon: Crown,
     color: 'from-primary-500 to-secondary-500',
     features: [
       'Real-time alerts (0 delay)',
-      'Telegram bot integration',
+      'Real-time push alerts',
       'Full dashboard access',
       'Diamond Signals priority',
       'Whale wallet deep dives',
@@ -52,12 +31,11 @@ const plans = [
       'Advanced filtering',
       'Portfolio tracking',
       'API access (beta)',
-      'Priority support'
+      'Priority support',
     ],
     limitations: [],
     cta: 'Upgrade to Premium',
     popular: true,
-    comingSoon: false
   },
   {
     id: 'payper',
@@ -77,26 +55,40 @@ const plans = [
     ],
     limitations: [
       'No bulk discounts',
-      'No API access'
+      'No API access',
     ],
     cta: 'Buy Credits',
     popular: false,
-    comingSoon: false
   },
 ]
 
 export default function PricingClient() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const [mounted, setMounted] = useState(false)
   const { data: session, status } = useSession()
-  const isLoggedIn = status === 'authenticated'
+  const isLoggedIn = mounted && status === 'authenticated'
+  const userTier = isLoggedIn ? (session?.user as any)?.premiumStatus ?? 'free' : null
+  const isPremium = userTier === 'premium'
+
+  // Check if user has current plan to show "Your Plan" badge
+  const isUserPlan = (planId: string) => {
+    if (!isLoggedIn) return false
+    if (planId === 'premium' && isPremium) return true
+    return false
+  }
+
+  // Defer session-dependent rendering until after hydration
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
         {/* Back Link */}
         <FadeIn>
-          <a 
-            href="/" 
+          <a
+            href="/"
             className="inline-flex items-center gap-2 text-text-muted hover:text-primary-400 transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -112,23 +104,25 @@ export default function PricingClient() {
               <span>Simple, transparent pricing</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Start free,{' '}
+              {isLoggedIn && !isPremium ? 'Upgrade your experience' : 'Start free,'}{' '}
               <span className="gradient-text">scale when ready</span>
             </h1>
             <p className="text-text-secondary max-w-2xl mx-auto mb-8">
-              Choose the plan that fits your trading style. Upgrade, downgrade, or cancel anytime.
-              All prices include 18% GST as applicable.
+              {isLoggedIn && !isPremium
+                ? 'Unlock real-time signals, push alerts, and advanced analytics. Upgrade to Premium or buy signals as needed.'
+                : 'Choose the plan that fits your trading style. Upgrade, downgrade, or cancel anytime.'
+              }
             </p>
-            
-            {/* Billing Toggle */}
+
+            {/* Billing Toggle — only show when Premium is available */}
             <div className="inline-flex items-center gap-2 p-1 rounded-xl bg-background-card border border-border">
               <button
                 onClick={() => setBillingPeriod('monthly')}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                   billingPeriod === 'monthly'
-                    ? "bg-primary-500 text-white"
-                    : "text-text-muted hover:text-text-secondary"
+                    ? 'bg-primary-500 text-white'
+                    : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 Monthly
@@ -136,10 +130,10 @@ export default function PricingClient() {
               <button
                 onClick={() => setBillingPeriod('yearly')}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                  'px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2',
                   billingPeriod === 'yearly'
-                    ? "bg-primary-500 text-white"
-                    : "text-text-muted hover:text-text-secondary"
+                    ? 'bg-primary-500 text-white'
+                    : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 Yearly
@@ -148,152 +142,227 @@ export default function PricingClient() {
                 </span>
               </button>
             </div>
+
+
           </div>
         </FadeIn>
-        
-        {/* Pricing Cards */}
-        <FadeInStagger stagger={0.1} className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
-          {plans.map((plan) => (
-            <HoverScale key={plan.id}>
-              <motion.div
-                className={cn(
-                  "relative p-8 rounded-2xl border transition-all duration-300",
-                  plan.popular
-                    ? "glass-card border-primary-500/50 hover:border-primary-500"
-                    : "glass-card hover:border-primary-500/30"
-                )}
-                whileHover={{ y: -4 }}
-              >
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-primary-600 to-secondary-600 text-white text-sm font-semibold"
-                  >
-                    Most Popular
-                  </motion.div>
-                )}
-                
-                {/* Plan Header */}
-                <div className="text-center mb-8">
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${plan.color} p-0.5 mx-auto mb-4`}>
-                    <div className="w-full h-full rounded-2xl bg-background-card flex items-center justify-center">
-                      <plan.icon className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
-                  
-                  <div className="flex items-baseline justify-center gap-1 mb-2">
-                    <span className="text-4xl font-bold">
-                      {billingPeriod === 'yearly' && plan.id === 'premium' 
-                        ? '$39' 
-                        : plan.price
-                      }
-                    </span>
-                    {plan.period && (
-                      <span className="text-text-muted">
-                        {billingPeriod === 'yearly' ? '/mo' : plan.period}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {billingPeriod === 'yearly' && plan.id === 'premium' && (
-                    <div className="text-sm text-success-400">
-                      $468/year (save 20%)
-                    </div>
+
+        {/* Pricing Cards — Only Premium + Pay-Per-Alpha */}
+        <FadeInStagger stagger={0.1} className="grid lg:grid-cols-2 gap-8 max-w-4xl mx-auto mb-16">
+          {basePlans.map((plan) => {
+            const isCurrentPlan = isUserPlan(plan.id)
+            const showUpgrade = isLoggedIn && !isPremium && plan.id === 'premium'
+            const showBuyButton = !isPremium || plan.id === 'payper'
+
+            return (
+              <HoverScale key={plan.id}>
+                <motion.div
+                  className={cn(
+                    'relative p-8 rounded-2xl border transition-all duration-300',
+                    plan.popular
+                      ? 'glass-card border-primary-500/50 hover:border-primary-500'
+                      : 'glass-card hover:border-primary-500/30',
+                    isCurrentPlan && 'border-success-500/50',
+                  )}
+                  whileHover={{ y: -4 }}
+                >
+                  {/* Popular Badge */}
+                  {plan.popular && !isCurrentPlan && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-primary-600 to-secondary-600 text-white text-sm font-semibold"
+                    >
+                      Most Popular
+                    </motion.div>
                   )}
 
-                  {plan.id === 'premium' && (
-                    <div className="text-xs text-text-muted mt-1">
-                      +18% GST applicable
-                    </div>
+                  {/* Your Current Plan Badge */}
+                  {isCurrentPlan && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-success-500 text-white text-sm font-semibold"
+                    >
+                      ✓ Your Plan
+                    </motion.div>
                   )}
-                  
-                  <p className="text-text-muted text-sm">{plan.description}</p>
-                </div>
-                
-                {/* Features */}
-                <div className="mb-8">
-                  <ul className="space-y-3">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-success-400 flex-shrink-0" />
-                        <span className="text-text-secondary text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  {plan.limitations.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <p className="text-xs text-text-muted mb-2">Not included:</p>
-                      <ul className="space-y-2">
-                        {plan.limitations.map((limitation) => (
-                          <li key={limitation} className="flex items-center gap-3">
-                            <Lock className="w-4 h-4 text-text-muted flex-shrink-0" />
-                            <span className="text-text-muted text-xs">{limitation}</span>
-                          </li>
-                        ))}
-                      </ul>
+
+                  {/* Plan Header */}
+                  <div className="text-center mb-8">
+                    <div
+                      className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${plan.color} p-0.5 mx-auto mb-4`}
+                    >
+                      <div className="w-full h-full rounded-2xl bg-background-card flex items-center justify-center">
+                        <plan.icon className="w-8 h-8 text-white" />
+                      </div>
                     </div>
+
+                    <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+
+                    <div className="flex items-baseline justify-center gap-1 mb-2">
+                      <span className="text-4xl font-bold">
+                        {billingPeriod === 'yearly' && plan.id === 'premium'
+                          ? plan.yearlyPrice
+                          : plan.price}
+                      </span>
+                      {plan.period && (
+                        <span className="text-text-muted">
+                          {billingPeriod === 'yearly' ? '/mo' : plan.period}
+                        </span>
+                      )}
+                    </div>
+
+                    {billingPeriod === 'yearly' && plan.id === 'premium' && (
+                      <div className="text-sm text-success-400">
+                        $468 billed annually (save $120)
+                      </div>
+                    )}
+
+                    <p className="text-text-muted text-sm">{plan.description}</p>
+                  </div>
+
+                  {/* Features */}
+                  <div className="mb-8">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-center gap-3">
+                          <CheckCircle2 className="w-5 h-5 text-success-400 flex-shrink-0" />
+                          <span className="text-text-secondary text-sm">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {plan.limitations.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <p className="text-xs text-text-muted mb-2">Not included:</p>
+                        <ul className="space-y-2">
+                          {plan.limitations.map((limitation) => (
+                            <li key={limitation} className="flex items-center gap-3">
+                              <Lock className="w-4 h-4 text-text-muted flex-shrink-0" />
+                              <span className="text-text-muted text-xs">{limitation}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CTA Button */}
+                  {isCurrentPlan ? (
+                    <Link
+                      href="/dashboard"
+                      className="w-full py-3 rounded-xl font-semibold transition-all block text-center bg-success-500/20 text-success-400 border border-success-500/30 hover:bg-success-500/30"
+                    >
+                      Go to Dashboard
+                    </Link>
+                  ) : showBuyButton || showUpgrade ? (
+                    <PaymentButton
+                      amount={billingPeriod === 'yearly' && plan.id === 'premium' ? 39 : plan.id === 'premium' ? 49 : 1}
+                      plan={billingPeriod === 'yearly' && plan.id === 'premium' ? 'Premium Yearly' : plan.id === 'premium' ? 'Premium Monthly' : 'Pay Per Alpha'}
+                      buttonText={plan.cta}
+                      className={cn(
+                        'w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center',
+                        plan.popular ? 'button-primary' : 'button-secondary',
+                      )}
+                    />
+                  ) : (
+                    <Link
+                      href={isLoggedIn ? '/dashboard' : '/signup'}
+                      className={cn(
+                        'w-full py-3 rounded-xl font-semibold transition-all block text-center',
+                        plan.popular ? 'button-primary' : 'button-secondary',
+                      )}
+                    >
+                      Get Started
+                    </Link>
                   )}
-                </div>
-                
-                {/* CTA Button */}
-                {plan.id === 'premium' ? (
-                  <PaymentButton
-                    amount={billingPeriod === 'yearly' ? 46296 : 5782}
-                    plan={billingPeriod === 'yearly' ? 'Premium Yearly' : 'Premium Monthly'}
-                    buttonText={plan.cta}
-                    className={cn(
-                      "w-full py-3 rounded-xl font-semibold transition-all button-primary flex items-center justify-center"
-                    )}
+
+                  {/* Background Effect */}
+                  <motion.div
+                    className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-[0.01] rounded-2xl`}
+                    whileHover={{ opacity: 0.02 }}
+                    transition={{ duration: 0.3 }}
                   />
-                ) : plan.id === 'payper' ? (
-                  <PaymentButton
-                    amount={100}
-                    plan="Pay Per Alpha"
-                    buttonText={plan.cta}
-                    className={cn(
-                      "w-full py-3 rounded-xl font-semibold transition-all button-secondary flex items-center justify-center"
-                    )}
-                  />
-                ) : (
-                  <Link
-                    href={isLoggedIn ? '/dashboard' : '/signup'}
-                    className={cn(
-                      "w-full py-3 rounded-xl font-semibold transition-all block text-center",
-                      plan.popular
-                        ? "button-primary"
-                        : "button-secondary"
-                    )}
-                  >
-                    {plan.cta}
-                  </Link>
-                )}
-                
-                {/* Background Effect */}
-                <motion.div
-                  className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-[0.01] rounded-2xl`}
-                  whileHover={{ opacity: 0.02 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </motion.div>
-            </HoverScale>
-          ))}
+                </motion.div>
+              </HoverScale>
+            )
+          })}
         </FadeInStagger>
-        
+
+        {/* What current Free users can do */}
+        {isLoggedIn && !isPremium && (
+          <FadeIn delay={0.3}>
+            <div className="glass-card p-8 max-w-3xl mx-auto mb-16 border border-warning-500/20">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-background-muted flex items-center justify-center flex-shrink-0">
+                  <Unlock className="w-6 h-6 text-warning-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Your Free Plan Features</h3>
+                  <p className="text-text-secondary text-sm mb-4">
+                    You currently have access to basic signals. Upgrade to unlock the full power of ChainPulse Alpha.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-2 text-sm text-text-muted">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success-400" />
+                      Top 5 daily signals
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success-400" />
+                      15-minute delay
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success-400" />
+                      Basic sentiment scores
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success-400" />
+                      Web dashboard access
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-success-400" />
+                      Community Discord
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </FadeIn>
+        )}
+
+        {/* Not logged in — show a CTA */}
+        {!isLoggedIn && (
+          <FadeIn delay={0.3}>
+            <div className="text-center mb-16">
+              <Link
+                href="/signup"
+                className="button-primary px-8 py-3 rounded-xl font-semibold text-lg inline-flex items-center gap-2"
+              >
+                <Zap className="w-5 h-5" />
+                Start Free — No Credit Card Required
+              </Link>
+              <p className="text-text-muted text-sm mt-3">
+                Already have an account?{' '}
+                <Link href="/login" className="text-primary-400 hover:text-primary-300 underline underline-offset-2">
+                  Log in
+                </Link>
+              </p>
+            </div>
+          </FadeIn>
+        )}
+
         {/* FAQ Preview */}
         <FadeIn delay={0.5}>
           <div className="text-center">
             <div className="glass-card p-8 max-w-2xl mx-auto">
               <h3 className="text-lg font-semibold mb-4">Questions about pricing?</h3>
               <p className="text-text-secondary mb-6">
-                All plans include a 7-day free trial. Cancel anytime, no questions asked.
+                Start with Free. Upgrade anytime. Cancel anytime — no questions asked.
               </p>
-              <div className="flex items-center justify-center gap-6 text-sm text-text-muted">
+              <div className="flex items-center justify-center gap-6 text-sm text-text-muted flex-wrap">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-success-400" />
                   <span>No setup fees</span>
