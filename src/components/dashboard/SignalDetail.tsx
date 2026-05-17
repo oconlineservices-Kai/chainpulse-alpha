@@ -48,15 +48,7 @@ interface SignalDetailProps {
 
 function getChainFromSymbol(symbol: string): string {
   const map: Record<string, string> = {
-    ETH: 'ethereum',
     SOL: 'solana',
-    BNB: 'bsc',
-    ARB: 'arbitrum',
-    AVAX: 'avalanche',
-    MATIC: 'polygon',
-    POL: 'polygon',
-    OP: 'optimism',
-    LINK: 'ethereum',
   }
   return map[symbol.toUpperCase()] || 'ethereum'
 }
@@ -64,21 +56,11 @@ function getChainFromSymbol(symbol: string): string {
 const EXPLORER_NAMES: Record<string, string> = {
   ethereum: 'Etherscan',
   solana: 'Solscan',
-  bsc: 'BscScan',
-  arbitrum: 'Arbiscan',
-  avalanche: 'Snowtrace',
-  polygon: 'PolygonScan',
-  optimism: 'Etherscan',
 }
 
 const EXPLORER_URLS: Record<string, string> = {
   ethereum: 'https://etherscan.io',
   solana: 'https://solscan.io',
-  bsc: 'https://bscscan.com',
-  arbitrum: 'https://arbiscan.io',
-  avalanche: 'https://snowtrace.io',
-  polygon: 'https://polygonscan.com',
-  optimism: 'https://optimistic.etherscan.io',
 }
 
 function getBlockExplorerUrl(wallet: string, tokenSymbol: string): string {
