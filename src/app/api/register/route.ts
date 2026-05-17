@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         email,
         password: hashedPassword,
         premiumStatus: 'free',
-        credits: 0,
+        credits: 1, // 1 free Pay-Per-Alpha credit on signup
       },
       select: {
         id: true,

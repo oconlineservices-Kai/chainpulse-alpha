@@ -145,6 +145,23 @@ export default function BlogPostPage({ params }: PageProps) {
           ))}
         </div>
 
+        {/* CTA Section */}
+        <div className="mt-12 p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+          <h3 className="text-xl font-semibold text-white mb-3">Want Real-Time Signals?</h3>
+          <p className="text-gray-300 mb-4">
+            Get AI-powered whale tracking and sentiment analysis alerts delivered in real time. 
+            Start with a free account and try Pay-Per-Alpha for just $1.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a href="/pricing" className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium hover:shadow-lg transition-all">
+              View Pricing →
+            </a>
+            <a href="/signup" className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 transition-all">
+              Try Free →
+            </a>
+          </div>
+        </div>
+
         <section className="mt-12 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-8">
           <h2 className="text-2xl font-bold mb-4">Next step for readers</h2>
           <p className="text-slate-300 mb-6 leading-relaxed">

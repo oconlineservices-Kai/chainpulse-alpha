@@ -70,18 +70,21 @@ export async function POST(req: NextRequest) {
     const verificationToken = crypto.randomUUID()
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    // Create user with verification fields
+    // Create user with verification fields + 1 free credit
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         premiumStatus: 'free',
-        credits: 0,
+        credits: 1, // 1 free Pay-Per-Alpha credit on signup
         emailVerified: false,
         verificationToken,
         verificationExpires
       }
     })
+
+    // Log the free credit grant
+    console.log(`[signup] Granted 1 free credit to user ${user.id.slice(0, 8)} (${email})`)
 
     // Send verification email (non-blocking — don't fail registration if email fails)
     sendVerificationEmail(email, verificationToken).catch((err: Error) => {
