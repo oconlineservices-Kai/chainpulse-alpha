@@ -49,14 +49,14 @@ const WHALE_WALLETS_BY_SYMBOL: Record<string, string[]> = {
     '3LYJfcf6G1dA2Tf6HBfXa8e8iYnZnHq7aD',
   ],
   ETH: [
-    '0x2feb1512183545f48f6b9c5b4ebfbd6e7e8a9e0b',
-    '0x40b38765696e3d5d8d9d834d8a2c7b6a5e4f3d2c',
-    '0x1a2b3c4d5e6f7890abcdef1234567890abcdef12',
+    '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
+    '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
+    '0x00000000219ab540356cbb839cbe05303d7705fa',
   ],
   SOL: [
+    '7VJ9dhBMkq3KUAhUXQZFQfBPJQzKdN8K5fYCVSG5Pf1u',
+    '3bLggfFhRFNDQqUys1SLaLLDCBkHjNBFTxCjCnPLYcKx',
     '7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV',
-    'GvjYmWj7P5RJmJMKXMmYBQ4NhC3g6K7V8dL9pQ0R',
-    '3xzoTFLRHs2VXPyFPjpgbQAXHkXYRKmYRXJCzCbBZ1N',
   ],
 }
 
@@ -67,18 +67,15 @@ function generateWhaleWallets(symbol: string, marketCapRank: number): string[] {
     return [...WHALE_WALLETS_BY_SYMBOL[symbol]]
   }
 
-  // Generate deterministic wallets based on token rank
-  const prefix = marketCapRank < 50 ? '0x' : '0x'
-  const wallets: string[] = []
-  for (let i = 0; i < 3; i++) {
-    const seed = `${symbol}${i}${marketCapRank}`
-    let hash = ''
-    for (let j = 0; j < 40; j++) {
-      hash += ((seed.charCodeAt(j % seed.length) + j) % 16).toString(16)
-    }
-    wallets.push(`${prefix}${hash}`)
-  }
-  return wallets
+  // For unknown tokens, return real known ethereum whale wallets
+  const REAL_FALLBACK_WALLETS = [
+    '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503',
+    '0x5a52e96bacdabb82fd05763e25335261b270efcb',
+  ]
+
+  // Use marketCapRank as seed to pick from real wallets
+  const idx = marketCapRank % REAL_FALLBACK_WALLETS.length
+  return [REAL_FALLBACK_WALLETS[idx], REAL_FALLBACK_WALLETS[(idx + 1) % REAL_FALLBACK_WALLETS.length]]
 }
 
 // ── In-memory cache for CoinGecko data ─────────────────────────────────────────
