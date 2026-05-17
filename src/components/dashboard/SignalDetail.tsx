@@ -46,6 +46,52 @@ interface SignalDetailProps {
   onClose: () => void
 }
 
+function getChainFromSymbol(symbol: string): string {
+  const map: Record<string, string> = {
+    ETH: 'ethereum',
+    SOL: 'solana',
+    BNB: 'bsc',
+    ARB: 'arbitrum',
+    AVAX: 'avalanche',
+    MATIC: 'polygon',
+    POL: 'polygon',
+    OP: 'optimism',
+    LINK: 'ethereum',
+  }
+  return map[symbol.toUpperCase()] || 'ethereum'
+}
+
+const EXPLORER_NAMES: Record<string, string> = {
+  ethereum: 'Etherscan',
+  solana: 'Solscan',
+  bsc: 'BscScan',
+  arbitrum: 'Arbiscan',
+  avalanche: 'Snowtrace',
+  polygon: 'PolygonScan',
+  optimism: 'Etherscan',
+}
+
+const EXPLORER_URLS: Record<string, string> = {
+  ethereum: 'https://etherscan.io',
+  solana: 'https://solscan.io',
+  bsc: 'https://bscscan.com',
+  arbitrum: 'https://arbiscan.io',
+  avalanche: 'https://snowtrace.io',
+  polygon: 'https://polygonscan.com',
+  optimism: 'https://optimistic.etherscan.io',
+}
+
+function getBlockExplorerUrl(wallet: string, tokenSymbol: string): string {
+  const chain = getChainFromSymbol(tokenSymbol)
+  const baseUrl = EXPLORER_URLS[chain]
+  return `${baseUrl}/address/${wallet}`
+}
+
+function getExplorerName(tokenSymbol: string): string {
+  const chain = getChainFromSymbol(tokenSymbol)
+  return EXPLORER_NAMES[chain] || 'Etherscan'
+}
+
 const mockTweets = [
   {
     id: 1,
@@ -342,20 +388,40 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
                       <code className="text-sm text-text-secondary font-mono">
                         {truncateAddress(wallet, 6)}
                       </code>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(wallet)}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(getBlockExplorerUrl(wallet, signal.tokenSymbol), '_blank', 'noopener,noreferrer')}
+                          title={`View on ${getExplorerName(signal.tokenSymbol)}`}
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(wallet)}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
                 
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    const wallet = signal.whaleWallets[0]
+                    if (wallet) {
+                      window.open(getBlockExplorerUrl(wallet, signal.tokenSymbol), '_blank', 'noopener,noreferrer')
+                    }
+                  }}
+                >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  View on Etherscan
+                  View on {getExplorerName(signal.tokenSymbol)}
                 </Button>
               </CardContent>
             </Card>
