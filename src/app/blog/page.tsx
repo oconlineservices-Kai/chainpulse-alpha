@@ -2,6 +2,27 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { getAllPosts } from '@/lib/blog'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://chainpulsealpha.com'
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: siteUrl,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Blog',
+      item: `${siteUrl}/blog`,
+    },
+  ],
+}
+
 export const metadata: Metadata = {
   title: 'Crypto Blog - ChainPulse Alpha',
   description:
@@ -36,6 +57,11 @@ export default function BlogPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-white">
+      {/* BreadcrumbList Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <nav className="flex justify-between items-center p-6 max-w-7xl mx-auto">
         <Link href="/" className="text-2xl font-bold hover:text-blue-400 transition">
           ChainPulse Alpha

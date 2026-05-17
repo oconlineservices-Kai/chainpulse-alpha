@@ -106,7 +106,8 @@ const jsonLd = [
     sameAs: [
       'https://twitter.com/chainpulsealpha',
       'https://github.com/chainpulsealpha',
-      'https://discord.gg/chainpulsealpha'
+      'https://discord.gg/chainpulsealpha',
+      'https://t.me/chainpulsealpha'
     ],
     contactPoint: {
       '@type': 'ContactPoint',
