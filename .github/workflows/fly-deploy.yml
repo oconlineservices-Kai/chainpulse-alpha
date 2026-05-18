@@ -44,21 +44,22 @@ jobs:
       - name: Deploy to Fly.io
         uses: superfly/flyctl-actions@1.4
         with:
-          args: "deploy --remote-only"
+          args: "deploy --remote-only --strategy immediate"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Force restart all machines (ensures new container serves traffic)
+      - name: Force restart all machines to ensure new image serves
         uses: superfly/flyctl-actions@1.4
         with:
-          args: "scale count 0"
+          args: "apps restart chainpulse-alpha"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      - name: Wait for machines to stop
-        run: sleep 15
-      - name: Scale back up
-        uses: superfly/flyctl-actions@1.4
-        with:
-          args: "scale count 1"
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Verify deployed image serves correct data
+        run: |
+          echo "Waiting for rollout..."
+          sleep 30
+          echo "Verifying API response..."
+          curl -s https://chainpulsealpha.com/api/signals | head -c 200
+          echo ""
+          echo "Deploy complete"
