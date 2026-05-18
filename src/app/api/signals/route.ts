@@ -284,23 +284,25 @@ export const GET = auth(async (req) => {
 
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
 
-    // Free users: limit to 3 signals, strip sensitive data, add 24h delay timestamp
+    // Free users: limit to 3 signals, add 24h delay timestamp
+    // DEMO signal wallets remain visible (they're hardcoded demo addresses, not real wallet data)
     const HOUR_MS = 3600000
+    const usingDemoSignals = dbSignals.length === 0
     if (isFree) {
       allSignals = allSignals.slice(0, 3).map(s => ({
         ...s,
-        whaleWallets: [],
+        whaleWallets: usingDemoSignals ? s.whaleWallets : [], // keep demo wallets visible
         twitterMentions: 0, // hide exact counts
         delayHours: 24,
         delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
       }))
     }
 
-    // Strip wallet addresses for non-admin, non-premium users
+    // Strip wallet addresses for non-admin, non-premium users (DB signals only, not demo)
     if (!isAdmin && !isPremiumActive) {
       allSignals = allSignals.map(s => ({
         ...s,
-        whaleWallets: s.isDiamondSignal ? ['[Premium metadata]'] : [],
+        whaleWallets: usingDemoSignals ? s.whaleWallets : (s.isDiamondSignal ? ['[Premium metadata]'] : []),
       }))
     }
 

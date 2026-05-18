@@ -409,20 +409,26 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
                   ))}
                 </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    const wallet = signal.whaleWallets[0]
-                    if (wallet) {
-                      window.open(getBlockExplorerUrl(wallet, signal.tokenSymbol), '_blank', 'noopener,noreferrer')
-                    }
-                  }}
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  View on {getExplorerName(signal.tokenSymbol)}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={signal.whaleWallets[0] ? 'flex-1' : 'flex-1 opacity-50 cursor-not-allowed'}
+                    disabled={!signal.whaleWallets[0]}
+                    onClick={() => {
+                      const wallet = signal.whaleWallets[0]
+                      if (wallet) {
+                        window.open(getBlockExplorerUrl(wallet, signal.tokenSymbol), '_blank', 'noopener,noreferrer')
+                      }
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    View on {getExplorerName(signal.tokenSymbol)}
+                  </Button>
+                  {!signal.whaleWallets[0] && (
+                    <span className="text-xs text-text-muted whitespace-nowrap">(No wallet data)</span>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
