@@ -39,25 +39,9 @@ jobs:
           NEXT_PHASE: phase-production-build
           POST_BUILD_DEPLOY: "true"
           
-      - name: Deploy to Fly.io
+      - name: Deploy to Fly.io with immediate strategy (replaces all machines)
         uses: superfly/flyctl-actions@1.4
         with:
           args: "deploy --remote-only --strategy immediate"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Kill old machines and ensure only one fresh machine runs
-        run: ./scripts/deploy-verify.sh
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Verify deployed image consistently
-        run: |
-          sleep 15
-          echo "Verifying..."
-          for i in 1 2 3 4 5; do
-            curl -s "https://chainpulsealpha.com/api/signals?t=$(date +%s)" | head -c 300
-            echo ""
-            sleep 3
-          done
-          echo "DONE"
