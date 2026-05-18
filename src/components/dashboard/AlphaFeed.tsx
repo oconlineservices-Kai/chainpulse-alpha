@@ -41,7 +41,11 @@ const mockSignals: Signal[] = [
     timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
     status: 'Free',
     twitterMentions: 1247,
-    whaleWallets: ['0x742...3a9f', '0x991...8b2e', '0x224...1c5d'],
+    whaleWallets: [
+      '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
+      '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
+      '0x00000000219ab540356cbb839cbe05303d7705fa',
+    ],
     recommendation: 'Buy',
     volume24h: 12500000,
     marketCap: 425000000
@@ -58,7 +62,7 @@ const mockSignals: Signal[] = [
     timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
     status: 'Premium',
     twitterMentions: 892,
-    whaleWallets: ['0x556...9e1a'],
+    whaleWallets: ['0x8894e0a0c962cb723c1976a4421c959dfbe81251'],
     recommendation: 'Skip',
     volume24h: 8900000,
     marketCap: 5200000000
@@ -75,7 +79,7 @@ const mockSignals: Signal[] = [
     timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
     status: 'Premium',
     twitterMentions: 2156,
-    whaleWallets: ['0x887...4f2b', '0x334...7d8e'],
+    whaleWallets: ['0xf977814e90da44bfa03e56b3c38bf12f1e7c3571', '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503'],
     recommendation: 'Buy',
     volume24h: 45000000,
     marketCap: 12500000000
@@ -92,7 +96,7 @@ const mockSignals: Signal[] = [
     timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString(),
     status: 'Locked',
     twitterMentions: 567,
-    whaleWallets: ['0x112...9c4f'],
+    whaleWallets: ['0x5a52e96bacdabb82fd05763e25335261b270efcb'],
     recommendation: 'Buy',
     volume24h: 3200000,
     marketCap: 225000000

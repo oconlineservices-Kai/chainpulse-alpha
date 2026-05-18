@@ -64,12 +64,21 @@ const determineStatus = (correlation: number): 'Free' | 'Premium' | 'Locked' => 
   return 'Locked'
 }
 
-// Generate mock whale wallets
+// Generate mock whale wallets (real 42-char hex addresses for valid explorer links)
 const generateWhaleWallets = (count: number): string[] => {
   const wallets: string[] = []
+  const knownWallets = [
+    '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
+    '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
+    '0x00000000219ab540356cbb839cbe05303d7705fa',
+    '0x8894e0a0c962cb723c1976a4421c959dfbe81251',
+    '0xf977814e90da44bfa03e56b3c38bf12f1e7c3571',
+    '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503',
+    '0x5a52e96bacdabb82fd05763e25335261b270efcb',
+    '0x2b1a6a34c56a89b2e91f255c89771738ec2c6ea9',
+  ]
   for (let i = 0; i < count; i++) {
-    const address = '0x' + Math.random().toString(16).slice(2, 8) + '...' + Math.random().toString(16).slice(2, 6)
-    wallets.push(address)
+    wallets.push(knownWallets[i % knownWallets.length])
   }
   return wallets
 }
@@ -170,7 +179,10 @@ export const mockSignals: Signal[] = [
     timestamp: new Date().toISOString(),
     status: 'Premium',
     twitterMentions: 1247,
-    whaleWallets: ['0x742...3a9f', '0x991...8b2e'],
+    whaleWallets: [
+      '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
+      '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
+    ],
     recommendation: 'Buy',
     volume24h: 35000000000,
     marketCap: 1250000000000,
@@ -187,7 +199,10 @@ export const mockSignals: Signal[] = [
     timestamp: new Date().toISOString(),
     status: 'Premium',
     twitterMentions: 892,
-    whaleWallets: ['0x556...9e1a', '0x334...7d8e'],
+    whaleWallets: [
+      '0x00000000219ab540356cbb839cbe05303d7705fa',
+      '0x8894e0a0c962cb723c1976a4421c959dfbe81251',
+    ],
     recommendation: 'Buy',
     volume24h: 15000000000,
     marketCap: 380000000000,
