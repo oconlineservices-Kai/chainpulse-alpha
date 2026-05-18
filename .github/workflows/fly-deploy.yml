@@ -21,6 +21,13 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
         
+      - name: Clear Next.js build cache
+        run: |
+          rm -rf .next/cache
+          echo "Cleared .next/cache"
+        env:
+          POST_BUILD_DEPLOY: "true"
+
       - name: Build
         run: npm run build
         env:
@@ -32,10 +39,18 @@ jobs:
           NEXTAUTH_URL: ${{ secrets.AUTH_URL }}
           # Signal to auth.ts to skip DB queries during static generation
           NEXT_PHASE: phase-production-build
+          POST_BUILD_DEPLOY: "true"
           
       - name: Deploy to Fly.io
         uses: superfly/flyctl-actions@1.4
         with:
           args: "deploy --remote-only"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Force app restart (ensures new container serves traffic)
+        uses: superfly/flyctl-actions@1.4
+        with:
+          args: "apps restart chainpulse-alpha"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
