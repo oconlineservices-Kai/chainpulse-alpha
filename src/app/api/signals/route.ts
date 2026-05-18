@@ -285,7 +285,7 @@ export const GET = auth(async (req) => {
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
 
     // Free users: limit to 3 signals, add 24h delay timestamp
-    // DEMO signal wallets remain visible (they're hardcoded demo addresses, not real wallet data)
+    // DEMO signal wallets remain visible - BUILD CACHE BUSTER (they're hardcoded demo addresses, not real wallet data)
     const HOUR_MS = 3600000
     const usingDemoSignals = dbSignals.length === 0
     if (isFree) {
