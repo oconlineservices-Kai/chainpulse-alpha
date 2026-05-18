@@ -71,19 +71,10 @@ jobs:
 
       - name: Verify deployed image serves correct data
         run: |
-          echo "Verifying API response..."
+          echo "Verifying..."
           for i in 1 2 3 4 5; do
-            RESULT=$(curl -s "https://chainpulsealpha.com/api/signals?t=$(date +%s)")
-            echo "--- Check $i ---"
-            echo "$RESULT" | python3 -c "
-import json,sys
-d=json.load(sys.stdin)
-sigs = d['data']['signals']
-for s in sigs:
-    w = s.get('whaleWallets', [])
-    first = w[0][:15] if w else 'STRIPPED'
-    print(f'  {s[\"tokenSymbol\"]}: {len(w)} wallets first=...{first}... delayHours={s.get(\"delayHours\",\"?\")}')
-" 2>&1 || echo "  FAILED"
+            curl -s "https://chainpulsealpha.com/api/signals?t=$(date +%s)" | head -c 300
+            echo ""
             sleep 3
           done
-          echo "Done"
+          echo "DONE"
