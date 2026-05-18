@@ -46,25 +46,14 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: List all machines
-        uses: superfly/flyctl-actions@1.4
-        with:
-          args: "machine list"
+      - name: Kill old machines and ensure only one fresh machine runs
+        run: ./scripts/deploy-verify.sh
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Restart all machines with new image
-        uses: superfly/flyctl-actions@1.4
-        with:
-          args: "apps restart chainpulse-alpha"
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Wait for restart
-        run: sleep 30
-
-      - name: Verify deployed image
+      - name: Verify deployed image consistently
         run: |
+          sleep 15
           echo "Verifying..."
           for i in 1 2 3 4 5; do
             curl -s "https://chainpulsealpha.com/api/signals?t=$(date +%s)" | head -c 300
