@@ -55,11 +55,17 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Verify deployed image serves correct data
+      - name: Wait for rollout and verify deployed image serves correct data
         run: |
           echo "Waiting for rollout..."
-          sleep 30
-          echo "Verifying API response..."
-          curl -s https://chainpulsealpha.com/api/signals | head -c 200
-          echo ""
+          sleep 15
+          echo "Verifying API response with cache buster..."
+          for i in 1 2 3; do
+            echo "--- Check \"$i\" ---"
+            RESULT=$(curl -s "https://chainpulsealpha.com/api/signals?t=$(date +%s)")
+            WALLET_COUNT=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); s=d['data']['signals'][0]; print(len(s.get('whaleWallets',[])))" 2>/dev/null || echo "error")
+            FIRST_WALLET=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); w=d['data']['signals'][0].get('whaleWallets',[]); print(w[0][:20] if w else 'NONE')" 2>/dev/null || echo "error")
+            echo "  wallets=$WALLET_COUNT first=$FIRST_WALLET"
+            sleep 5
+          done
           echo "Deploy complete"
