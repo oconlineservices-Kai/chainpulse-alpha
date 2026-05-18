@@ -48,9 +48,17 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Force app restart (ensures new container serves traffic)
+      - name: Force restart all machines (ensures new container serves traffic)
         uses: superfly/flyctl-actions@1.4
         with:
-          args: "apps restart chainpulse-alpha"
+          args: "scale count 0"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Wait for machines to stop
+        run: sleep 15
+      - name: Scale back up
+        uses: superfly/flyctl-actions@1.4
+        with:
+          args: "scale count 1"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
