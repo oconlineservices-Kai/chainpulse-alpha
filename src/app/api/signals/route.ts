@@ -284,12 +284,15 @@ export const GET = auth(async (req) => {
 
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
 
-    // Free users (not authenticated OR logged-in as free, or expired premium): limit to 3 signals, strip sensitive data
+    // Free users: limit to 3 signals, strip sensitive data, add 24h delay timestamp
+    const HOUR_MS = 3600000
     if (isFree) {
       allSignals = allSignals.slice(0, 3).map(s => ({
         ...s,
         whaleWallets: [],
         twitterMentions: 0, // hide exact counts
+        delayHours: 24,
+        delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
       }))
     }
 

@@ -30,6 +30,8 @@ interface LiveSignal {
   twitterMentions: number | null
   createdAt: string
   expiresAt: string | null
+  delayHours?: number
+  delayedTimestamp?: string
 }
 
 interface SignalMeta {
@@ -309,7 +311,7 @@ export default function SignalsPage() {
                               </span>
                             </div>
                             <div className="text-text-muted text-xs mt-0.5">
-                              {new Date(signal.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} today
+                              {new Date(signal.delayedTimestamp || signal.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} today
                             </div>
                           </div>
                         </div>
