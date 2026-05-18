@@ -46,30 +46,24 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Wait for deploy to settle
-        run: sleep 15
-
-      - name: Destroy all old machines and restart fresh
+      - name: List all machines
         uses: superfly/flyctl-actions@1.4
         with:
-          args: "scale count 0"
+          args: "machine list"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Wait for machines to fully stop
-        run: sleep 30
-
-      - name: Create single fresh machine from latest image
+      - name: Restart all machines with new image
         uses: superfly/flyctl-actions@1.4
         with:
-          args: "scale count 1"
+          args: "apps restart chainpulse-alpha"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Wait for new machine to be healthy
+      - name: Wait for restart
         run: sleep 30
 
-      - name: Verify deployed image serves correct data
+      - name: Verify deployed image
         run: |
           echo "Verifying..."
           for i in 1 2 3 4 5; do
