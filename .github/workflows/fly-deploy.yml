@@ -31,13 +31,11 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Use dummy DB URL for build-time (real URL is a Fly.io secret at runtime)
           NEON_DATABASE_URL: postgresql://build:build@localhost/build
           AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           AUTH_URL: ${{ secrets.AUTH_URL }}
           NEXTAUTH_SECRET: ${{ secrets.AUTH_SECRET }}
           NEXTAUTH_URL: ${{ secrets.AUTH_URL }}
-          # Signal to auth.ts to skip DB queries during static generation
           NEXT_PHASE: phase-production-build
           POST_BUILD_DEPLOY: "true"
           
@@ -48,24 +46,44 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Force restart all machines to ensure new image serves
+      - name: Wait for deploy to settle
+        run: sleep 15
+
+      - name: Destroy all old machines and restart fresh
         uses: superfly/flyctl-actions@1.4
         with:
-          args: "apps restart chainpulse-alpha"
+          args: "scale count 0"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Wait for rollout and verify deployed image serves correct data
+      - name: Wait for machines to fully stop
+        run: sleep 30
+
+      - name: Create single fresh machine from latest image
+        uses: superfly/flyctl-actions@1.4
+        with:
+          args: "scale count 1"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Wait for new machine to be healthy
+        run: sleep 30
+
+      - name: Verify deployed image serves correct data
         run: |
-          echo "Waiting for rollout..."
-          sleep 15
-          echo "Verifying API response with cache buster..."
-          for i in 1 2 3; do
-            echo "--- Check \"$i\" ---"
+          echo "Verifying API response..."
+          for i in 1 2 3 4 5; do
             RESULT=$(curl -s "https://chainpulsealpha.com/api/signals?t=$(date +%s)")
-            WALLET_COUNT=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); s=d['data']['signals'][0]; print(len(s.get('whaleWallets',[])))" 2>/dev/null || echo "error")
-            FIRST_WALLET=$(echo "$RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); w=d['data']['signals'][0].get('whaleWallets',[]); print(w[0][:20] if w else 'NONE')" 2>/dev/null || echo "error")
-            echo "  wallets=$WALLET_COUNT first=$FIRST_WALLET"
-            sleep 5
+            echo "--- Check $i ---"
+            echo "$RESULT" | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+sigs = d['data']['signals']
+for s in sigs:
+    w = s.get('whaleWallets', [])
+    first = w[0][:15] if w else 'STRIPPED'
+    print(f'  {s[\"tokenSymbol\"]}: {len(w)} wallets first=...{first}... delayHours={s.get(\"delayHours\",\"?\")}')
+" 2>&1 || echo "  FAILED"
+            sleep 3
           done
-          echo "Deploy complete"
+          echo "Done"
