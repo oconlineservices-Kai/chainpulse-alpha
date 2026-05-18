@@ -299,10 +299,11 @@ export const GET = auth(async (req) => {
     }
 
     // Strip wallet addresses for non-admin, non-premium users (DB signals only, not demo)
-    if (!isAdmin && !isPremiumActive) {
+    // FREE USER PATH CHECK: if usingDemoSignals, wallets stay visible regardless of premium status
+    if (!isAdmin && !isPremiumActive && !usingDemoSignals) {
       allSignals = allSignals.map(s => ({
         ...s,
-        whaleWallets: usingDemoSignals ? s.whaleWallets : (s.isDiamondSignal ? ['[Premium metadata]'] : []),
+        whaleWallets: s.isDiamondSignal ? ['[Premium metadata]'] : [],
       }))
     }
 
@@ -352,7 +353,13 @@ export const GET = auth(async (req) => {
       return true
     })
 
-    if (isFree) demoSignals = demoSignals.slice(0, 3)
+    if (isFree) {
+      demoSignals = demoSignals.slice(0, 3).map(s => ({
+        ...s,
+        delayHours: 24,
+        delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
+      }))
+    }
 
     logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined, extras: { source: 'demo-fallback', count: demoSignals.length } })
     return NextResponse.json({
