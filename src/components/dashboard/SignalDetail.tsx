@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   X, 
@@ -15,11 +15,17 @@ import {
   Zap,
   ExternalLink,
   Copy,
-  Shield
+  Shield,
+  Lock,
+  Crown,
+  Sparkles,
+  CreditCard
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import { useSession } from 'next-auth/react'
+import BuySignalButton from '@/components/signals/BuySignalButton'
 import { cn, formatNumber, formatPercentage, getTimeAgo, getScoreColor, truncateAddress } from '@/lib/utils'
 import { HoverScale } from '@/components/animations/ScaleIn'
 
@@ -120,10 +126,28 @@ const mockTweets = [
 ]
 
 export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
+  const { data: session } = useSession()
   const modalRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const isPriceUp = signal.priceChange > 0
   const isHighConfidence = signal.correlationScore >= 85
+
+  const userCredits = (session?.user as any)?.credits ?? 0
+  const isLoggedIn = !!session
+
+  // Map dashboard signal status + correlationScore to BuySignalButton signalType
+  const getSignalTypeForDashboard = (): 'diamond' | 'whale' | 'default' => {
+    const isLockedOrPremium = signal.status === 'Premium' || signal.status === 'Locked'
+    if (isLockedOrPremium && signal.correlationScore >= 85) return 'diamond'
+    if (isLockedOrPremium) return 'whale'
+    return 'default'
+  }
+
+  // Refresh signal on unlock (re-render with updated status)
+  const [unlockSuccess, setUnlockSuccess] = useState(false)
+  const handleUnlocked = () => {
+    setUnlockSuccess(true)
+  }
 
   // Handle ESC key to close modal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -253,6 +277,84 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
             </Button>
           </div>
         </div>
+
+        {/* Premium/Locked Unlock Banner */}
+        {!isLoggedIn && (signal.status === 'Premium' || signal.status === 'Locked') && (
+          <div className="p-4 mx-6 mt-6 rounded-xl border border-primary-500/30 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Lock className="w-6 h-6 text-primary-400 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-text-primary">Premium Signal</p>
+                <p className="text-xs text-text-muted">Login to unlock this signal and access full details.</p>
+              </div>
+            </div>
+            <a
+              href={`/login?callbackUrl=/dashboard`}
+              className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
+            >
+              <Zap className="w-4 h-4" />
+              Login to Unlock
+            </a>
+          </div>
+        )}
+
+        {/* Unlock Banner for Logged-In Free Users */}
+        {isLoggedIn && !unlockSuccess && (signal.status === 'Premium' || signal.status === 'Locked') && (
+          <div className="p-4 mx-6 mt-6 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">
+                    {isHighConfidence ? '💎 Diamond Premium Signal' : '🐋 Premium Signal'}
+                  </p>
+                  <p className="text-xs text-text-muted">
+                    {userCredits > 0 
+                      ? `You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}. Unlock this premium signal for just 1 credit.`
+                      : 'Unlock this premium signal individually with Pay-Per-Alpha.'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <BuySignalButton
+                  signalId={signal.id}
+                  signalType={getSignalTypeForDashboard()}
+                  onUnlocked={handleUnlocked}
+                />
+                <a
+                  href="/pricing"
+                  className="text-xs text-primary-400 hover:text-primary-300 font-medium whitespace-nowrap"
+                >
+                  Premium Access →
+                </a>
+              </div>
+            </div>
+            {/* Credit balance line */}
+            {userCredits > 0 && (
+              <div className="mt-3 pt-3 border-t border-yellow-500/10 flex items-center gap-2 text-xs text-text-muted">
+                <Sparkles className="w-3 h-3 text-yellow-400" />
+                <span>Your balance: <strong className="text-yellow-400">{userCredits} credit{userCredits !== 1 ? 's' : ''}</strong> — <span className="text-text-muted">1 credit unlocks this signal</span></span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Unlocked Success Banner */}
+        {unlockSuccess && (
+          <div className="p-4 mx-6 mt-6 rounded-xl border border-success-500/30 bg-gradient-to-r from-success-500/10 to-emerald-500/10">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-success-500/20 flex items-center justify-center">
+                <svg className="w-5 h-5 text-success-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-success-400">Signal Unlocked!</p>
+                <p className="text-xs text-text-muted">You now have full access to this premium signal data.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="p-6 space-y-6">
           {/* Confidence Scores */}
