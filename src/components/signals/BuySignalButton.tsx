@@ -59,6 +59,8 @@ export default function BuySignalButton({
   const { data: session } = useSession()
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const userCredits = (session?.user as any)?.credits ?? 0
+  const hasCredits = userCredits >= 1
 
   const loadRazorpayScript = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -218,11 +220,15 @@ export default function BuySignalButton({
     >
       {status === 'loading' ? (
         <Loader2 className={`animate-spin ${compact ? 'w-3 h-3' : 'w-4 h-4'}`} />
+      ) : hasCredits ? (
+        <Zap className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
       ) : (
         <CreditCard className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
       )}
       {status === 'loading'
         ? 'Processing...'
+        : hasCredits
+        ? 'Unlock (1 credit)'
         : compact
         ? `Buy ${PRICE_LABELS[signalType] ?? '₹99'}`
         : `Buy Signal ${PRICE_LABELS[signalType] ?? '₹99'}`}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useSession } from 'next-auth/react'
 import { 
   TrendingUp, 
   Zap, 
@@ -94,6 +95,10 @@ const typeStyles = {
 }
 
 export default function SignalsPage() {
+  const { data: session } = useSession()
+  const isLoggedIn = !!session
+  const userCredits = (session?.user as any)?.credits ?? 0
+  const isPremium = (session?.user as any)?.premiumStatus === 'premium'
   const [filter, setFilter] = useState<'all' | 'diamond' | 'whale' | 'sentiment'>('all')
   const [signals, setSignals] = useState<LiveSignal[]>([])
   const [meta, setMeta] = useState<SignalMeta | null>(null)
@@ -168,9 +173,16 @@ export default function SignalsPage() {
               {meta?.isRealTime
                 ? 'Real-time AI-generated signals from on-chain data and market momentum analysis.'
                 : meta?.authenticated
-                  ? 'You are logged in on the Free plan. Upgrade to Premium for real-time signals with zero delay.'
+                  ? 'You are logged in on the Free plan. Upgrade to Premium for real-time signals with zero delay, or unlock individual signals with Pay-Per-Alpha.'
                   : 'A preview of signals our system generates. Signals shown with 24hr delay. Login and upgrade for real-time access.'}
             </p>
+            {/* Credits Banner — show for logged-in free users with credits */}
+            {isLoggedIn && !isPremium && userCredits > 0 && (
+              <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning-500/20 text-warning-400 text-sm border border-warning-500/30">
+                <Zap className="w-4 h-4" />
+                <span>You have <strong>{userCredits} credit{userCredits !== 1 ? 's' : ''}</strong> — click <strong>Buy</strong> on any locked signal to unlock it</span>
+              </div>
+            )}
             {lastUpdated && (
               <p className="text-text-muted text-xs mt-3">
                 Last updated: {lastUpdated.toLocaleTimeString()}
@@ -332,7 +344,7 @@ export default function SignalsPage() {
                               />
                               <span className="text-xs text-text-muted">or</span>
                               <Link href="/pricing" className="text-xs text-primary-400 hover:text-primary-300 font-medium">
-                                Premium Access →
+                                {' '}Premium Access →
                               </Link>
                             </div>
                           </div>
