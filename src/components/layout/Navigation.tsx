@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { Activity, UserPlus, Menu, X, LayoutDashboard, Shield } from 'lucide-react'
+import { Activity, UserPlus, Zap, Menu, X, LayoutDashboard, Shield } from 'lucide-react'
 
 export default function PremiumNavigationSimple() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -54,9 +54,14 @@ export default function PremiumNavigationSimple() {
             )}
 
             {isLoggedIn ? (
-              <Link href="/dashboard" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-1.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-1.5">
-                <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
-              </Link>
+              <>
+                <Link href="/pricing" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-purple-500/40 px-3 py-1.5 rounded-lg hover:border-purple-400 transition flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-purple-400" /> Upgrade
+                </Link>
+                <Link href="/dashboard" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-1.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-1.5">
+                  <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+                </Link>
+              </>
             ) : (
               <Link 
                 href="/signup" 

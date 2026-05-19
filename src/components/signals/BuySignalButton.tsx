@@ -39,9 +39,9 @@ interface RazorpayInstance {
 }
 
 const PRICE_LABELS: Record<string, string> = {
-  diamond: '₹299',
-  whale:   '₹199',
-  default: '₹99',
+  diamond: '$3.50',
+  whale:   '$2.50',
+  default: '$1.00',
 }
 
 const PRICE_DESCRIPTIONS: Record<string, string> = {
@@ -230,8 +230,8 @@ export default function BuySignalButton({
         : hasCredits
         ? 'Unlock (1 credit)'
         : compact
-        ? `Buy ${PRICE_LABELS[signalType] ?? '₹99'}`
-        : `Buy Signal ${PRICE_LABELS[signalType] ?? '₹99'}`}
+        ? `Buy ${PRICE_LABELS[signalType] ?? '$1.00'}`
+        : `Buy Signal ${PRICE_LABELS[signalType] ?? '$1.00'}`}
     </button>
   )
 }
