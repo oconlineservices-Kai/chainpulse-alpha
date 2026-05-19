@@ -91,9 +91,14 @@ export default function PremiumNavigationSimple() {
                 </Link>
               )}
               {isLoggedIn ? (
-                <Link href="/dashboard" className="block text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-2.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-2">
-                  <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
-                </Link>
+                <>
+                  <Link href="/dashboard" className="block text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-2.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+                  </Link>
+                  <Link href="/pricing" className="block text-center text-sm text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg mt-2">
+                    Upgrade Plan
+                  </Link>
+                </>
               ) : (
                 <div className="pt-4 border-t border-gray-800">
                   <Link 

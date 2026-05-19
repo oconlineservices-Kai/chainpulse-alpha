@@ -332,7 +332,7 @@ export default function SignalsPage() {
                               />
                               <span className="text-xs text-text-muted">or</span>
                               <Link href="/pricing" className="text-xs text-primary-400 hover:text-primary-300 font-medium">
-                                Upgrade for All →
+                                Premium Access →
                               </Link>
                             </div>
                           </div>
@@ -419,10 +419,15 @@ export default function SignalsPage() {
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     {meta?.authenticated ? (
-                      <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
-                        Upgrade to Premium
-                      </Link>
+                      <>
+                        <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Upgrade to Premium
+                        </Link>
+                        <p className="text-xs text-text-muted mt-2">
+                          Or unlock individual signals using <strong>Pay-Per-Alpha</strong>
+                        </p>
+                      </>
                     ) : (
                       <>
                         <Link href="/login" className="button-secondary px-6 py-2.5 rounded-xl text-sm font-semibold">
