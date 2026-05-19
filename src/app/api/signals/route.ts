@@ -302,14 +302,17 @@ export const GET = auth(async (req) => {
     // EXEMPTION: demo/test addresses are always visible (they're hardcoded, not real wallet data)
     if (!isAdmin && !isPremiumActive) {
       allSignals = allSignals.map(s => {
-        const walletIsDemo = s.whaleWallets?.length > 0 && s.whaleWallets.every(w =>
-          ['0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
-           '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
-           '0x000000000000000000000000000000000000a1b2',
-           '7VJ9dhBMkq3KUAhUXQZFQfBPJQzKdN8K5fYCVSG5Pf1u',
-           '3bLggfFhRFNDQqUys1SLaLLDCBkHjNBFTxCjCnPLYcKx',
-           '0x4e5cf134502894ce1ee7f4c7b05af4aafb9b4e19',
-           '0x081441a0d8b6a04cc694da4c4acd3710315e636b'].includes(w))
+        const DEMO_WALLETS = [
+          '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
+          '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
+          '0x000000000000000000000000000000000000a1b2',
+          '0x00000000219ab540356cbb839cbe05303d7705fa',
+          '7VJ9dhBMkq3KUAhUXQZFQfBPJQzKdN8K5fYCVSG5Pf1u',
+          '3bLggfFhRFNDQqUys1SLaLLDCBkHjNBFTxCjCnPLYcKx',
+          '0x4e5cf134502894ce1ee7f4c7b05af4aafb9b4e19',
+          '0x081441a0d8b6a04cc694da4c4acd3710315e636b',
+        ]
+        const walletIsDemo = s.whaleWallets?.length > 0 && s.whaleWallets.every(w => DEMO_WALLETS.includes(w))
         if (walletIsDemo) return s // demo wallets always visible
         return { ...s, whaleWallets: s.isDiamondSignal ? ['[Premium metadata]'] : [] }
       })
