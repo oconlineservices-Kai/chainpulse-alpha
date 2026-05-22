@@ -29,6 +29,7 @@ export interface Signal {
   marketCap: number
   image?: string
   signalSource?: 'live' | 'cached' | 'demo'
+  locked?: boolean
 }
 
 // Generate AI scores based on real market data

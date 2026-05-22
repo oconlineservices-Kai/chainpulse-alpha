@@ -34,17 +34,41 @@ export default function DashboardPage() {
     try {
       setIsLoading(true)
       setError(null)
-      const data = await fetchTopCoins(20)
 
       if (isPremiumActive) {
-        // Premium: show all signals with full data
+        // Premium: show all signals with full data from CoinGecko proxy
+        const data = await fetchTopCoins(20)
         setSignals(data)
       } else {
-        // Free tier: show only 5 signals, mark Diamond/correlated as 'Locked'
-        setSignals(data.slice(0, 5).map(s => ({
-          ...s,
-          status: (s.correlationScore >= 85 ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
-        })))
+        // Free tier: fetch from the real /api/signals endpoint which handles gating
+        const res = await fetch('/api/signals?limit=10')
+        if (!res.ok) throw new Error(`API error: ${res.status}`)
+        const json = await res.json()
+        const apiSignals = json?.data?.signals ?? []
+
+        // Map API signals to the Signal type expected by AlphaFeed
+        // The backend already stamps 'locked: true' for indices 3+
+        // and strips premium metadata (wallets, etc.)
+        const mapped = apiSignals.map((s: any, idx: number) => ({
+          id: s.id,
+          tokenSymbol: s.tokenSymbol,
+          tokenName: s.tokenName ?? s.tokenSymbol,
+          price: 0,
+          priceChange: 0,
+          sentimentScore: s.sentimentScore ?? 0,
+          whaleConfidence: s.whaleConfidence ?? 0,
+          correlationScore: s.correlationScore ?? 0,
+          timestamp: s.createdAt ?? new Date().toISOString(),
+          status: (s.locked === true ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
+          twitterMentions: s.twitterMentions ?? 0,
+          whaleWallets: s.whaleWallets ?? [],
+          recommendation: 'Skip' as 'Buy' | 'Sell' | 'Skip',
+          volume24h: 0,
+          marketCap: 0,
+          locked: s.locked === true,
+        }))
+
+        setSignals(mapped)
       }
     } catch (err) {
       console.error('Failed to fetch crypto data:', err)

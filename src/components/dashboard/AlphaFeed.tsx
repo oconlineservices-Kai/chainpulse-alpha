@@ -15,7 +15,8 @@ import {
   MessageCircle,
   DollarSign,
   BarChart3,
-  Search
+  Search,
+  AlertTriangle
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -23,85 +24,25 @@ import Button from '@/components/ui/Button'
 import { cn, formatNumber, formatPercentage, getTimeAgo, getScoreColor } from '@/lib/utils'
 import { HoverScale } from '@/components/animations/ScaleIn'
 import { Signal } from '@/lib/api/crypto'
+import BuySignalButton from '@/components/signals/BuySignalButton'
 
 type SignalStatus = 'Free' | 'Premium' | 'Locked'
 type Recommendation = 'Buy' | 'Sell' | 'Skip'
 type FilterType = 'All' | 'Free' | 'Premium' | 'High Confidence'
 
-const mockSignals: Signal[] = [
-  {
-    id: '1',
-    tokenSymbol: 'PEPE',
-    tokenName: 'Pepe',
-    price: 0.00000123,
-    priceChange: 12.4,
-    sentimentScore: 87,
-    whaleConfidence: 92,
-    correlationScore: 91,
-    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-    status: 'Free',
-    twitterMentions: 1247,
-    whaleWallets: [
-      '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
-      '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
-      '0x00000000219ab540356cbb839cbe05303d7705fa',
-    ],
-    recommendation: 'Buy',
-    volume24h: 12500000,
-    marketCap: 425000000
-  },
-  {
-    id: '2',
-    tokenSymbol: 'SHIB',
-    tokenName: 'Shiba Inu',
-    price: 0.0000089,
-    priceChange: -2.1,
-    sentimentScore: 76,
-    whaleConfidence: 68,
-    correlationScore: 72,
-    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    status: 'Premium',
-    twitterMentions: 892,
-    whaleWallets: ['0x8894e0a0c962cb723c1976a4421c959dfbe81251'],
-    recommendation: 'Skip',
-    volume24h: 8900000,
-    marketCap: 5200000000
-  },
-  {
-    id: '3',
-    tokenSymbol: 'DOGE',
-    tokenName: 'Dogecoin',
-    price: 0.087,
-    priceChange: 5.7,
-    sentimentScore: 82,
-    whaleConfidence: 85,
-    correlationScore: 84,
-    timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-    status: 'Premium',
-    twitterMentions: 2156,
-    whaleWallets: ['0xf977814e90da44bfa03e56b3c38bf12f1e7c3571', '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503'],
-    recommendation: 'Buy',
-    volume24h: 45000000,
-    marketCap: 12500000000
-  },
-  {
-    id: '4',
-    tokenSymbol: 'FLOKI',
-    tokenName: 'Floki',
-    price: 0.0000234,
-    priceChange: 8.3,
-    sentimentScore: 91,
-    whaleConfidence: 88,
-    correlationScore: 90,
-    timestamp: new Date(Date.now() - 18 * 60 * 1000).toISOString(),
-    status: 'Locked',
-    twitterMentions: 567,
-    whaleWallets: ['0x5a52e96bacdabb82fd05763e25335261b270efcb'],
-    recommendation: 'Buy',
-    volume24h: 3200000,
-    marketCap: 225000000
-  },
-]
+// ── Helper: how many free (unlocked) preview cards exist ──────────────────────
+function countFreeSignals(list: Signal[]): number {
+  return list.filter(s => !s.locked).length
+}
+
+// ── Determine whether this card represents a genuinely locked signal ──────────
+function isGenuinelyLocked(signal: Signal): boolean {
+  // If the API explicitly tells us it's locked, believe it
+  if (signal.locked === true) return true
+  // Also lock signals whose status is 'Locked' as a fallback
+  if (signal.status === 'Locked') return true
+  return false
+}
 
 interface AlphaFeedProps {
   signals: Signal[]
@@ -158,6 +99,8 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
       case 'Skip': return 'warning'
     }
   }
+
+  const freePreviewCount = countFreeSignals(signals)
 
   return (
     <div className="space-y-6">
@@ -253,9 +196,89 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
           {filteredSignals.map((signal, index) => {
+            const locked = isGenuinelyLocked(signal)
             const StatusIcon = getStatusIcon(signal.status)
             const isPriceUp = signal.priceChange > 0
-            
+
+            if (locked) {
+              // ── Locked card: show token + badge + blur placeholder + BuySignalButton ──
+              return (
+                <motion.div
+                  key={signal.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="p-6 border border-slate-700/50 bg-slate-800/30">
+                    {/* Minimal header — only token name + symbol visible */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center text-white font-bold text-lg">
+                          {signal.tokenSymbol[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-lg text-text-primary">{signal.tokenSymbol}</h3>
+                            <Badge variant="muted" size="sm">
+                              <Lock className="w-3 h-3 mr-1" />
+                              Premium Signal
+                            </Badge>
+                          </div>
+                          <p className="text-text-muted text-xs">{signal.tokenName}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Blurred placeholder — all actual data hidden */}
+                    <div className="mb-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700/30">
+                      <div className="flex items-center gap-3 mb-3">
+                        <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
+                        <span className="text-sm font-medium text-text-muted">
+                          🔒 Full signal data hidden
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        {/* Blurred score badges */}
+                        <div className="grid grid-cols-3 gap-4">
+                          {['Sentiment', 'Whale Conf', 'Correlation'].map((label) => (
+                            <div key={label} className="text-center">
+                              <div className="mx-auto w-16 h-7 rounded-md bg-slate-700/60 blur-sm" />
+                              <p className="text-text-muted text-xs mt-1">{label}</p>
+                            </div>
+                          ))}
+                        </div>
+                        {/* Blurred detail row */}
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-4">
+                            <div className="h-4 w-24 rounded bg-slate-700/60 blur-sm" />
+                            <div className="h-4 w-20 rounded bg-slate-700/60 blur-sm" />
+                          </div>
+                          <div className="h-5 w-14 rounded bg-slate-700/60 blur-sm" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Buy Signal Button — makes sense here because data is genuinely hidden */}
+                    <div className="flex items-center justify-end">
+                      <BuySignalButton
+                        signalId={signal.id}
+                        signalType={
+                          (signal.correlationScore ?? 0) >= 85
+                            ? 'diamond'
+                            : (signal.whaleConfidence ?? 0) >= 80
+                            ? 'whale'
+                            : 'default'
+                        }
+                        compact
+                      />
+                    </div>
+                  </Card>
+                </motion.div>
+              )
+            }
+
+            // ── Free / Unlocked card: full data, NO buy button ──
             return (
               <motion.div
                 key={signal.id}
@@ -292,11 +315,11 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
                           <div className="flex items-center gap-2">
                             <h3 className="font-bold text-lg text-text-primary">{signal.tokenSymbol}</h3>
                             <Badge 
-                              variant={signal.status === 'Free' ? 'success' : signal.status === 'Premium' ? 'primary' : 'muted'}
+                              variant="success"
                               size="sm"
                             >
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {signal.status}
+                              <Unlock className="w-3 h-3 mr-1" />
+                              Free
                             </Badge>
                           </div>
                           <p className="text-text-muted text-xs truncate max-w-[70px] xs:max-w-[90px] sm:max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap w-full">{signal.tokenName}</p>
