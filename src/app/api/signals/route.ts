@@ -288,18 +288,44 @@ export const GET = auth(async (req) => {
     // DEMO signal wallets remain visible - BUILD CACHE BUSTER (they're hardcoded demo addresses, not real wallet data)
     const HOUR_MS = 3600000
     const usingDemoSignals = dbSignals.length === 0
+    
+    // Fetch purchased signal IDs so purchased signals stay unlocked even after re-fetch
+    // Look up the user by email (same approach as /api/user/purchased-signals)
+    let purchasedSignalIds: string[] = []
+    if (isFree && req.auth?.user?.email) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: req.auth.user.email },
+          select: {
+            alphaPurchases: {
+              where: { expiresAt: { gt: new Date() } },
+              select: { signalId: true },
+            },
+          },
+        })
+        if (dbUser) {
+          purchasedSignalIds = dbUser.alphaPurchases.map(p => p.signalId)
+        }
+      } catch (e) {
+        // Non-fatal — if this query fails, purchased signals just stay locked
+        console.error('[signals] Failed to fetch purchases:', e)
+      }
+    }
+    
     if (isFree) {
       const FREE_PREVIEW_LIMIT = 3
       allSignals = allSignals.map((s, idx) => {
         const isPreview = idx < FREE_PREVIEW_LIMIT
+        const isPurchased = purchasedSignalIds.includes(s.id)
+        const isUnlocked = isPreview || isPurchased
         return {
           ...s,
-          // Keep demo wallets visible for the preview signals
-          whaleWallets: isPreview && usingDemoSignals ? s.whaleWallets : (isPreview ? [] : []),
-          twitterMentions: isPreview ? (s.twitterMentions ?? 0) : 0, // hide exact counts on locked
+          // Keep demo wallets visible for the preview signals and purchased signals
+          whaleWallets: isUnlocked && usingDemoSignals ? s.whaleWallets : (isUnlocked ? [] : []),
+          twitterMentions: isUnlocked ? (s.twitterMentions ?? 0) : 0, // hide exact counts on locked
           delayHours: 24,
           delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
-          locked: !isPreview, // mark locked for premium/buy now signals
+          locked: !isUnlocked, // mark locked for premium/buy now signals
         }
       })
     }
@@ -371,12 +397,33 @@ export const GET = auth(async (req) => {
     })
 
     if (isFree) {
-      demoSignals = demoSignals.map((s, idx) => ({
-        ...s,
-        delayHours: 24,
-        delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
-        locked: idx >= 3,
-      }))
+      // Fetch purchased signal IDs for the fallback path too
+      let purchasedIds: string[] = []
+      if (req.auth?.user?.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: req.auth.user.email },
+            select: {
+              alphaPurchases: {
+                where: { expiresAt: { gt: new Date() } },
+                select: { signalId: true },
+              },
+            },
+          })
+          if (dbUser) purchasedIds = dbUser.alphaPurchases.map(p => p.signalId)
+        } catch (e) {
+          // Non-fatal
+        }
+      }
+      demoSignals = demoSignals.map((s, idx) => {
+        const isUnlocked = idx < 3 || purchasedIds.includes(s.id)
+        return {
+          ...s,
+          delayHours: 24,
+          delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
+          locked: !isUnlocked,
+        }
+      })
     }
 
     logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined, extras: { source: 'demo-fallback', count: demoSignals.length } })
