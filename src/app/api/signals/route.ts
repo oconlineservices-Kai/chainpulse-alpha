@@ -173,6 +173,33 @@ const DEMO_SIGNALS = [
   },
 ]
 
+// ── Demo signal enrichment (add Dashboard-required fields) ──────────────────
+// Demo signals lack price/volume/marketCap/status etc that the dashboard needs
+const DEMO_ENRICHMENT: Record<string, Partial<{
+  price: number
+  priceChange: number
+  volume24h: number
+  marketCap: number
+  recommendation: string
+  status: string
+  timestamp: string
+}>> = {
+  'demo-001': { price: 3125.40, priceChange: 2.35, volume24h: 18_200_000_000, marketCap: 375_000_000_000, recommendation: 'Buy', status: 'Free', timestamp: new Date(Date.now() - 2 * 3600000).toISOString() },
+  'demo-002': { price: 143.80, priceChange: -1.22, volume24h: 5_100_000_000, marketCap: 64_000_000_000, recommendation: 'Buy', status: 'Free', timestamp: new Date(Date.now() - 4 * 3600000).toISOString() },
+  'demo-003': { price: 0.85, priceChange: 5.67, volume24h: 1_200_000_000, marketCap: 3_200_000_000, recommendation: 'Buy', status: 'Free', timestamp: new Date(Date.now() - 6 * 3600000).toISOString() },
+  'demo-004': { price: 35.22, priceChange: 1.89, volume24h: 2_800_000_000, marketCap: 13_400_000_000, recommendation: 'Buy', status: 'Premium', timestamp: new Date(Date.now() - 8 * 3600000).toISOString() },
+  'demo-005': { price: 578.10, priceChange: -0.45, volume24h: 3_500_000_000, marketCap: 88_000_000_000, recommendation: 'Skip', status: 'Premium', timestamp: new Date(Date.now() - 10 * 3600000).toISOString() },
+  'demo-006': { price: 14.55, priceChange: 3.12, volume24h: 900_000_000, marketCap: 8_500_000_000, recommendation: 'Buy', status: 'Premium', timestamp: new Date(Date.now() - 12 * 3600000).toISOString() },
+  'demo-007': { price: 0.52, priceChange: -2.18, volume24h: 1_100_000_000, marketCap: 4_800_000_000, recommendation: 'Sell', status: 'Premium', timestamp: new Date(Date.now() - 14 * 3600000).toISOString() },
+  'demo-008': { price: 2.86, priceChange: 0.93, volume24h: 600_000_000, marketCap: 3_100_000_000, recommendation: 'Skip', status: 'Premium', timestamp: new Date(Date.now() - 16 * 3600000).toISOString() },
+}
+
+type AnySignal = { id: string; tokenSymbol: string; tokenName: string; sentimentScore: number; whaleConfidence: number; correlationScore: number; isDiamondSignal: boolean; twitterMentions: number; whaleWallets: string[]; createdAt: string; expiresAt: string; [key: string]: any }
+function enrichDemoSignal(s: AnySignal): AnySignal {
+  const enrich = DEMO_ENRICHMENT[s.id] || {}
+  return { ...s, ...enrich }
+}
+
 // ── Performance stats ─────────────────────────────────────────────────────────
 const PERFORMANCE_STATS = {
   overall: {
@@ -288,6 +315,11 @@ export const GET = auth(async (req) => {
     // DEMO signal wallets remain visible - BUILD CACHE BUSTER (they're hardcoded demo addresses, not real wallet data)
     const HOUR_MS = 3600000
     const usingDemoSignals = dbSignals.length === 0
+
+    // Enrich demo signals with dashboard-required fields (price, volume24h, recommendation, etc)
+    if (usingDemoSignals) {
+      allSignals = allSignals.map(s => enrichDemoSignal(s))
+    }
     
     // Fetch purchased signal IDs so purchased signals stay unlocked even after re-fetch
     // Look up the user by email (same approach as /api/user/purchased-signals)
@@ -390,6 +422,8 @@ export const GET = auth(async (req) => {
 
     // Graceful fallback to demo data
     let demoSignals = DEMO_SIGNALS.filter(s => {
+      // Enrich with dashboard fields (price, volume24h, etc)
+      Object.assign(s, DEMO_ENRICHMENT[s.id] || {})
       if (typeFilter === 'diamond') return s.isDiamondSignal
       if (typeFilter === 'whale') return (s.whaleConfidence || 0) > 70
       if (typeFilter === 'sentiment') return (s.sentimentScore || 0) > 70
