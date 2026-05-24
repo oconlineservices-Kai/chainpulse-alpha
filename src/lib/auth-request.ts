@@ -61,10 +61,17 @@ export async function getRequestSession(req: NextRequest): Promise<RequestUser |
       return null 
     }
 
-    console.log('[auth-request-debug] Secret found (first 5 chars):', secret.substring(0, 5) + '...')
-    console.log('[auth-request-debug] Attempting decode with salt:', SESSION_TOKEN_COOKIE)
+    // Determine the salt from which cookie name was actually found.
+    // The JWT was ENCODED using the cookie name as the salt (NextAuth does this internally).
+    // So we must decode with the SAME salt that was used during encoding.
+    const foundInCookie = cookies[SESSION_TOKEN_COOKIE]
+      ? SESSION_TOKEN_COOKIE
+      : SESSION_TOKEN_COOKIE_DEV
 
-    const payload = await decode({ token: tokenCookie, secret, salt: SESSION_TOKEN_COOKIE })
+    console.log('[auth-request-debug] Secret found (first 5 chars):', secret.substring(0, 5) + '...')
+    console.log('[auth-request-debug] Attempting decode with salt:', foundInCookie, '(matched cookie name)')
+
+    const payload = await decode({ token: tokenCookie, secret, salt: foundInCookie })
     
     console.log('[auth-request-debug] Decode result:', payload ? 'SUCCESS - email: ' + payload.email + ', sub: ' + (payload.sub ?? 'none') : 'NULL/FAILED')
     console.log('[auth-request-debug] Payload keys:', payload ? Object.keys(payload).join(', ') : 'N/A')
