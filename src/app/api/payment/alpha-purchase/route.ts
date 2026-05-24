@@ -15,12 +15,12 @@
  */
 
 import Razorpay from 'razorpay'
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { NextResponse, NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { convertToINR } from '@/lib/exchange-rate'
 import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
 import { logApiResponse } from '@/lib/api/response-logger'
+import { getRequestEmail } from '@/lib/auth-request'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,8 +38,23 @@ function getRazorpay() {
   return new Razorpay({ key_id: keyId, key_secret: keySecret })
 }
 
+/**
+ * Get the authenticated user from the request's session cookie directly.
+ * This is more reliable than calling auth() in a route-handler context,
+ * because it reads the cookie from the incoming request (not from next/headers)
+ * and decodes the JWT using @auth/core's own decode function.
+ */
+async function getSessionEmail(req: NextRequest): Promise<string | null> {
+  try {
+    const email = await getRequestEmail(req)
+    return email
+  } catch {
+    return null
+  }
+}
+
 // ── POST /api/payment/alpha-purchase ─────────────────────────────────────────
-export const POST = auth(async (req) => {
+export async function POST(req: NextRequest) {
   // Rate limiting: 10 requests per IP per minute
   const clientIp = getClientIP(req)
   const rateKey = getRateLimitKey(clientIp, 'payment:alpha-purchase')
@@ -48,7 +63,10 @@ export const POST = auth(async (req) => {
     return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
   }
 
-  if (!req.auth?.user?.email) {
+  // Get session by decoding the JWT from the request cookie directly
+  const userEmail = await getSessionEmail(req)
+
+  if (!userEmail) {
     logApiResponse('POST', '/api/payment/alpha-purchase', 401, { error: 'Authentication required' })
     return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
   }
@@ -65,7 +83,6 @@ export const POST = auth(async (req) => {
       return NextResponse.json({ error: 'signalId is required' }, { status: 400 })
     }
 
-    const userEmail = req.auth.user.email
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
     })
@@ -175,4 +192,4 @@ export const POST = auth(async (req) => {
     logApiResponse('POST', '/api/payment/alpha-purchase', 500, { error: msg })
     return NextResponse.json({ error: msg }, { status: 500 })
   }
-})
+}

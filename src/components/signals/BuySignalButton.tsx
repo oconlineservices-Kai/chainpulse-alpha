@@ -56,8 +56,8 @@ export default function BuySignalButton({
   onUnlocked,
   compact = false,
 }: BuySignalButtonProps) {
-  const { data: session } = useSession()
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const { data: session, status: authStatus } = useSession()
+  const [buyStatus, setBuyStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const userCredits = (session?.user as any)?.credits ?? 0
   const hasCredits = userCredits >= 1
@@ -73,10 +73,10 @@ export default function BuySignalButton({
     })
   }
 
-  const handleBuy = async () => {
+  const handleBuy = async (e?: React.MouseEvent) => {
     if (!session) return
 
-    setStatus('loading')
+    setBuyStatus('loading')
     setErrorMsg(null)
 
     try {
@@ -90,7 +90,7 @@ export default function BuySignalButton({
 
       if (!orderRes.ok) {
         if (orderData.alreadyOwned) {
-          setStatus('success')
+          setBuyStatus('success')
           onUnlocked?.()
           return
         }
@@ -99,7 +99,7 @@ export default function BuySignalButton({
 
       // Step 2: If paid with credits, done
       if (orderData.method === 'credits') {
-        setStatus('success')
+        setBuyStatus('success')
         onUnlocked?.()
         return
       }
@@ -132,13 +132,13 @@ export default function BuySignalButton({
             const verifyData = await verifyRes.json()
 
             if (verifyData.success) {
-              setStatus('success')
+              setBuyStatus('success')
               onUnlocked?.()
             } else {
               throw new Error(verifyData.error || 'Verification failed')
             }
           } catch (err) {
-            setStatus('error')
+            setBuyStatus('error')
             setErrorMsg('Payment failed to verify. Contact support if amount was deducted.')
           }
         },
@@ -149,7 +149,7 @@ export default function BuySignalButton({
         theme: { color: '#6366f1' },
         modal: {
           ondismiss: () => {
-            if (status === 'loading') setStatus('idle')
+            if (buyStatus === 'loading') setBuyStatus('idle')
           },
         },
       }
@@ -158,16 +158,31 @@ export default function BuySignalButton({
       rzp.open()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Purchase failed'
-      setStatus('error')
+      setBuyStatus('error')
       setErrorMsg(message)
     }
   }
 
+  // Session loading — show skeleton / disabled button
+  if (authStatus === 'loading') {
+    return (
+      <span
+        className={`inline-flex items-center gap-2 bg-background-card text-text-muted font-semibold rounded-lg animate-pulse ${
+          compact ? 'text-xs px-3 py-1.5' : 'text-sm px-4 py-2'
+        }`}
+      >
+        <Zap className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
+        {compact ? '...' : 'Loading...'}
+      </span>
+    )
+  }
+
   // Not logged in
-  if (!session) {
+  if (authStatus === 'unauthenticated') {
     return (
       <Link
         href={`/login?callbackUrl=/signals`}
+        onClick={(e) => e.stopPropagation()}
         className={`inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors ${
           compact ? 'text-xs px-3 py-1.5' : 'text-sm px-4 py-2'
         }`}
@@ -178,7 +193,7 @@ export default function BuySignalButton({
     )
   }
 
-  if (status === 'success') {
+  if (buyStatus === 'success') {
     return (
       <span className={`inline-flex items-center gap-2 bg-success-500/20 text-success-400 font-semibold rounded-lg border border-success-500/30 ${
         compact ? 'text-xs px-3 py-1.5' : 'text-sm px-4 py-2'
@@ -189,7 +204,7 @@ export default function BuySignalButton({
     )
   }
 
-  if (status === 'error') {
+  if (buyStatus === 'error') {
     return (
       <div className="flex flex-col gap-1">
         <span className={`inline-flex items-center gap-2 bg-danger-500/20 text-danger-400 font-semibold rounded-lg border border-danger-500/30 ${
@@ -199,7 +214,7 @@ export default function BuySignalButton({
           Failed
         </span>
         {errorMsg && <p className="text-xs text-danger-400">{errorMsg}</p>}
-        <button onClick={() => { setStatus('idle'); setErrorMsg(null) }} className="text-xs text-text-muted hover:text-text-secondary">
+        <button onClick={() => { setBuyStatus('idle'); setErrorMsg(null) }} className="text-xs text-text-muted hover:text-text-secondary">
           Try again →
         </button>
       </div>
@@ -208,8 +223,8 @@ export default function BuySignalButton({
 
   return (
     <button
-      onClick={handleBuy}
-      disabled={status === 'loading'}
+      onClick={(e) => handleBuy(e)}
+      disabled={buyStatus === 'loading'}
       className={`inline-flex items-center gap-2 font-semibold rounded-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
         signalType === 'diamond'
           ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white'
@@ -218,14 +233,14 @@ export default function BuySignalButton({
           : 'bg-primary-500 hover:bg-primary-600 text-white'
       } ${compact ? 'text-xs px-3 py-1.5' : 'text-sm px-4 py-2'}`}
     >
-      {status === 'loading' ? (
+      {buyStatus === 'loading' ? (
         <Loader2 className={`animate-spin ${compact ? 'w-3 h-3' : 'w-4 h-4'}`} />
       ) : hasCredits ? (
         <Zap className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
       ) : (
         <CreditCard className={compact ? 'w-3 h-3' : 'w-4 h-4'} />
       )}
-      {status === 'loading'
+      {buyStatus === 'loading'
         ? 'Processing...'
         : hasCredits
         ? 'Unlock (1 credit)'

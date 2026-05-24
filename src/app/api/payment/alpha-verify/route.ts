@@ -5,17 +5,32 @@
  * Verifies the signature, marks transaction as success, and creates AlphaPurchase record.
  */
 
-import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { NextResponse, NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
 import { logApiResponse } from '@/lib/api/response-logger'
+import { getRequestEmail } from '@/lib/auth-request'
 
 export const dynamic = 'force-dynamic'
 
-export const POST = auth(async (req) => {
-  const email = req.auth?.user?.email as string | undefined
+/**
+ * Get the authenticated user from the request's session cookie directly.
+ * This is more reliable than calling auth() in a route-handler context,
+ * because it reads the cookie from the incoming request (not from next/headers)
+ * and decodes the JWT using @auth/core's own decode function.
+ */
+async function getSessionEmail(req: NextRequest): Promise<string | null> {
+  try {
+    return await getRequestEmail(req)
+  } catch {
+    return null
+  }
+}
+
+export async function POST(req: NextRequest) {
+  // Get session by decoding the JWT from the request cookie directly
+  const email = await getSessionEmail(req)
 
   // Rate limiting: 10 requests per IP per minute
   const clientIp = getClientIP(req)
@@ -56,9 +71,8 @@ export const POST = auth(async (req) => {
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 })
     }
 
-    const email = req.auth!.user.email!
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email! },
     })
     if (!user) {
       logApiResponse('POST', '/api/payment/alpha-verify', 404, { email, error: 'User not found' })
@@ -129,4 +143,4 @@ export const POST = auth(async (req) => {
     logApiResponse('POST', '/api/payment/alpha-verify', 500, { email, error: msg })
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
   }
-})
+}

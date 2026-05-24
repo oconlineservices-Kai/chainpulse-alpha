@@ -284,18 +284,24 @@ export const GET = auth(async (req) => {
 
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
 
-    // Free users: limit to 3 signals, add 24h delay timestamp
+    // Free users: show first 3 as unlocked preview, remaining as locked (premium)
     // DEMO signal wallets remain visible - BUILD CACHE BUSTER (they're hardcoded demo addresses, not real wallet data)
     const HOUR_MS = 3600000
     const usingDemoSignals = dbSignals.length === 0
     if (isFree) {
-      allSignals = allSignals.slice(0, 3).map(s => ({
-        ...s,
-        whaleWallets: usingDemoSignals ? s.whaleWallets : [], // keep demo wallets visible
-        twitterMentions: 0, // hide exact counts
-        delayHours: 24,
-        delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
-      }))
+      const FREE_PREVIEW_LIMIT = 3
+      allSignals = allSignals.map((s, idx) => {
+        const isPreview = idx < FREE_PREVIEW_LIMIT
+        return {
+          ...s,
+          // Keep demo wallets visible for the preview signals
+          whaleWallets: isPreview && usingDemoSignals ? s.whaleWallets : (isPreview ? [] : []),
+          twitterMentions: isPreview ? (s.twitterMentions ?? 0) : 0, // hide exact counts on locked
+          delayHours: 24,
+          delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
+          locked: !isPreview, // mark locked for premium/buy now signals
+        }
+      })
     }
 
     // Strip wallet addresses for non-admin, non-premium users
@@ -325,7 +331,7 @@ export const GET = auth(async (req) => {
         pagination: {
           page,
           limit,
-          total: isFree ? Math.min(3, totalCount) : totalCount,
+          total: totalCount,
           hasMore: isFree ? false : page * limit < totalCount,
         },
         meta: {
@@ -365,10 +371,11 @@ export const GET = auth(async (req) => {
     })
 
     if (isFree) {
-      demoSignals = demoSignals.slice(0, 3).map(s => ({
+      demoSignals = demoSignals.map((s, idx) => ({
         ...s,
         delayHours: 24,
         delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
+        locked: idx >= 3,
       }))
     }
 

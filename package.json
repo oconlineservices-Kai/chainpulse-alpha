@@ -12,6 +12,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@auth/core": "0.41.2",
     "@auth/prisma-adapter": "^2.0.0",
     "@fontsource/inter": "^5.2.8",
     "@next/font": "^14.2.15",

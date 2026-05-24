@@ -33,6 +33,7 @@ interface LiveSignal {
   expiresAt: string | null
   delayHours?: number
   delayedTimestamp?: string
+  locked?: boolean
 }
 
 interface SignalMeta {
@@ -292,7 +293,9 @@ export default function SignalsPage() {
                 const style = typeStyles[type]
                 const confidence = getConfidence(signal)
                 const recommendation = getRecommendation(signal)
-                const isLocked = idx >= 3 && !meta?.isRealTime // Lock signals beyond first 3 for free users
+                const isDiamondOrHighConf = type === 'diamond' || confidence >= 80
+                const isTierLocked = meta?.authenticated && !meta?.isRealTime && isDiamondOrHighConf
+                const isLocked = signal.locked === true || (idx >= 3 && !meta?.isRealTime) || isTierLocked
 
                 return (
                   <HoverScale key={signal.id}>
@@ -328,28 +331,10 @@ export default function SignalsPage() {
                           </div>
                         </div>
 
-                        {/* Center: Scores */}
-                        {isLocked ? (
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                            <div className="flex items-center gap-2 text-text-muted">
-                              <Lock className="w-4 h-4" />
-                              <span className="text-sm font-medium">Premium Signal</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <BuySignalButton
-                                signalId={signal.id}
-                                signalType={type === 'diamond' ? 'diamond' : type === 'whale' ? 'whale' : 'default'}
-                                compact
-                                onUnlocked={() => fetchSignals()}
-                              />
-                              <span className="text-xs text-text-muted">or</span>
-                              <Link href="/pricing" className="text-xs text-primary-400 hover:text-primary-300 font-medium">
-                                {' '}Premium Access →
-                              </Link>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-6 text-sm">
+                        {/* Center: Scores + Buy/Action buttons */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          {/* Scores always visible */}
+                          <div className="flex items-center gap-3 sm:gap-6 text-sm flex-wrap">
                             {signal.sentimentScore != null && (
                               <div className="text-center">
                                 <div className="text-text-muted text-xs mb-1">Sentiment</div>
@@ -376,7 +361,22 @@ export default function SignalsPage() {
                               )}>{confidence}</div>
                             </div>
                           </div>
-                        )}
+
+                          {/* Buy / Unlock button — shown for ALL Premium/Diamond signals (locked or not) on Free tier, always if user has credits */}
+                          {(isDiamondOrHighConf || isLocked || userCredits > 0) && meta?.authenticated && !meta?.isRealTime && (
+                            <div className="flex items-center gap-2">
+                              <BuySignalButton
+                                signalId={signal.id}
+                                signalType={type === 'diamond' ? 'diamond' : type === 'whale' ? 'whale' : 'default'}
+                                compact
+                                onUnlocked={() => fetchSignals()}
+                              />
+                              <Link href="/pricing" className="text-xs text-primary-400 hover:text-primary-300 font-medium whitespace-nowrap">
+                                Premium →
+                              </Link>
+                            </div>
+                          )}
+                        </div>
 
                         {/* Right: Recommendation */}
                         {!isLocked && (
@@ -418,39 +418,35 @@ export default function SignalsPage() {
               })}
             </FadeInStagger>
 
-            {/* Upgrade prompt if there are locked signals */}
-            {!meta?.isRealTime && filtered.length >= 3 && (
-              <FadeIn delay={0.4}>
-                <div className="glass-card p-8 rounded-2xl border border-primary-500/30 text-center mb-12">
-                  <Lock className="w-8 h-8 text-primary-400 mx-auto mb-3" />
-                  <h3 className="text-lg font-bold mb-2">{meta?.totalAvailable ? meta.totalAvailable - 3 : 'More'} signals locked</h3>
-                  <p className="text-text-secondary text-sm mb-4">
-                    {meta?.authenticated
-                      ? 'You are logged in on the Free plan. Upgrade to Premium for real-time signals, unlimited access, and Diamond tier.'
-                      : 'Login for free access, or upgrade to Premium for real-time signals and full access.'}
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    {meta?.authenticated ? (
-                      <>
-                        <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                          <Zap className="w-4 h-4" />
-                          Upgrade to Premium
-                        </Link>
-                        <p className="text-xs text-text-muted mt-2">
-                          Or unlock individual signals using <strong>Pay-Per-Alpha</strong>
+            {/* Unlock action bar for free users — prominent with Buy button */}
+            {!meta?.isRealTime && meta?.authenticated && (
+              <FadeIn delay={0.35}>
+                <div className="glass-card p-6 rounded-2xl border border-warning-500/30 bg-gradient-to-r from-warning-500/5 via-warning-500/10 to-warning-500/5 mb-8">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-warning-500 to-orange-500 flex items-center justify-center">
+                        <Zap className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-text-primary">
+                          Unlock Premium Signals
+                        </h3>
+                        <p className="text-xs text-text-muted">
+                          {userCredits > 0
+                            ? `You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}. Click Buy on any locked signal above to unlock it instantly.`
+                            : `Get credits to unlock individual signals, or upgrade for full Premium access.`}
                         </p>
-                      </>
-                    ) : (
-                      <>
-                        <Link href="/login" className="button-secondary px-6 py-2.5 rounded-xl text-sm font-semibold">
-                          Login Free
-                        </Link>
-                        <Link href="/pricing" className="button-primary px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2">
-                          <Zap className="w-4 h-4" />
-                          Upgrade to Premium
-                        </Link>
-                      </>
-                    )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Link
+                        href="/pricing"
+                        className="bg-gradient-to-r from-warning-500 to-orange-500 hover:from-warning-600 hover:to-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
+                      >
+                        <Zap className="w-4 h-4" />
+                        {userCredits > 0 ? 'Buy More Credits' : 'Upgrade to Premium'}
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </FadeIn>
