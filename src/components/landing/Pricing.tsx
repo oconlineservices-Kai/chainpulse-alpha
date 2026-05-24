@@ -12,9 +12,9 @@ import Link from 'next/link'
 
 // Credit pack definitions
 const CREDIT_PACKS = [
-  { id: 'starter' as const, credits: 5,  price: 399,  label: 'Starter',  icon: Sparkles },
-  { id: 'value' as const,   credits: 10, price: 699,  label: 'Value',    icon: Zap },
-  { id: 'pro' as const,     credits: 25, price: 1499, label: 'Pro',      icon: Crown },
+  { id: 'starter' as const, credits: 5,  amount: 499, disp: '\$5',    label: 'Starter',  icon: Sparkles },
+  { id: 'value' as const,   credits: 10, amount: 899, disp: '\$9',    label: 'Value',    icon: Zap },
+  { id: 'pro' as const,     credits: 25, amount: 1399, disp: '\$14',   label: 'Pro',      icon: Crown },
 ]
 
 // Window.Razorpay types
@@ -94,7 +94,7 @@ const plans = [
   {
     id: 'payper',
     name: 'Pay-Per-Alpha',
-    price: '₹399',
+    price: '\$1',
     period: '',
     description: 'Unlock single signals',
     icon: Sparkles,
@@ -404,7 +404,7 @@ export default function Pricing() {
                               {pack.credits} credits
                             </span>
                             <span className="text-text-muted text-xs">
-                              ₹{pack.price}
+                              {pack.disp}
                             </span>
                           </button>
                         )
