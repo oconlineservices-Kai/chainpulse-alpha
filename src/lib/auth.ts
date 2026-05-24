@@ -124,5 +124,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     strategy: 'jwt',
     // Shorten max age so sessions expire naturally if premium lapses
     maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  // Explicit cookie config: do NOT use __Secure- prefix.
+  // Fly.io's HTTPS→HTTP proxy strips __Secure- cookie values before they reach Next.js,
+  // making authentication impossible. By using non-prefixed cookies, the JWT survives the proxy.
+  cookies: {
+    sessionToken: {
+      name: 'authjs.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false,    // must be false — Fly.io proxy terminates TLS, app sees HTTP
+      }
+    }
   }
 })
