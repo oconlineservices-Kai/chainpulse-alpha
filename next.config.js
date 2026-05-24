@@ -84,6 +84,9 @@ const nextConfig = {
       },
     ];
   },
+  experimental: {
+    trustHostHeader: true,
+  },
   images: {
     remotePatterns: [
       {

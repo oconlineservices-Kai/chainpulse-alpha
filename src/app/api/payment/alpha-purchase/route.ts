@@ -188,7 +188,22 @@ export async function POST(req: NextRequest) {
       signalId,
     })
   } catch (error) {
-    const msg = error instanceof Error ? error.message : 'Failed to create purchase order'
+    const err = error instanceof Error ? error : new Error('Unknown error')
+    const msg = err.message
+    
+    // Friendly message for Prisma schema/column mismatch errors (deploy gap)
+    // e.g. "column alpha_purchases.expires_at does not exist"
+    if (msg.includes('does not exist') || msg.includes('column')) {
+      logApiResponse('POST', '/api/payment/alpha-purchase', 500, {
+        error: 'Schema mismatch — please contact support',
+        extras: { details: msg.slice(0, 200) },
+      })
+      return NextResponse.json({
+        error: 'A database schema mismatch was detected. The application has been deployed incorrectly. Please contact support.',
+        code: 'SCHEMA_MISMATCH',
+      }, { status: 500 })
+    }
+
     logApiResponse('POST', '/api/payment/alpha-purchase', 500, { error: msg })
     return NextResponse.json({ error: msg }, { status: 500 })
   }
