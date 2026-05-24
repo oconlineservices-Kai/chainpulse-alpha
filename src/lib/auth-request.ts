@@ -64,17 +64,43 @@ export async function getRequestSession(req: NextRequest): Promise<RequestUser |
     // Determine the salt from which cookie name was actually found.
     // The JWT was ENCODED using the cookie name as the salt (NextAuth does this internally).
     // So we must decode with the SAME salt that was used during encoding.
-    const foundInCookie = cookies[SESSION_TOKEN_COOKIE]
+    //
+    // IMPORTANT: Check the VALUE, not just key presence. When __Secure- cookie is stripped
+    // by Next.js (HTTP proxy from HTTPS), the key exists but value is empty string.
+    // Fall back to non-secure salt in that case.
+    const hasSecureCookie = cookies[SESSION_TOKEN_COOKIE] && cookies[SESSION_TOKEN_COOKIE].length > 0
+    const foundInCookie = hasSecureCookie
       ? SESSION_TOKEN_COOKIE
       : SESSION_TOKEN_COOKIE_DEV
 
-    console.log('[auth-request-debug] Secret found (first 5 chars):', secret.substring(0, 5) + '...')
-    console.log('[auth-request-debug] Attempting decode with salt:', foundInCookie, '(matched cookie name)')
+    let payload: any = null
+    let decodeError: Error | null = null
 
-    const payload = await decode({ token: tokenCookie, secret, salt: foundInCookie })
-    
-    console.log('[auth-request-debug] Decode result:', payload ? 'SUCCESS - email: ' + payload.email + ', sub: ' + (payload.sub ?? 'none') : 'NULL/FAILED')
-    console.log('[auth-request-debug] Payload keys:', payload ? Object.keys(payload).join(', ') : 'N/A')
+    // Try the best-guess salt first
+    try {
+      payload = await decode({ token: tokenCookie, secret, salt: foundInCookie })
+    } catch (e) {
+      decodeError = e as Error
+    }
+
+    // If that failed, try the OTHER salt (handles salt mismatch from cookie name detection)
+    if (!payload) {
+      const fallbackSalt = foundInCookie === SESSION_TOKEN_COOKIE
+        ? SESSION_TOKEN_COOKIE_DEV
+        : SESSION_TOKEN_COOKIE
+      try {
+        payload = await decode({ token: tokenCookie, secret, salt: fallbackSalt })
+        console.log('[auth-request-debug] Decode succeeded with fallback salt:', fallbackSalt)
+        decodeError = null
+      } catch (e2) {
+        // Both salts failed, use original error
+        console.log('[auth-request-debug] Both salts failed')
+      }
+    }
+
+    if (decodeError) {
+      console.error('[auth-request-debug] Decode failed with all attempts:', decodeError.message)
+    }
 
     if (!payload?.email) {
       console.log('[auth-request-debug] Decode returned payload but no email field')

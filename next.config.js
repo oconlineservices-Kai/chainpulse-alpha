@@ -84,9 +84,10 @@ const nextConfig = {
       },
     ];
   },
-  experimental: {
-    trustHostHeader: true,
-  },
+  // Note: trustHostHeader was attempted but is not a supported option in Next.js 14.2.0
+  // (Next.js server ignores X-Forwarded-Proto header from nginx/Fly proxy,
+  // which causes __Secure- cookie values to be stripped on HTTP connections).
+  // The fallback auth-request.ts now tries both cookie salts to handle this.
   images: {
     remotePatterns: [
       {
