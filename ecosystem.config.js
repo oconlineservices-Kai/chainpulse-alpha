@@ -31,7 +31,7 @@ module.exports = {
       NEXTAUTH_SECRET: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
       NEXTAUTH_URL: 'https://chainpulsealpha.com',
       NEON_DATABASE_URL: process.env.NEON_DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
-      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
+      DATABASE_URL: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
       RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
       RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || '',
       ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@chainpulsealpha.com',
