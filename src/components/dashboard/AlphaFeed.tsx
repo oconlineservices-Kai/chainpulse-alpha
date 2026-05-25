@@ -54,6 +54,15 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
   const [activeFilter, setActiveFilter] = useState<FilterType>('All')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  // Track locally-unlocked signal IDs so unlock is instant, no re-fetch dependency
+  const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
+
+  // Override locked status: a signal is unlocked if either the API says it's free
+  // OR the user just successfully purchased/unlocked it in this session
+  const isActuallyLocked = (signal: Signal): boolean => {
+    if (unlockedIds.has(signal.id)) return false
+    return isGenuinelyLocked(signal)
+  }
 
   const filters: FilterType[] = ['All', 'Free', 'Premium', 'High Confidence']
 
@@ -61,9 +70,9 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
   const filteredSignals = useMemo(() => {
     let result = signals
 
-    // Apply category filter
-    if (activeFilter === 'Free') result = result.filter(s => !isGenuinelyLocked(s))
-    else if (activeFilter === 'Premium') result = result.filter(s => isGenuinelyLocked(s))
+    // Apply category filter (use isActuallyLocked so locally-unlocked signals appear as Free)
+    if (activeFilter === 'Free') result = result.filter(s => !isActuallyLocked(s))
+    else if (activeFilter === 'Premium') result = result.filter(s => isActuallyLocked(s))
     else if (activeFilter === 'High Confidence') result = result.filter(s => s.correlationScore >= 85)
 
     // Apply search filter
@@ -201,7 +210,7 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
           {filteredSignals.map((signal, index) => {
-            const locked = isGenuinelyLocked(signal)
+            const locked = isActuallyLocked(signal)
             const StatusIcon = getStatusIcon(signal.status)
             const isPriceUp = signal.priceChange > 0
 
@@ -289,7 +298,12 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
                             : 'default'
                         }
                         compact
-                        onUnlocked={() => onRefetch?.()}
+                        onUnlocked={() => {
+                          // Instantly unlock locally — no re-fetch needed
+                          setUnlockedIds(prev => new Set(prev).add(signal.id))
+                          // Also trigger background re-fetch so the API state catches up
+                          onRefetch?.()
+                        }}
                       />
                     </div>
                   </Card>
