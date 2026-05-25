@@ -17,19 +17,10 @@
  *   - src/app/api/webhooks/razorpay/route.ts
  */
 
-import { PrismaClient } from '@prisma/client'
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log:
-      process.env.NODE_ENV === 'development'
-        ? ['query', 'warn', 'error']
-        : ['error', 'warn'],
-  })
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+/**
+ * Alias to src/lib/prisma.ts.
+ *
+ * Kept for back-compat — routes that accidentally import from
+ * '@/lib/db' get the same singleton with auto-retry middleware.
+ */
+export { prisma } from '@/lib/prisma'
