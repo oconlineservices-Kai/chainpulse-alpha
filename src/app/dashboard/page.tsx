@@ -53,8 +53,8 @@ export default function DashboardPage() {
           id: s.id,
           tokenSymbol: s.tokenSymbol,
           tokenName: s.tokenName ?? s.tokenSymbol,
-          price: 0,
-          priceChange: 0,
+          price: s.price ?? 0,
+          priceChange: s.priceChange ?? 0,
           sentimentScore: s.sentimentScore ?? 0,
           whaleConfidence: s.whaleConfidence ?? 0,
           correlationScore: s.correlationScore ?? 0,
@@ -62,9 +62,9 @@ export default function DashboardPage() {
           status: (s.locked === true ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
           twitterMentions: s.twitterMentions ?? 0,
           whaleWallets: s.whaleWallets ?? [],
-          recommendation: 'Skip' as 'Buy' | 'Sell' | 'Skip',
-          volume24h: 0,
-          marketCap: 0,
+          recommendation: (s.recommendation ?? 'Skip') as 'Buy' | 'Sell' | 'Skip',
+          volume24h: s.volume24h ?? 0,
+          marketCap: s.marketCap ?? 0,
           locked: s.locked === true,
         }))
 
@@ -73,12 +73,40 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Failed to fetch crypto data:', err)
       setError('Live market data temporarily unavailable. Showing fallback signals.')
-      const rawSignals = isPremiumActive ? mockSignals : mockSignals.slice(0, 5)
+
+      // Build sufficient fallback signals so locked cards appear at indices 3+
+      // mockSignals only has 2 entries — pad with our own premium-style entries
+      const FALLBACK_SIGNALS = [
+        ...mockSignals,
+        ...[{ id: 'solana', tokenSymbol: 'SOL', tokenName: 'Solana', sentimentScore: 76, whaleConfidence: 85, correlationScore: 81 },
+          { id: 'avalanche', tokenSymbol: 'AVAX', tokenName: 'Avalanche', sentimentScore: 71, whaleConfidence: 93, correlationScore: 82 },
+          { id: 'bnb', tokenSymbol: 'BNB', tokenName: 'BNB Chain', sentimentScore: 65, whaleConfidence: 78, correlationScore: 71 },
+          { id: 'polygon', tokenSymbol: 'MATIC', tokenName: 'Polygon', sentimentScore: 84, whaleConfidence: 88, correlationScore: 86 },
+          { id: 'optimism', tokenSymbol: 'OP', tokenName: 'Optimism', sentimentScore: 73, whaleConfidence: 69, correlationScore: 71 },
+          { id: 'chainlink', tokenSymbol: 'LINK', tokenName: 'Chainlink', sentimentScore: 79, whaleConfidence: 55, correlationScore: 67 },
+        ].map(s => ({
+          ...s,
+          price: 0,
+          priceChange: 0,
+          timestamp: new Date().toISOString(),
+          status: 'Free' as const,
+          twitterMentions: 0,
+          whaleWallets: [],
+          recommendation: 'Skip' as const,
+          volume24h: 0,
+          marketCap: 0,
+          signalSource: 'cached' as const,
+        })),
+      ]
+
+      const rawSignals = isPremiumActive ? FALLBACK_SIGNALS : FALLBACK_SIGNALS.slice(0, 5)
       const fallback = rawSignals.map((s, idx) => ({
         ...s,
         locked: !isPremiumActive && idx >= 3,
-        status: !isPremiumActive && idx >= 3 ? 'Locked' : s.status,
-        signalSource: 'cached' as const,
+        // Override status: preview signals (idx<3) get 'Free', locked get 'Locked'
+        status: !isPremiumActive
+          ? (idx >= 3 ? 'Locked' as const : 'Free' as const)
+          : s.status,
       }))
       setSignals(fallback)
     } finally {
@@ -224,6 +252,7 @@ export default function DashboardPage() {
               <SignalDetail
                 signal={selectedSignal}
                 onClose={() => setSelectedSignal(null)}
+                onRefetch={fetchData}
               />
             )}
           </AnimatePresence>

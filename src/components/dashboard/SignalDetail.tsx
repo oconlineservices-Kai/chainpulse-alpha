@@ -51,6 +51,7 @@ interface Signal {
 interface SignalDetailProps {
   signal: Signal
   onClose: () => void
+  onRefetch?: () => void
 }
 
 function getChainFromSymbol(symbol: string): string {
@@ -126,7 +127,7 @@ const mockTweets = [
   }
 ]
 
-export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
+export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetailProps) {
   const { data: session } = useSession()
   const modalRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
@@ -148,6 +149,8 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
   const [unlockSuccess, setUnlockSuccess] = useState(false)
   const handleUnlocked = () => {
     setUnlockSuccess(true)
+    // Also trigger parent refetch so the dashboard reflects the unlocked state
+    onRefetch?.()
   }
 
   // Gate all premium data behind this check

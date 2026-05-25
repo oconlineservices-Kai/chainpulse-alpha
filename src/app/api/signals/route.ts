@@ -358,6 +358,7 @@ export const GET = auth(async (req) => {
           delayHours: 24,
           delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
           locked: !isUnlocked, // mark locked for premium/buy now signals
+          status: isUnlocked ? 'Free' : 'Locked', // ensure correct status for free-tier users
         }
       })
     }
@@ -456,6 +457,7 @@ export const GET = auth(async (req) => {
           delayHours: 24,
           delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
           locked: !isUnlocked,
+          status: isUnlocked ? 'Free' : 'Locked',
         }
       })
     }

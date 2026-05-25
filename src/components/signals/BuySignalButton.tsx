@@ -181,7 +181,7 @@ export default function BuySignalButton({
   if (authStatus === 'unauthenticated') {
     return (
       <Link
-        href={`/login?callbackUrl=/signals`}
+        href={`/login?callbackUrl=/dashboard`}
         onClick={(e) => e.stopPropagation()}
         className={`inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-colors ${
           compact ? 'text-xs px-3 py-1.5' : 'text-sm px-4 py-2'
