@@ -194,7 +194,134 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const err = error instanceof Error ? error : new Error('Unknown error')
     const msg = err.message
-    
+
+    // Auto-retry logic: if the connection was closed, Prisma will re-establish
+    // on the next attempt. Try the Prisma queries again with $connect first.
+    const isConnectionError =
+      msg.toLowerCase().includes('closed the connection') ||
+      msg.toLowerCase().includes('connection terminated') ||
+      msg.toLowerCase().includes('connection pool exhausted') ||
+      msg.toLowerCase().includes('timeout')
+
+    if (isConnectionError) {
+      logApiResponse('POST', '/api/payment/alpha-purchase', 0, {
+        error: 'Connection dropped — retrying once',
+        extras: { details: msg.slice(0, 200) },
+      })
+      try {
+        // Force Prisma to close and re-establish connections
+        await prisma.$disconnect()
+        // Small delay to let the TCP stack settle
+        await new Promise(r => setTimeout(r, 100))
+        await prisma.$connect()
+
+        // Now retry the user lookup (the original query that failed)
+        const userRetry = await prisma.user.findUnique({
+          where: { email: userEmail },
+        })
+        if (!userRetry) {
+          logApiResponse('POST', '/api/payment/alpha-purchase', 404, { error: 'User not found (retry)' })
+          return NextResponse.json({ error: 'User not found' }, { status: 404 })
+        }
+
+        // Reparse body for second attempt
+        const body2 = await req.json()
+        const signalId2: string = typeof body2?.signalId === 'string' ? body2.signalId : ''
+        const signalType2: string = typeof body2?.signalType === 'string' ? body2.signalType : 'default'
+
+        if (!signalId2) {
+          return NextResponse.json({ error: 'signalId is required' }, { status: 400 })
+        }
+
+        // Check if already purchased (retry)
+        const existingRetry = await prisma.alphaPurchase.findFirst({
+          where: { userId: userRetry.id, signalId: signalId2 },
+        })
+        if (existingRetry) {
+          return NextResponse.json({ error: 'Signal already purchased', alreadyOwned: true }, { status: 409 })
+        }
+
+        // Credit purchase (retry)
+        if (userRetry.credits >= 1) {
+          const thirtyDaysFromNow = new Date()
+          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
+          await prisma.$transaction([
+            prisma.user.update({
+              where: { id: userRetry.id },
+              data: { credits: { decrement: 1 } },
+            }),
+            prisma.alphaPurchase.create({
+              data: {
+                userId: userRetry.id,
+                signalId: signalId2,
+                creditsUsed: 1,
+                expiresAt: thirtyDaysFromNow,
+              },
+            }),
+          ])
+          logApiResponse('POST', '/api/payment/alpha-purchase', 200, { extras: { method: 'credits (retry)', signalId: signalId2 } })
+          return NextResponse.json({
+            success: true,
+            method: 'credits',
+            creditsRemaining: userRetry.credits - 1,
+            message: '1 credit used — signal unlocked!',
+          })
+        }
+
+        // Paid purchase (retry)
+        const pricingRetry = SIGNAL_PRICES_USD[signalType2] ?? SIGNAL_PRICES_USD.default
+        const { totalPaise, totalINR, rate } = await convertToINR(pricingRetry.usd)
+        const razorpay = getRazorpay()
+        const orderRetry = await razorpay.orders.create({
+          amount: totalPaise,
+          currency: 'INR',
+          receipt: `alpha_${signalId2.slice(0, 8)}_${Date.now()}`,
+          notes: {
+            userId: userRetry.id,
+            signalId: signalId2,
+            signalType: signalType2,
+            purchaseType: 'alpha',
+            baseUSD: String(pricingRetry.usd),
+            exchangeRate: String(rate),
+          },
+        })
+        const txnRetry = await prisma.transaction.create({
+          data: {
+            userId: userRetry.id,
+            provider: 'razorpay',
+            transactionType: 'alpha_purchase',
+            providerPaymentId: orderRetry.id,
+            amount: totalINR,
+            currency: 'INR',
+            status: 'pending',
+            metadata: { signalId: signalId2, signalType: signalType2, baseUSD: pricingRetry.usd, exchangeRate: rate },
+          },
+        })
+        return NextResponse.json({
+          success: true,
+          method: 'payment',
+          orderId: orderRetry.id,
+          amount: orderRetry.amount,
+          currency: orderRetry.currency,
+          keyId: process.env.RAZORPAY_KEY_ID,
+          label: pricingRetry.label,
+          transactionId: txnRetry.id,
+          signalId: signalId2,
+        })
+      } catch (retryErr) {
+        const retryMsg = retryErr instanceof Error ? retryErr.message : 'Unknown error'
+        logApiResponse('POST', '/api/payment/alpha-purchase', 503, {
+          error: 'Database temporarily unavailable (retry failed)',
+          extras: { first: msg.slice(0, 100), retry: retryMsg.slice(0, 100) },
+        })
+        return NextResponse.json({
+          error: 'Database connection temporarily unavailable. Please try again in a few seconds.',
+          code: 'DB_CONNECTION_RETRY_FAILED',
+          retry: true,
+        }, { status: 503 })
+      }
+    }
+
     // Friendly message for Prisma schema/column mismatch errors (deploy gap)
     // e.g. "column alpha_purchases.expires_at does not exist"
     if (msg.includes('does not exist') || msg.includes('column')) {
