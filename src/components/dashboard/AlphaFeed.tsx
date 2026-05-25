@@ -215,7 +215,20 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="p-6 border border-slate-700/50 bg-slate-800/30">
+                  <Card
+                    hoverable
+                    className="p-6 border border-slate-700/50 bg-slate-800/30 cursor-pointer"
+                    onClick={() => onSelectSignal(signal)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View premium details for ${signal.tokenName} signal`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onSelectSignal(signal)
+                      }
+                    }}
+                  >
                     {/* Minimal header — only token name + symbol visible */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-4">

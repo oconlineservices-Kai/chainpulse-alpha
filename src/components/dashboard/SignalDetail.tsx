@@ -313,7 +313,7 @@ export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetai
               <p className="text-text-muted text-sm mb-6 max-w-md mx-auto">
                 Unlock this signal with 1 credit to access sentiment scores, whale wallet addresses, AI recommendations, and full market analysis.
               </p>
-              {isLoggedIn && userCredits > 0 && (
+              {isLoggedIn && (
                 <div className="inline-block">
                   <BuySignalButton
                     signalId={signal.id}
@@ -323,13 +323,13 @@ export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetai
                 </div>
               )}
               {isLoggedIn && userCredits <= 0 && (
-                <a
-                  href="/pricing"
-                  className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-colors"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  Buy Credits to Unlock
-                </a>
+                <p className="text-xs text-text-muted mt-2">
+                  or{' '}
+                  <a href="/pricing" className="text-primary-400 hover:text-primary-300 underline underline-offset-2">
+                    buy a credit pack
+                  </a>{' '}
+                  for volume discount
+                </p>
               )}
               {!isLoggedIn && (
                 <a

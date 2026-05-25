@@ -38,27 +38,15 @@ export async function getRequestSession(req: NextRequest): Promise<RequestUser |
     const cookies = parseCookies(rawCookie)
     const tokenCookie = cookies[SESSION_TOKEN_COOKIE] ?? cookies[SESSION_TOKEN_COOKIE_DEV]
 
-    // DEBUG: log cookie info
-    const cookieKeys = Object.keys(cookies)
-    const chunkedKeys = cookieKeys.filter(k => k.startsWith(SESSION_TOKEN_COOKIE))
-    console.log('[auth-request-debug] cookie header length:', rawCookie.length)
-    console.log('[auth-request-debug] cookie names:', JSON.stringify(cookieKeys))
-    console.log('[auth-request-debug] exact match found:', SESSION_TOKEN_COOKIE in cookies)
-    console.log('[auth-request-debug] dev match found:', SESSION_TOKEN_COOKIE_DEV in cookies)
-    console.log('[auth-request-debug] chunked cookies found:', JSON.stringify(chunkedKeys))
-    console.log('[auth-request-debug] token value (first 30):', tokenCookie ? tokenCookie.substring(0, 30) + '...' : 'null')
-
     if (!tokenCookie) {
-      console.log('[auth-request-debug] NO TOKEN COOKIE FOUND - returning null')
+      console.log('[auth-request-debug] No session token cookie found')
       return null
     }
 
     const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
-    if (!secret) { 
-      console.error('[auth-request] No AUTH_SECRET or NEXTAUTH_SECRET'); 
-      console.log('[auth-request-debug] AUTH_SECRET present:', !!process.env.AUTH_SECRET)
-      console.log('[auth-request-debug] NEXTAUTH_SECRET present:', !!process.env.NEXTAUTH_SECRET)
-      return null 
+    if (!secret) {
+      console.error('[auth-request] No AUTH_SECRET or NEXTAUTH_SECRET — JWT decode impossible');
+      return null
     }
 
     // Determine the salt from which cookie name was actually found.
@@ -90,20 +78,20 @@ export async function getRequestSession(req: NextRequest): Promise<RequestUser |
         : SESSION_TOKEN_COOKIE
       try {
         payload = await decode({ token: tokenCookie, secret, salt: fallbackSalt })
-        console.log('[auth-request-debug] Decode succeeded with fallback salt:', fallbackSalt)
+        console.log('[auth-request] Decode succeeded with fallback salt:', fallbackSalt)
         decodeError = null
       } catch (e2) {
         // Both salts failed, use original error
-        console.log('[auth-request-debug] Both salts failed')
+        console.warn('[auth-request] Both salt decode attempts failed')
       }
     }
 
     if (decodeError) {
-      console.error('[auth-request-debug] Decode failed with all attempts:', decodeError.message)
+      console.warn('[auth-request] JWT decode failed:', decodeError.message)
     }
 
     if (!payload?.email) {
-      console.log('[auth-request-debug] Decode returned payload but no email field')
+      console.warn('[auth-request] JWT decoded but missing email field')
       return null
     }
 

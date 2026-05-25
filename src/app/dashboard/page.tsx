@@ -207,7 +207,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-text-muted">
                     {userCredits > 0
                       ? `You have ${userCredits} credit${userCredits > 1 ? 's' : ''}. Use them to unlock premium signals individually.`
-                      : 'Top 5 signals shown. Upgrade to Premium for real-time access to all 20+ signals.'}
+                      : 'Top 3 signals shown. Unlock individual signals with a credit or upgrade to Premium for real-time access to all 20+ signals.'}
                   </p>
                 </div>
               </div>
@@ -227,11 +227,11 @@ export default function DashboardPage() {
           {!isPremiumActive && signals.length > 0 && (
             <div className="mb-6 text-center">
               <p className="text-xs text-text-muted">
-                <span className="text-text-secondary font-medium">{signals.length}</span> free signals shown.
-                Premium unlocks <span className="text-text-secondary font-medium">real-time</span> access to all signals plus{' '}
-                <span className="text-text-secondary font-medium">Diamond tier</span> and{' '}
+                You can see the first <span className="text-text-secondary font-medium">3 signals</span> for free.
+                Unlock individual signals with 1 credit or{' '}
+                <Link href="/pricing" className="text-primary-400 hover:text-primary-300 underline underline-offset-2">upgrade to Premium</Link>
+                {' '}for real-time access to all signals plus <span className="text-text-secondary font-medium">Diamond tier</span> and{' '}
                 <span className="text-text-secondary font-medium">whale analytics</span>.
-                {' '}<Link href="/pricing" className="text-primary-400 hover:text-primary-300 underline underline-offset-2">Upgrade →</Link>
               </p>
             </div>
           )}
