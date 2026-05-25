@@ -204,6 +204,28 @@ export async function POST(req: NextRequest) {
       }, { status: 500 })
     }
 
+    // 🔑 Handle "Server has closed the connection" — this happens when
+    // Neon drops an idle connection (direct connections, not pooled).
+    // The fix is documented in src/lib/prisma.ts:
+    //   1. Use the Neon **pooled** connection string (-pooler suffix)
+    //   2. Set PRISMA_CONNECTION_LIMIT env var for higher concurrency
+    if (
+      msg.toLowerCase().includes('closed the connection') ||
+      msg.toLowerCase().includes('connection terminated') ||
+      msg.toLowerCase().includes('connection pool exhausted') ||
+      msg.toLowerCase().includes('timeout')
+    ) {
+      logApiResponse('POST', '/api/payment/alpha-purchase', 503, {
+        error: 'Database connection temporarily unavailable',
+        extras: { details: msg.slice(0, 200) },
+      })
+      return NextResponse.json({
+        error: 'Database connection temporarily unavailable. Our payment system uses a direct database connection that may drop after idle periods. Please try again — your payment will be processed correctly.',
+        code: 'DB_CONNECTION_CLOSED',
+        retry: true,
+      }, { status: 503 })
+    }
+
     logApiResponse('POST', '/api/payment/alpha-purchase', 500, { error: msg })
     return NextResponse.json({ error: msg }, { status: 500 })
   }

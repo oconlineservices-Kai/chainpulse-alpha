@@ -140,6 +140,26 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Verification failed'
+
+    // 🔑 Handle "Server has closed the connection" — see alpha-purchase for details
+    if (
+      msg.toLowerCase().includes('closed the connection') ||
+      msg.toLowerCase().includes('connection terminated') ||
+      msg.toLowerCase().includes('connection pool exhausted') ||
+      msg.toLowerCase().includes('timeout')
+    ) {
+      logApiResponse('POST', '/api/payment/alpha-verify', 503, {
+        email,
+        error: 'Database connection temporarily unavailable',
+        extras: { details: msg.slice(0, 200) },
+      })
+      return NextResponse.json({
+        error: 'Database connection temporarily unavailable. Please try again — your payment will still be verified.',
+        code: 'DB_CONNECTION_CLOSED',
+        retry: true,
+      }, { status: 503 })
+    }
+
     logApiResponse('POST', '/api/payment/alpha-verify', 500, { email, error: msg })
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
   }
