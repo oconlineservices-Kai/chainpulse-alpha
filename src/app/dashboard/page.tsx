@@ -73,8 +73,11 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Failed to fetch crypto data:', err)
       setError('Live market data temporarily unavailable. Showing fallback signals.')
-      const fallback = (isPremiumActive ? mockSignals : mockSignals.slice(0, 5)).map(s => ({
+      const rawSignals = isPremiumActive ? mockSignals : mockSignals.slice(0, 5)
+      const fallback = rawSignals.map((s, idx) => ({
         ...s,
+        locked: !isPremiumActive && idx >= 3,
+        status: !isPremiumActive && idx >= 3 ? 'Locked' : s.status,
         signalSource: 'cached' as const,
       }))
       setSignals(fallback)

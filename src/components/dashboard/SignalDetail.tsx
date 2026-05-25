@@ -282,68 +282,7 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
           </div>
         </div>
 
-        {/* Premium/Locked Unlock Banner */}
-        {!isLoggedIn && (signal.status === 'Premium' || signal.status === 'Locked') && (
-          <div className="p-4 mx-6 mt-6 rounded-xl border border-primary-500/30 bg-gradient-to-r from-primary-500/10 to-secondary-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Lock className="w-6 h-6 text-primary-400 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-text-primary">Premium Signal</p>
-                <p className="text-xs text-text-muted">Login to unlock this signal and access full details.</p>
-              </div>
-            </div>
-            <a
-              href={`/login?callbackUrl=/dashboard`}
-              className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
-            >
-              <Zap className="w-4 h-4" />
-              Login to Unlock
-            </a>
-          </div>
-        )}
-
-        {/* Unlock Banner for Logged-In Free Users */}
-        {isLoggedIn && !unlockSuccess && (signal.status === 'Premium' || signal.status === 'Locked') && (
-          <div className="p-4 mx-6 mt-6 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Crown className="w-6 h-6 text-yellow-400 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-text-primary">
-                    {isHighConfidence ? '💎 Diamond Premium Signal' : '🐋 Premium Signal'}
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    {userCredits > 0 
-                      ? `You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}. Unlock this premium signal for just 1 credit.`
-                      : 'Unlock this premium signal individually with Pay-Per-Alpha.'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <BuySignalButton
-                  signalId={signal.id}
-                  signalType={getSignalTypeForDashboard()}
-                  onUnlocked={handleUnlocked}
-                />
-                <a
-                  href="/pricing"
-                  className="text-xs text-primary-400 hover:text-primary-300 font-medium whitespace-nowrap"
-                >
-                  Premium Access →
-                </a>
-              </div>
-            </div>
-            {/* Credit balance line */}
-            {userCredits > 0 && (
-              <div className="mt-3 pt-3 border-t border-yellow-500/10 flex items-center gap-2 text-xs text-text-muted">
-                <Sparkles className="w-3 h-3 text-yellow-400" />
-                <span>Your balance: <strong className="text-yellow-400">{userCredits} credit{userCredits !== 1 ? 's' : ''}</strong> — <span className="text-text-muted">1 credit unlocks this signal</span></span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Unlocked Success Banner */}
+        {/* Unlocked Success Banner — shown briefly after successful unlock */}
         {unlockSuccess && (
           <div className="p-4 mx-6 mt-6 rounded-xl border border-success-500/30 bg-gradient-to-r from-success-500/10 to-emerald-500/10">
             <div className="flex items-center gap-3">

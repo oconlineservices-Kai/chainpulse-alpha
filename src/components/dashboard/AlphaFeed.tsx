@@ -32,7 +32,7 @@ type FilterType = 'All' | 'Free' | 'Premium' | 'High Confidence'
 
 // ── Helper: how many free (unlocked) preview cards exist ──────────────────────
 function countFreeSignals(list: Signal[]): number {
-  return list.filter(s => !s.locked).length
+  return list.filter(s => !isGenuinelyLocked(s)).length
 }
 
 // ── Determine whether this card represents a genuinely locked signal ──────────
@@ -62,8 +62,8 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
     let result = signals
 
     // Apply category filter
-    if (activeFilter === 'Free') result = result.filter(s => s.status === 'Free')
-    else if (activeFilter === 'Premium') result = result.filter(s => s.status === 'Premium')
+    if (activeFilter === 'Free') result = result.filter(s => !isGenuinelyLocked(s))
+    else if (activeFilter === 'Premium') result = result.filter(s => isGenuinelyLocked(s))
     else if (activeFilter === 'High Confidence') result = result.filter(s => s.correlationScore >= 85)
 
     // Apply search filter
@@ -80,8 +80,12 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    if (onRefetch) {
+      await onRefetch()
+    } else {
+      // Simulate API call fallback
+      await new Promise(resolve => setTimeout(resolve, 1500))
+    }
     setIsRefreshing(false)
   }
 
