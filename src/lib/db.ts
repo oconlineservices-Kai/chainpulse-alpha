@@ -30,9 +30,6 @@ export const prisma =
       process.env.NODE_ENV === 'development'
         ? ['query', 'warn', 'error']
         : ['error', 'warn'],
-    ...(process.env.PRISMA_CONNECTION_LIMIT
-      ? { connection_limit: parseInt(process.env.PRISMA_CONNECTION_LIMIT, 10) }
-      : {}),
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
