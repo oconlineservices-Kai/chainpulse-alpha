@@ -47,9 +47,10 @@ function isGenuinelyLocked(signal: Signal): boolean {
 interface AlphaFeedProps {
   signals: Signal[]
   onSelectSignal: (signal: Signal) => void
+  onRefetch?: () => void
 }
 
-export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
+export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaFeedProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>('All')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -271,6 +272,7 @@ export default function AlphaFeed({ signals, onSelectSignal }: AlphaFeedProps) {
                             : 'default'
                         }
                         compact
+                        onUnlocked={() => onRefetch?.()}
                       />
                     </div>
                   </Card>

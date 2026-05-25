@@ -213,7 +213,7 @@ export default function DashboardPage() {
           )}
 
           {/* Main Alpha Feed */}
-          <AlphaFeed signals={signals} onSelectSignal={setSelectedSignal} />
+          <AlphaFeed signals={signals} onSelectSignal={setSelectedSignal} onRefetch={fetchData} />
 
           {/* Signal Detail Modal */}
           <AnimatePresence>

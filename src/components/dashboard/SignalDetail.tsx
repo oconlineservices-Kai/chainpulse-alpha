@@ -45,6 +45,7 @@ interface Signal {
   recommendation: 'Buy' | 'Sell' | 'Skip'
   volume24h: number
   marketCap: number
+  locked?: boolean
 }
 
 interface SignalDetailProps {
@@ -148,6 +149,9 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
   const handleUnlocked = () => {
     setUnlockSuccess(true)
   }
+
+  // Gate all premium data behind this check
+  const isDataUnlocked = !signal.locked || unlockSuccess
 
   // Handle ESC key to close modal
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -356,6 +360,50 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
           </div>
         )}
 
+        {/* Locked Data Overlay — blur all detailed data behind a lock screen */}
+        {!isDataUnlocked && (
+          <div className="p-6">
+            <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-b from-yellow-500/5 to-background-card p-12 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-yellow-400" />
+              </div>
+              <h3 className="text-xl font-bold text-text-primary mb-2">Premium Signal Data Locked</h3>
+              <p className="text-text-muted text-sm mb-6 max-w-md mx-auto">
+                Unlock this signal with 1 credit to access sentiment scores, whale wallet addresses, AI recommendations, and full market analysis.
+              </p>
+              {isLoggedIn && userCredits > 0 && (
+                <div className="inline-block">
+                  <BuySignalButton
+                    signalId={signal.id}
+                    signalType={getSignalTypeForDashboard()}
+                    onUnlocked={handleUnlocked}
+                  />
+                </div>
+              )}
+              {isLoggedIn && userCredits <= 0 && (
+                <a
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-colors"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Buy Credits to Unlock
+                </a>
+              )}
+              {!isLoggedIn && (
+                <a
+                  href="/login?callbackUrl=/dashboard"
+                  className="inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold text-sm px-6 py-3 rounded-lg transition-colors"
+                >
+                  <Zap className="w-4 h-4" />
+                  Login to Unlock
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Full Data — only rendered when unlocked */}
+        {isDataUnlocked && (
         <div className="p-6 space-y-6">
           {/* Confidence Scores */}
           <div className="grid md:grid-cols-3 gap-4">
@@ -593,6 +641,7 @@ export default function SignalDetail({ signal, onClose }: SignalDetailProps) {
             </CardContent>
           </Card>
         </div>
+        )}
       </motion.div>
     </div>
   )
