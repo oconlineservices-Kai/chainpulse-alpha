@@ -17,6 +17,10 @@
 import Razorpay from 'razorpay'
 import { NextResponse, NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { registerGracefulShutdown } from '@/lib/prisma-shutdown'
+
+// Register Prisma graceful shutdown on server start
+registerGracefulShutdown()
 import { convertToINR } from '@/lib/exchange-rate'
 import { checkRateLimit, getClientIP, getRateLimitKey } from '@/lib/security'
 import { logApiResponse } from '@/lib/api/response-logger'
