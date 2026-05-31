@@ -44,6 +44,7 @@ export default function PremiumNavigationSimple() {
             <Link href="/features" className="text-gray-300 hover:text-white transition">Features</Link>
             <Link href="/signals" className="text-gray-300 hover:text-white transition">Signals</Link>
             <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
+            <Link href="/about" className="text-gray-300 hover:text-white transition">About</Link>
             <Link href="/contact" className="text-gray-300 hover:text-white transition">Contact</Link>
 
             {/* Admin link — only visible to admins */}
@@ -89,6 +90,7 @@ export default function PremiumNavigationSimple() {
               <Link href="/features" className="block text-gray-300 hover:text-white py-2">Features</Link>
               <Link href="/signals" className="block text-gray-300 hover:text-white py-2">Signals</Link>
               <Link href="/pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
+              <Link href="/about" className="block text-gray-300 hover:text-white py-2">About</Link>
               <Link href="/contact" className="block text-gray-300 hover:text-white py-2">Contact</Link>
               {isAdmin && (
                 <Link href="/admin/dashboard" className="block text-orange-400 hover:text-orange-300 py-2 flex items-center gap-2">

@@ -23,6 +23,7 @@ import {
 import FadeIn, { FadeInStagger } from '@/components/animations/FadeIn'
 import { HoverScale } from '@/components/animations/ScaleIn'
 import Link from 'next/link'
+import { usePageMeta } from '@/lib/usePageMeta'
 import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
 
@@ -168,6 +169,16 @@ const methodologySteps = [
 ]
 
 export default function FeaturesPage() {
+  usePageMeta({
+    title: 'Features - AI-Powered Crypto Signals | ChainPulse Alpha',
+    description: 'Explore ChainPulse Alpha features: whale wallet tracking, Twitter sentiment analysis, AI-powered signals, correlation scoring, and real-time alerts for crypto traders.',
+    ogTitle: 'Features | ChainPulse Alpha - AI Crypto Signal Platform',
+    ogDescription: 'Real-time whale tracking, sentiment analysis, and AI-powered crypto signals. Features include 500+ wallet monitoring, 250K+ daily tweets analyzed, and multi-exchange correlation scoring.',
+    ogUrl: 'https://chainpulsealpha.com/features',
+    canonical: 'https://chainpulsealpha.com/features',
+    keywords: 'crypto signals features, whale tracking, sentiment analysis crypto, AI trading signals, crypto alert system, blockchain analytics features'
+  })
+
   useEffect(() => {
     // Inject JSON-LD structured data for software application
     const scriptId = 'schema-features'

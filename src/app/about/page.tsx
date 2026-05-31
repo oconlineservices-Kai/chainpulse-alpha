@@ -19,6 +19,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import FadeIn, { FadeInStagger } from '@/components/animations/FadeIn'
+import { usePageMeta } from '@/lib/usePageMeta'
 import { HoverScale } from '@/components/animations/ScaleIn'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -84,6 +85,16 @@ const methodologySteps = [
 ]
 
 export default function AboutPage() {
+  usePageMeta({
+    title: 'About ChainPulse Alpha | AI-Powered Crypto Signal Platform',
+    description: 'Learn about ChainPulse Alpha - the AI-powered crypto signal platform combining on-chain whale wallet tracking with social sentiment analysis for retail traders.',
+    ogTitle: 'About Us | ChainPulse Alpha',
+    ogDescription: 'Discover how ChainPulse Alpha democratizes professional-grade crypto trading signals through AI-powered whale tracking and sentiment analysis. 10,000+ wallets monitored, 250,000+ tweets analyzed daily.',
+    ogUrl: 'https://chainpulsealpha.com/about',
+    canonical: 'https://chainpulsealpha.com/about',
+    keywords: 'about chainpulse alpha, crypto signal platform, AI trading signals, whale tracking, crypto market intelligence'
+  })
+
   useEffect(() => {
     // Set document title for 'use client' page
     document.title = 'About ChainPulse Alpha | AI-Powered Crypto Signal Platform'

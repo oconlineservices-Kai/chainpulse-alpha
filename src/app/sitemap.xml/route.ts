@@ -11,6 +11,7 @@ export async function GET() {
     { url: baseUrl, lastMod: new Date(), freq: 'daily', pri: 1 },
     { url: `${baseUrl}/pricing`, lastMod: new Date(), freq: 'weekly', pri: 0.9 },
     { url: `${baseUrl}/features`, lastMod: new Date(), freq: 'monthly', pri: 0.8 },
+    { url: `${baseUrl}/about`, lastMod: new Date(), freq: 'monthly', pri: 0.7 },
     { url: `${baseUrl}/signals`, lastMod: new Date(), freq: 'daily', pri: 0.8 },
     { url: `${baseUrl}/login`, lastMod: new Date(), freq: 'monthly', pri: 0.5 },
     { url: `${baseUrl}/signup`, lastMod: new Date(), freq: 'monthly', pri: 0.6 },

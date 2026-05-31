@@ -19,6 +19,7 @@ import { HoverScale } from '@/components/animations/ScaleIn'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import BuySignalButton from '@/components/signals/BuySignalButton'
+import { usePageMeta } from '@/lib/usePageMeta'
 
 interface LiveSignal {
   id: string
@@ -96,7 +97,17 @@ const typeStyles = {
 }
 
 export default function SignalsPage() {
-  // Set page metadata for SEO — use client pages can't export metadata
+  usePageMeta({
+    title: 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha',
+    description: 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Browse live crypto trading signals, free tier available.',
+    ogTitle: 'Live Crypto Signals | ChainPulse Alpha',
+    ogDescription: 'Browse real-time AI-powered crypto trading signals. Whale wallet tracking, sentiment analysis, and high-confidence alpha signals updated daily.',
+    ogUrl: 'https://chainpulsealpha.com/signals',
+    canonical: 'https://chainpulsealpha.com/signals',
+    keywords: 'live crypto signals, trading signals, crypto alerts, whale tracking signals, sentiment analysis, AI trading signals'
+  })
+
+  // Fallback metadata injection
   useEffect(() => {
     document.title = 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha'
     
