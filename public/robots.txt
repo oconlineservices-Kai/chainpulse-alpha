@@ -8,7 +8,7 @@ Allow: /
 Sitemap: https://chainpulsealpha.com/sitemap.xml
 
 # Crawl-delay for bots
-Crawl-delay: 10
+Crawl-delay: 3
 
 # Disallow admin and API routes
 Disallow: /admin/
@@ -17,3 +17,13 @@ Disallow: /dashboard/
 
 # Allow specific API endpoints that are public
 Allow: /api/auth/
+
+# Specific AI bot allowances for faster indexing
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /

@@ -96,6 +96,37 @@ const typeStyles = {
 }
 
 export default function SignalsPage() {
+  // Set page metadata for SEO — use client pages can't export metadata
+  useEffect(() => {
+    document.title = 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha'
+    
+    const setMetaTag = (name: string, content: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`)
+      if (!el) {
+        el = document.createElement('meta')
+        if (name.startsWith('og:')) {
+          el.setAttribute('property', name)
+        } else {
+          el.setAttribute('name', name)
+        }
+        document.head.appendChild(el)
+      }
+      el.setAttribute('content', content)
+    }
+
+    setMetaTag('description', 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Free tier available with daily signals.')
+    setMetaTag('og:title', 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha')
+    setMetaTag('og:description', 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Free tier available with daily signals.')
+    setMetaTag('og:type', 'website')
+    setMetaTag('og:url', 'https://chainpulsealpha.com/signals')
+    setMetaTag('twitter:card', 'summary_large_image')
+    setMetaTag('twitter:title', 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha')
+    setMetaTag('twitter:description', 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis.')
+
+    return () => {
+      // clean up on unmount (optional)
+    }
+  }, [])
   const { data: session } = useSession()
   const isLoggedIn = !!session
   const userCredits = (session?.user as any)?.credits ?? 0

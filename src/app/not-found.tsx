@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: '404 — Block Not Found | ChainPulse Alpha',
-  description: 'This page doesn\'t exist — it might have been rugged, no-coined, or never mined. Head back to the mempool.',
+  title: '404 — Page Not Found | ChainPulse Alpha',
+  description: 'Page not found — try exploring live crypto signals, features, or pricing. Head back to the mempool.',
 }
 
 export default function NotFound() {
@@ -19,7 +19,7 @@ export default function NotFound() {
             404
           </div>
           <div className="mt-2 inline-block px-4 py-1.5 rounded-full bg-background-card border border-border text-text-muted text-xs font-mono tracking-wider uppercase">
-            ⛏️ Block Not Mined
+            ⛏️ Page Not Found — Block Not Mined
           </div>
         </div>
 
@@ -36,7 +36,7 @@ export default function NotFound() {
             <span className="text-text-muted font-medium">never mined</span>.
           </p>
 
-          {/* Crypo-themed hint block */}
+          {/* Crypto-themed hint block */}
           <div className="bg-background-muted/60 rounded-xl p-4 border border-border text-left">
             <div className="flex items-center gap-2 text-xs font-mono text-text-muted mb-2">
               <span className="w-2 h-2 rounded-full bg-danger-500 animate-pulse" />
@@ -53,6 +53,28 @@ export default function NotFound() {
               <span className="text-accent-400">tx</span> status:{' '}
               <span className="text-danger-400">reverted</span>
             </p>
+          </div>
+
+          {/* Suggested pages */}
+          <div className="bg-background-muted/60 rounded-xl p-4 border border-border text-left">
+            <div className="flex items-center gap-2 text-xs font-mono text-text-muted mb-3">
+              <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
+              <span>Looking for something?</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Link href="/signals" className="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-2">
+                📡 View Live Crypto Signals
+              </Link>
+              <Link href="/features" className="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-2">
+                ⚙️ Explore Platform Features
+              </Link>
+              <Link href="/pricing" className="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-2">
+                💎 See Pricing Plans
+              </Link>
+              <Link href="/about" className="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-2">
+                ℹ️ About ChainPulse Alpha
+              </Link>
+            </div>
           </div>
 
           {/* Navigation buttons */}
