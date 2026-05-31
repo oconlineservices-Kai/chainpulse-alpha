@@ -400,7 +400,7 @@ export default function AboutContent() {
             <p className="text-text-secondary mb-6 max-w-md mx-auto">
               Join early access traders using ChainPulse Alpha to stay ahead of the market.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-wrap gap-3 justify-center mb-4">
               <Link
                 href="/signup"
                 className="button-primary px-8 py-3 rounded-xl font-semibold text-center"
@@ -412,6 +412,18 @@ export default function AboutContent() {
                 className="button-secondary px-8 py-3 rounded-xl font-semibold text-center"
               >
                 View Features
+              </Link>
+              <Link
+                href="/signals"
+                className="button-ghost px-8 py-3 rounded-xl font-semibold text-center"
+              >
+                Live Signals
+              </Link>
+              <Link
+                href="/blog"
+                className="button-ghost px-8 py-3 rounded-xl font-semibold text-center"
+              >
+                Read Blog
               </Link>
             </div>
           </div>

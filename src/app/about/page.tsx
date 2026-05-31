@@ -15,5 +15,23 @@ export const metadata: Metadata = {
 }
 
 export default function AboutPage() {
-  return <AboutContent />
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://chainpulsealpha.com' },
+      { '@type': 'ListItem', position: 2, name: 'About', item: 'https://chainpulsealpha.com/about' },
+    ],
+  }
+
+  return (
+    <>
+      {/* BreadcrumbList Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
+      <AboutContent />
+    </>
+  )
 }

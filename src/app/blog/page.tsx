@@ -23,6 +23,20 @@ const breadcrumbSchema = {
   ],
 }
 
+const blogSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  '@id': `${siteUrl}/blog#blog`,
+  name: 'ChainPulse Alpha Blog',
+  description: 'Read ChainPulse Alpha insights on crypto market analysis, whale tracking, sentiment analysis, and trading signal interpretation.',
+  url: `${siteUrl}/blog`,
+  publisher: {
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+    name: 'ChainPulse Alpha',
+  },
+}
+
 export const metadata: Metadata = {
   title: 'Crypto Blog - ChainPulse Alpha',
   description:
@@ -57,6 +71,11 @@ export default function BlogPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-white">
+      {/* Blog Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogSchema) }}
+      />
       {/* BreadcrumbList Schema */}
       <script
         type="application/ld+json"
