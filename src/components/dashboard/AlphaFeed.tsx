@@ -57,6 +57,19 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
   // Track locally-unlocked signal IDs so unlock is instant, no re-fetch dependency
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
 
+  // Defensive: log all signal lock states to browser console for debugging
+  if (typeof window !== 'undefined') {
+    console.debug('[AlphaFeed] Signals lock status:', signals.map(s => ({
+      id: s.id,
+      sym: s.tokenSymbol,
+      locked: s.locked,
+      status: s.status,
+      isGenuinelyLocked: isGenuinelyLocked(s),
+      inUnlockedIds: unlockedIds.has(s.id),
+      isActuallyLocked: unlockedIds.has(s.id) ? false : isGenuinelyLocked(s),
+    })))
+  }
+
   // Override locked status: a signal is unlocked if either the API says it's free
   // OR the user just successfully purchased/unlocked it in this session
   const isActuallyLocked = (signal: Signal): boolean => {

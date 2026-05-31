@@ -11,6 +11,8 @@ import { DashboardSkeleton } from '@/components/ui/Skeleton'
 import { fetchTopCoins, mockSignals, Signal } from '@/lib/api/crypto'
 import Link from 'next/link'
 
+const BUILD_VERSION = '2026-05-30-v2'
+
 export default function DashboardPage() {
   const { data: session, status, update } = useSession({
     required: true,
@@ -41,7 +43,7 @@ export default function DashboardPage() {
         setSignals(data)
       } else {
         // Free tier: fetch from the real /api/signals endpoint which handles gating
-        const res = await fetch('/api/signals?limit=10')
+        const res = await fetch(`/api/signals?limit=10&_v=${BUILD_VERSION}`)
         if (!res.ok) throw new Error(`API error: ${res.status}`)
         const json = await res.json()
         const apiSignals = json?.data?.signals ?? []
@@ -59,7 +61,7 @@ export default function DashboardPage() {
           whaleConfidence: s.whaleConfidence ?? 0,
           correlationScore: s.correlationScore ?? 0,
           timestamp: s.createdAt ?? new Date().toISOString(),
-          status: (s.locked === true ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
+          status: (s.locked === true || s.status === 'Premium' ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
           twitterMentions: s.twitterMentions ?? 0,
           whaleWallets: s.whaleWallets ?? [],
           recommendation: (s.recommendation ?? 'Skip') as 'Buy' | 'Sell' | 'Skip',
@@ -99,7 +101,7 @@ export default function DashboardPage() {
         })),
       ]
 
-      const rawSignals = isPremiumActive ? FALLBACK_SIGNALS : FALLBACK_SIGNALS.slice(0, 5)
+      const rawSignals = isPremiumActive ? FALLBACK_SIGNALS : FALLBACK_SIGNALS.slice(0, 8)
       const fallback = rawSignals.map((s, idx) => ({
         ...s,
         locked: !isPremiumActive && idx >= 3,

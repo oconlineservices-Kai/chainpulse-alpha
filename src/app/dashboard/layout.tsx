@@ -9,14 +9,24 @@
  * the global Navigation and caused visual overlap. Removed.
  */
 
+import Head from 'next/head'
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      {children}
-    </div>
+    <>
+      <Head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+        <meta name="build-version" content="2026-05-30-v2" />
+      </Head>
+      <div className="min-h-screen bg-background">
+        {children}
+      </div>
+    </>
   )
 }

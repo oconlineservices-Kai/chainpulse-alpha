@@ -379,7 +379,7 @@ export const GET = auth(async (req) => {
         ]
         const walletIsDemo = s.whaleWallets?.length > 0 && s.whaleWallets.every(w => DEMO_WALLETS.includes(w))
         if (walletIsDemo) return s // demo wallets always visible
-        return { ...s, whaleWallets: s.isDiamondSignal ? ['[Premium metadata]'] : [] }
+        return { ...s, whaleWallets: s.isDiamondSignal ? [] : [] }
       })
     }
 

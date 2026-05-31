@@ -58,6 +58,7 @@ function getChainFromSymbol(symbol: string): string {
   const map: Record<string, string> = {
     ETH: 'ethereum',
     SOL: 'solana',
+    BTC: 'bitcoin',
     BNB: 'bsc',
     ARB: 'arbitrum',
     AVAX: 'avalanche',
@@ -72,6 +73,7 @@ function getChainFromSymbol(symbol: string): string {
 const EXPLORER_NAMES: Record<string, string> = {
   ethereum: 'Etherscan',
   solana: 'Solscan',
+  bitcoin: 'Blockchain.info',
   bsc: 'BscScan',
   arbitrum: 'Arbiscan',
   avalanche: 'Snowtrace',
@@ -82,6 +84,7 @@ const EXPLORER_NAMES: Record<string, string> = {
 const EXPLORER_URLS: Record<string, string> = {
   ethereum: 'https://etherscan.io/address',
   solana: 'https://solscan.io/account',
+  bitcoin: 'https://blockchain.info/address',
   bsc: 'https://bscscan.com/address',
   arbitrum: 'https://arbiscan.io/address',
   avalanche: 'https://snowtrace.io/address',
