@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import SignalsContent from './SignalsContent'
 
+export const revalidate = 60
+
 export const metadata: Metadata = {
   title: 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha',
   description: 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Browse live crypto trading signals, free tier available with daily updates.',

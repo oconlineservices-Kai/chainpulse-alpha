@@ -15,6 +15,40 @@ import Footer from '@/components/landing/Footer'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://chainpulsealpha.com'
 
+const webApplicationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  '@id': `${siteUrl}/#webapp`,
+  name: 'ChainPulse Alpha',
+  description: 'AI-powered crypto signal platform combining whale wallet tracking with Twitter sentiment analysis for real-time trading signals.',
+  url: siteUrl,
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  browserRequirements: 'Requires modern browser with JavaScript enabled',
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+  },
+}
+
+const datasetSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  '@id': `${siteUrl}/#signals-dataset`,
+  name: 'ChainPulse Alpha Crypto Signal Dataset',
+  description: 'Real-time AI-generated crypto trading signals derived from on-chain whale wallet movements and Twitter sentiment analysis. Includes sentiment scores, whale confidence levels, correlation scoring, and wallet addresses.',
+  url: `${siteUrl}/signals`,
+  keywords: ['crypto signals', 'whale tracking', 'sentiment analysis', 'trading signals', 'on-chain data'],
+  publisher: {
+    '@type': 'Organization',
+    '@id': `${siteUrl}/#organization`,
+  },
+  temporalCoverage: 'P30D',
+  frequency: 'P1D',
+}
+
 const faqSchema = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
@@ -81,6 +115,24 @@ const faqSchema = {
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(webApplicationSchema)
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026'),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(datasetSchema)
+            .replace(/</g, '\\u003c')
+            .replace(/>/g, '\\u003e')
+            .replace(/&/g, '\\u0026'),
+        }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
