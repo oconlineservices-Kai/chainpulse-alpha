@@ -35,6 +35,8 @@ export function generateMetadata({ params }: PageProps): Metadata {
       type: 'article',
       url: canonical,
       publishedTime: post.date,
+      modifiedTime: post.date,
+      tags: Array.isArray(post.keywords) ? post.keywords : ['crypto', 'blockchain', 'trading'],
       siteName: 'ChainPulse Alpha',
     },
     twitter: {

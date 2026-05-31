@@ -350,15 +350,41 @@ export const GET = auth(async (req) => {
         const isPreview = idx < FREE_PREVIEW_LIMIT
         const isPurchased = purchasedSignalIds.includes(s.id)
         const isUnlocked = isPreview || isPurchased
+        if (!isUnlocked) {
+          // 🔴 SECURITY: Zero out all proprietary data for locked/premium signals
+          // Frontend uses `locked: true` + `status: 'Locked'` to gate display,
+          // but we MUST NOT trust client-side enforcement alone.
+          // A malicious user inspecting the API response via DevTools gets
+          // tokenSymbol and tokenName only — no signal data.
+          return {
+            id: s.id,
+            tokenSymbol: s.tokenSymbol,
+            tokenName: s.tokenName,
+            price: 0,
+            priceChange: 0,
+            volume24h: 0,
+            marketCap: 0,
+            sentimentScore: 0,
+            whaleConfidence: 0,
+            correlationScore: 0,
+            twitterMentions: 0,
+            isDiamondSignal: true,
+            whaleWallets: [],
+            createdAt: s.createdAt,
+            expiresAt: s.expiresAt,
+            delayHours: 24,
+            delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
+            locked: true,
+            status: 'Locked',
+          }
+        }
         return {
           ...s,
-          // Keep demo wallets visible for the preview signals and purchased signals
-          whaleWallets: isUnlocked && usingDemoSignals ? s.whaleWallets : (isUnlocked ? [] : []),
-          twitterMentions: isUnlocked ? (s.twitterMentions ?? 0) : 0, // hide exact counts on locked
-          delayHours: 24,
-          delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
-          locked: !isUnlocked, // mark locked for premium/buy now signals
-          status: isUnlocked ? 'Free' : 'Locked', // ensure correct status for free-tier users
+          whaleWallets: usingDemoSignals ? s.whaleWallets : s.whaleWallets,
+          twitterMentions: s.twitterMentions ?? 0,
+          delayHours: 0,
+          locked: false,
+          status: 'Free',
         }
       })
     }
@@ -452,12 +478,34 @@ export const GET = auth(async (req) => {
       }
       demoSignals = demoSignals.map((s, idx) => {
         const isUnlocked = idx < 3 || purchasedIds.includes(s.id)
+        if (!isUnlocked) {
+          return {
+            id: s.id,
+            tokenSymbol: s.tokenSymbol,
+            tokenName: s.tokenName,
+            price: 0,
+            priceChange: 0,
+            volume24h: 0,
+            marketCap: 0,
+            sentimentScore: 0,
+            whaleConfidence: 0,
+            correlationScore: 0,
+            twitterMentions: 0,
+            isDiamondSignal: true,
+            whaleWallets: [],
+            createdAt: s.createdAt,
+            expiresAt: s.expiresAt,
+            delayHours: 24,
+            delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
+            locked: true,
+            status: 'Locked',
+          }
+        }
         return {
           ...s,
-          delayHours: 24,
-          delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
-          locked: !isUnlocked,
-          status: isUnlocked ? 'Free' : 'Locked',
+          delayHours: 0,
+          locked: false,
+          status: 'Free',
         }
       })
     }
