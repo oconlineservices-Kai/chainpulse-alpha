@@ -15,21 +15,42 @@ export const metadata: Metadata = {
 }
 
 export default function AboutPage() {
-  const breadcrumb = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://chainpulsealpha.com' },
-      { '@type': 'ListItem', position: 2, name: 'About', item: 'https://chainpulsealpha.com/about' },
-    ],
-  }
+  const schemas = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://chainpulsealpha.com' },
+        { '@type': 'ListItem', position: 2, name: 'About', item: 'https://chainpulsealpha.com/about' },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      '@id': 'https://chainpulsealpha.com/about',
+      name: 'About ChainPulse Alpha',
+      description: 'AI-powered crypto signal platform combining on-chain whale wallet tracking with social sentiment analysis.',
+      url: 'https://chainpulsealpha.com/about',
+      mainEntity: {
+        '@type': 'SoftwareApplication',
+        name: 'ChainPulse Alpha',
+        applicationCategory: 'FinanceApplication',
+        description: 'AI-powered crypto trading signals with whale wallet tracking and Twitter sentiment analysis',
+      },
+      significantLink: [
+        'https://chainpulsealpha.com/features',
+        'https://chainpulsealpha.com/signals',
+        'https://chainpulsealpha.com/pricing',
+      ],
+    },
+  ]
 
   return (
     <>
-      {/* BreadcrumbList Schema */}
+      {/* Structured Data Schema */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, '\u003c').replace(/>/g, '\u003e').replace(/&/g, '\u0026') }}
       />
       <AboutContent />
     </>

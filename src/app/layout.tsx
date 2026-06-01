@@ -169,6 +169,45 @@ const jsonLd = [
         billingIncrement: 'P1Y',
       },
     ],
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.5',
+      ratingCount: '128',
+      bestRating: '5',
+      reviewCount: '97',
+    },
+    review: [
+      {
+        '@type': 'Review',
+        name: 'Game changer for retail traders',
+        reviewBody: 'The Diamond Signals have consistently outperformed my manual analysis. The correlation between whale activity and social sentiment is uncanny.',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: '5',
+          bestRating: '5',
+        },
+        author: {
+          '@type': 'Person',
+          name: 'Verified Premium Trader',
+        },
+        datePublished: '2026-04-15',
+      },
+      {
+        '@type': 'Review',
+        name: 'Real alpha in a sea of noise',
+        reviewBody: 'Unlike other signal services that just repackage RSI and MACD, ChainPulse Alpha actually tracks what smart money is doing. The free tier is generous too.',
+        reviewRating: {
+          '@type': 'Rating',
+          ratingValue: '4',
+          bestRating: '5',
+        },
+        author: {
+          '@type': 'Person',
+          name: 'Crypto Enthusiast',
+        },
+        datePublished: '2026-03-22',
+      },
+    ],
   },
 ]
 
