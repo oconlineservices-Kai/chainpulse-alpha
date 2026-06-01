@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, HelpCircle, ArrowRight } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 
@@ -110,10 +109,9 @@ export default function FAQ() {
 
         <div className="space-y-4">
           {faqs.map((faq, index) => (
-            <FadeIn key={faq.question} delay={index * 0.08}>
-              <motion.div
+            <FadeIn delay={index * 0.08}>
+              <div
                 className="glass-card overflow-hidden hover:border-primary-500/30 transition-colors"
-                whileHover={{ y: -2 }}
               >
                 <button
                   onClick={() => toggleFAQ(index)}
@@ -123,22 +121,16 @@ export default function FAQ() {
                   <span className="font-semibold pr-4 group-hover:text-primary-400 transition-colors">
                     {faq.question}
                   </span>
-                  <motion.div
-                    animate={{ rotate: openIndex === index ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
+                  <div
                     className="flex-shrink-0"
                   >
                     <ChevronDown className="w-5 h-5 text-text-muted group-hover:text-primary-400 transition-colors" />
-                  </motion.div>
+                  </div>
                 </button>
 
-                <AnimatePresence>
+                
                   {openIndex === index && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    <div
                       className="overflow-hidden"
                     >
                       <div className="px-6 pb-5">
@@ -152,10 +144,10 @@ export default function FAQ() {
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       </div>
-                    </motion.div>
+                    </div>
                   )}
-                </AnimatePresence>
-              </motion.div>
+                
+              </div>
             </FadeIn>
           ))}
         </div>

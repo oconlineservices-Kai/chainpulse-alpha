@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 
@@ -64,9 +63,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="w-full max-w-md"
       >
         {/* Logo */}
@@ -176,7 +173,7 @@ export default function SignupPage() {
             ← Back to home
           </Link>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { Users, CreditCard, Signal, TrendingUp, LogOut, Shield, Activity, Clock, CheckCircle, AlertCircle, Diamond, UserPlus, RefreshCw, Zap } from 'lucide-react'
 import Link from 'next/link'
 import AdminNav from '@/components/admin/AdminNav'
@@ -181,7 +180,7 @@ export default function AdminDashboardPage() {
     <div className="bg-background-card border border-border rounded-xl overflow-hidden animate-pulse">
       <div className="p-5 space-y-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="flex gap-4">
+          <div className="flex gap-4">
             <div className="h-4 w-1/4 bg-background/50 rounded" />
             <div className="h-4 w-1/4 bg-background/50 rounded" />
             <div className="h-4 w-1/6 bg-background/50 rounded" />
@@ -302,11 +301,7 @@ export default function AdminDashboardPage() {
                 { label: 'Premium Users',        icon: <TrendingUp className="w-6 h-6 text-warning-400" />, value: val(data?.users.premium, false) },
                 { label: 'Monthly Onboarded',    icon: <UserPlus className="w-6 h-6 text-success-400" />,   value: val(data?.users.monthlyOnboarded, false) },
               ].map((card, i) => (
-                <motion.div
-                  key={card.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                <div
                   className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
                 >
                   {card.icon}
@@ -314,7 +309,7 @@ export default function AdminDashboardPage() {
                     <p className="text-2xl font-bold">{card.value}</p>
                     <p className="text-xs text-text-muted">{card.label}</p>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
@@ -340,11 +335,7 @@ export default function AdminDashboardPage() {
                 { label: 'PPA Payments',                icon: <CreditCard className="w-6 h-6 text-primary-400" />,  value: val(data?.financial.payPerAlphaCount, false) },
                 { label: 'Premium Payments',           icon: <CreditCard className="w-6 h-6 text-warning-400" />,  value: val(data?.financial.premiumPaymentCount, false) },
               ].map((card, i) => (
-                <motion.div
-                  key={card.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 + i * 0.05 }}
+                <div
                   className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
                 >
                   {card.icon}
@@ -352,7 +343,7 @@ export default function AdminDashboardPage() {
                     <p className="text-2xl font-bold">{card.value}</p>
                     <p className="text-xs text-text-muted">{card.label}</p>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
@@ -374,11 +365,7 @@ export default function AdminDashboardPage() {
                 { label: 'Diamond Signals', icon: <Diamond className="w-6 h-6 text-primary-400" />,    value: val(data?.signals.diamondCount, false) },
                 { label: 'Win Rate',        icon: <CheckCircle className="w-6 h-6 text-success-400" />, value: pct(data?.signals.winRate, false) },
               ].map((card, i) => (
-                <motion.div
-                  key={card.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 + i * 0.05 }}
+                <div
                   className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
                 >
                   {card.icon}
@@ -386,7 +373,7 @@ export default function AdminDashboardPage() {
                     <p className="text-2xl font-bold">{card.value}</p>
                     <p className="text-xs text-text-muted">{card.label}</p>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
@@ -406,11 +393,7 @@ export default function AdminDashboardPage() {
                 { label: 'Waitlist', icon: <Users className="w-6 h-6 text-secondary-400" />, value: val(data?.system.waitlist, false) },
                 { label: 'Active Users (7d)', icon: <Activity className="w-6 h-6 text-success-400" />, value: val(data?.activeUsers, false) },
               ].map((card, i) => (
-                <motion.div
-                  key={card.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.35 + i * 0.05 }}
+                <div
                   className="bg-background-card border border-border rounded-xl p-5 flex items-center gap-4"
                 >
                   {card.icon}
@@ -418,7 +401,7 @@ export default function AdminDashboardPage() {
                     <p className="text-2xl font-bold">{card.value}</p>
                     <p className="text-xs text-text-muted">{card.label}</p>
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
@@ -441,7 +424,7 @@ export default function AdminDashboardPage() {
                   </thead>
                   <tbody>
                     {data.recentUsers.map((u, i) => (
-                      <tr key={u.id} className="border-b border-border last:border-0 hover:bg-background/50">
+                      <tr className="border-b border-border last:border-0 hover:bg-background/50">
                         <td className="px-5 py-3 font-mono text-xs text-text-secondary">{u.id.substring(0, 8)}...</td>
                         <td className="px-5 py-3">{u.email}</td>
                         <td className="px-5 py-3">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { 
   TrendingUp, 
   TrendingDown,
@@ -152,10 +151,8 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
           <div className="flex items-center gap-2 text-sm text-text-muted">
             <div className="relative">
               <div className="w-2 h-2 bg-success-400 rounded-full" />
-              <motion.div
+              <div
                 className="absolute inset-0 bg-success-400 rounded-full"
-                animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
               />
             </div>
             <span>Live updates</span>
@@ -171,7 +168,6 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
             <Filter className="w-4 h-4 text-text-muted mr-2" />
             {filters.map((filter, index) => (
             <Button
-              key={filter}
               variant={activeFilter === filter ? 'primary' : 'ghost'}
               size="sm"
               onClick={() => setActiveFilter(filter)}
@@ -221,7 +217,7 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
 
       {/* Signals List */}
       <div className="space-y-4">
-        <AnimatePresence mode="popLayout">
+        
           {filteredSignals.map((signal, index) => {
             const locked = isActuallyLocked(signal)
             const StatusIcon = getStatusIcon(signal.status)
@@ -230,12 +226,7 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
             if (locked) {
               // ── Locked card: show token + badge + blur placeholder + BuySignalButton ──
               return (
-                <motion.div
-                  key={signal.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.1 }}
+                <div
                 >
                   <Card
                     hoverable
@@ -282,7 +273,7 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
                         {/* Blurred score badges */}
                         <div className="grid grid-cols-3 gap-4">
                           {['Sentiment', 'Whale Conf', 'Correlation'].map((label) => (
-                            <div key={label} className="text-center">
+                            <div className="text-center">
                               <div className="mx-auto w-16 h-7 rounded-md bg-slate-700/60 blur-sm" />
                               <p className="text-text-muted text-xs mt-1">{label}</p>
                             </div>
@@ -320,18 +311,13 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
                       />
                     </div>
                   </Card>
-                </motion.div>
+                </div>
               )
             }
 
             // ── Free / Unlocked card: full data, NO buy button ──
             return (
-              <motion.div
-                key={signal.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.1 }}
+              <div
               >
                 <HoverScale>
                   <Card 
@@ -450,10 +436,10 @@ export default function AlphaFeed({ signals, onSelectSignal, onRefetch }: AlphaF
                     </div>
                   </Card>
                 </HoverScale>
-              </motion.div>
+              </div>
             )
           })}
-        </AnimatePresence>
+        
       </div>
 
       {/* Empty State */}

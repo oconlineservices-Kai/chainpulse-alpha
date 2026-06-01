@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
 import { CheckCircle2, Crown, ArrowRight, Zap, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import FadeIn from '@/components/animations/FadeIn'
@@ -43,20 +42,14 @@ export default function PaymentSuccess() {
         <FadeIn>
           <div className="glass-card p-12 rounded-2xl border border-success-500/30 text-center">
             {/* Success Icon */}
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            <div
               className="w-24 h-24 rounded-full bg-success-500/20 flex items-center justify-center mx-auto mb-6"
             >
               <CheckCircle2 className="w-14 h-14 text-success-400" />
-            </motion.div>
+            </div>
 
             {/* Heading */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+            <div
             >
               <h1 className="text-3xl font-bold mb-3">Payment Successful! 🎉</h1>
               <p className="text-text-secondary mb-2">
@@ -77,13 +70,10 @@ export default function PaymentSuccess() {
                   ✓ Premium access activated
                 </p>
               )}
-            </motion.div>
+            </div>
 
             {/* What's unlocked */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+            <div
               className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-6 mb-8 text-left"
             >
               <div className="flex items-center gap-2 mb-4">
@@ -99,19 +89,16 @@ export default function PaymentSuccess() {
                   'Advanced whale wallet analysis',
                   'Priority support',
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2">
+                  <li className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-primary-400 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
-            </motion.div>
+            </div>
 
             {/* CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
+            <div
               className="flex flex-col sm:flex-row gap-4 justify-center"
             >
               <Link
@@ -121,7 +108,7 @@ export default function PaymentSuccess() {
                 Go to Dashboard
                 <ArrowRight className="w-4 h-4" />
               </Link>
-            </motion.div>
+            </div>
 
             <p className="text-text-muted text-xs mt-6">
               Redirecting to dashboard in 5 seconds…

@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ArrowRight, MessageCircle, Wallet, Bell, Zap } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 import { HoverScale } from '../animations/ScaleIn'
@@ -83,7 +82,7 @@ export default function HowItWorks() {
         {/* Steps */}
         <div className="max-w-6xl mx-auto">
           {steps.map((step, index) => (
-            <FadeIn key={step.number} delay={index * 0.2}>
+            <FadeIn delay={index * 0.2}>
               <div className="relative">
                 {/* Step Container */}
                 <div className={`flex flex-col lg:flex-row items-center gap-8 mb-16 ${
@@ -92,9 +91,8 @@ export default function HowItWorks() {
                   {/* Content */}
                   <div className="flex-1 lg:max-w-md">
                     <HoverScale>
-                      <motion.div 
+                      <div 
                         className="glass-card p-8 hover:border-primary-500/30 transition-all duration-300"
-                        whileHover={{ y: -4 }}
                       >
                         {/* Step Number */}
                         <div className="flex items-center gap-4 mb-4">
@@ -115,88 +113,48 @@ export default function HowItWorks() {
                         {/* Details */}
                         <ul className="space-y-2">
                           {step.details.map((detail, idx) => (
-                            <li key={idx} className="flex items-center gap-2 text-sm text-text-muted">
+                            <li className="flex items-center gap-2 text-sm text-text-muted">
                               <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${step.color}`} />
                               <span>{detail}</span>
                             </li>
                           ))}
                         </ul>
-                      </motion.div>
+                      </div>
                     </HoverScale>
                   </div>
                   
                   {/* Icon Visualization */}
                   <div className="flex-1 flex justify-center">
-                    <motion.div
+                    <div
                       className={`relative w-32 h-32 rounded-3xl bg-gradient-to-br ${step.color} p-0.5`}
-                      whileHover={{ scale: 1.05 }}
-                      animate={{ 
-                        rotateY: [0, 5, 0, -5, 0],
-                      }}
-                      transition={{
-                        duration: 6,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                        delay: index * 0.5
-                      }}
                     >
                       <div className="w-full h-full rounded-3xl bg-background-card flex items-center justify-center">
-                        <motion.div
-                          animate={{
-                            y: [0, -4, 0],
-                            rotate: [0, 2, 0, -2, 0]
-                          }}
-                          transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "easeInOut",
-                            delay: index * 0.3
-                          }}
+                        <div
                         >
                           <step.icon className="w-16 h-16 text-white" />
-                        </motion.div>
+                        </div>
                       </div>
                       
                       {/* Floating particles */}
-                      <motion.div
+                      <div
                         className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-warning-400"
-                        animate={{
-                          scale: [1, 1.5, 1],
-                          opacity: [1, 0.5, 1]
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          delay: index * 0.4
-                        }}
                       />
-                      <motion.div
+                      <div
                         className="absolute -bottom-2 -left-2 w-2 h-2 rounded-full bg-primary-400"
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [1, 0.7, 1]
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          delay: index * 0.6
-                        }}
                       />
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
                 
                 {/* Connecting Arrow */}
                 {index < steps.length - 1 && (
-                  <motion.div
+                  <div
                     className="flex justify-center mb-8"
-                    animate={{ y: [0, 4, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.5 }}
                   >
                     <div className="w-12 h-12 rounded-full bg-background-card border border-border flex items-center justify-center">
                       <ArrowRight className="w-5 h-5 text-text-muted rotate-90" />
                     </div>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             </FadeIn>

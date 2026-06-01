@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { Wallet, Brain, Diamond, Activity, Zap, Target } from 'lucide-react'
 import FadeIn, { FadeInStagger } from '../animations/FadeIn'
 import { HoverScale } from '../animations/ScaleIn'
@@ -70,11 +69,10 @@ export default function Features() {
         {/* Features Grid */}
         <div className="grid lg:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => (
-            <FadeIn key={feature.title} delay={index * 0.1}>
+            <FadeIn delay={index * 0.1}>
               <HoverScale>
-                <motion.div 
+                <div 
                   className="group glass-card p-8 h-full hover:border-primary-500/30 transition-all duration-300 relative overflow-hidden"
-                  whileHover={{ y: -8 }}
                 >
                   {/* Background Gradient */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-[0.02] group-hover:opacity-[0.05] transition-opacity`} />
@@ -102,7 +100,7 @@ export default function Features() {
                     {/* Benefits List */}
                     <ul className="space-y-2">
                       {feature.benefits.map((benefit, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm text-text-muted">
+                        <li className="flex items-center gap-2 text-sm text-text-muted">
                           <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${feature.gradient}`} />
                           <span>{benefit}</span>
                         </li>
@@ -111,11 +109,10 @@ export default function Features() {
                   </div>
                   
                   {/* Hover Effect */}
-                  <motion.div
+                  <div
                     className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-                    layoutId={`feature-${index}`}
                   />
-                </motion.div>
+                </div>
               </HoverScale>
             </FadeIn>
           ))}
@@ -132,14 +129,12 @@ export default function Features() {
               <p className="text-text-secondary mb-6">
                 Join thousands of traders who trust ChainPulse Alpha for their crypto intelligence.
               </p>
-              <motion.button 
+              <button 
                 className="button-primary"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <Target className="w-5 h-5 mr-2" />
                 Start Getting Alpha
-              </motion.button>
+              </button>
             </div>
           </div>
         </FadeIn>

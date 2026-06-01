@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { Star, TrendingUp, Shield, Zap, Activity } from 'lucide-react'
 import FadeIn, { FadeInStagger } from '../animations/FadeIn'
 import { HoverScale } from '../animations/ScaleIn'
@@ -75,10 +74,9 @@ export default function SocialProof() {
         {/* Stats Grid */}
         <FadeInStagger stagger={0.1} className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-16 max-w-4xl mx-auto">
           {stats.map((stat) => (
-            <HoverScale key={stat.label} className="text-center">
-              <motion.div 
+            <HoverScale className="text-center">
+              <div 
                 className="glass-card p-6 hover:border-primary-500/50 transition-colors min-w-[140px] sm:min-w-[180px]"
-                whileHover={{ borderColor: 'rgb(59 130 246 / 0.5)' }}
               >
                 <div className={`w-12 h-12 rounded-xl bg-background-hover flex items-center justify-center mx-auto mb-4 ${stat.color}`}>
                   <stat.icon className="w-6 h-6" />
@@ -89,7 +87,7 @@ export default function SocialProof() {
                 <div className="text-text-muted text-xs sm:text-sm truncate px-2 overflow-hidden text-ellipsis whitespace-nowrap w-full max-w-[120px] sm:max-w-[160px] mx-auto">
                   {stat.label}
                 </div>
-              </motion.div>
+              </div>
             </HoverScale>
           ))}
         </FadeInStagger>
@@ -97,15 +95,14 @@ export default function SocialProof() {
         {/* Testimonials */}
         <FadeInStagger stagger={0.15} className="grid md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <HoverScale key={index} className="h-full">
-              <motion.div 
+            <HoverScale className="h-full">
+              <div 
                 className="glass-card p-6 h-full hover:border-primary-500/30 transition-all duration-300"
-                whileHover={{ y: -4 }}
               >
                 {/* Rating */}
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-warning-400 fill-current" />
+                    <Star className="w-4 h-4 text-warning-400 fill-current" />
                   ))}
                 </div>
                 
@@ -128,7 +125,7 @@ export default function SocialProof() {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </HoverScale>
           ))}
         </FadeInStagger>

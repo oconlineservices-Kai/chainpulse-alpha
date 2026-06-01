@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { 
   Eye, 
   TrendingUp, 
@@ -275,7 +274,7 @@ export default function FeaturesContent() {
         <FadeIn delay={0.1}>
           <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 xs:gap-6 mb-16">
             {stats.map((stat) => (
-              <div key={stat.label} className="glass-card p-6 text-center">
+              <div className="glass-card p-6 text-center">
                 <div className="text-3xl font-bold gradient-text mb-1">{stat.value}</div>
                 <div className="text-text-muted text-sm">{stat.label}</div>
               </div>
@@ -286,10 +285,9 @@ export default function FeaturesContent() {
         {/* Feature Grid */}
         <FadeInStagger stagger={0.08} className="grid md:grid-cols-2 gap-8 mb-16">
           {features.map((feature) => (
-            <HoverScale key={feature.title}>
-              <motion.div
+            <HoverScale>
+              <div
                 className="glass-card p-8 rounded-2xl border border-border hover:border-primary-500/30 transition-all duration-300"
-                whileHover={{ y: -4 }}
               >
                 <div className="flex items-start gap-3 sm:gap-4 mb-4">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${feature.color} p-0.5 flex-shrink-0`}>
@@ -304,13 +302,13 @@ export default function FeaturesContent() {
                 </div>
                 <ul className="space-y-2 ml-13 sm:ml-16">
                   {feature.details.map((detail) => (
-                    <li key={detail} className="flex items-center gap-2">
+                    <li className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-success-400 flex-shrink-0" />
                       <span className="text-text-muted text-sm">{detail}</span>
                     </li>
                   ))}
                 </ul>
-              </motion.div>
+              </div>
             </HoverScale>
           ))}
         </FadeInStagger>
@@ -364,10 +362,9 @@ export default function FeaturesContent() {
           {/* Methodology Steps */}
           <FadeInStagger stagger={0.1} className="space-y-8 mb-12">
             {methodologySteps.map((step, idx) => (
-              <HoverScale key={step.title}>
-                <motion.div
+              <HoverScale>
+                <div
                   className="glass-card p-8 rounded-2xl border border-border hover:border-primary-500/30 transition-all duration-300"
-                  whileHover={{ y: -2 }}
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 p-0.5 flex-shrink-0">
@@ -380,7 +377,7 @@ export default function FeaturesContent() {
                       <p className="text-text-secondary text-sm leading-relaxed mb-3">{step.description}</p>
                       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                         {step.details.map((detail) => (
-                          <li key={detail} className="flex items-center gap-2 text-sm">
+                          <li className="flex items-center gap-2 text-sm">
                             <CheckCircle2 className="w-3.5 h-3.5 text-success-400 flex-shrink-0" />
                             <span className="text-text-muted">{detail}</span>
                           </li>
@@ -388,7 +385,7 @@ export default function FeaturesContent() {
                       </ul>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </HoverScale>
             ))}
           </FadeInStagger>
@@ -407,7 +404,7 @@ export default function FeaturesContent() {
                   { step: 'Confluence', desc: 'Cross-reference whale activity with sentiment trends for correlation score', color: 'from-orange-500 to-orange-600' },
                   { step: 'Published', desc: 'Validated signals delivered via dashboard, push alerts, and API in real-time', color: 'from-green-500 to-green-600' },
                 ].map((item) => (
-                  <div key={item.step} className="glass-card p-4 rounded-xl border-border text-center">
+                  <div className="glass-card p-4 rounded-xl border-border text-center">
                     <div className={`w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center text-white text-sm font-bold`}>
                       {item.step[0]}
                     </div>

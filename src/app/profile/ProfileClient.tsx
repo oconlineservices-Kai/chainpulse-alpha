@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-
 interface UserProfile {
   id: string
   email: string
@@ -144,10 +142,7 @@ export default function ProfileClient() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         {/* Message Alert */}
         {message && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+          <div
             className={`mb-6 p-4 rounded-lg border ${
               message.type === 'success'
                 ? 'bg-green-500/10 border-green-500/30 text-green-300'
@@ -155,13 +150,11 @@ export default function ProfileClient() {
             }`}
           >
             {message.text}
-          </motion.div>
+          </div>
         )}
 
         {/* Profile Header Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
           className="bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700/60 rounded-2xl p-8 mb-8"
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -184,13 +177,12 @@ export default function ProfileClient() {
               </span>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Tabs */}
         <nav className="flex gap-2 mb-8 border-b border-slate-700/60 flex-wrap">
           {(['account', 'subscription', 'notifications', 'security'] as TabType[]).map((tab) => (
             <button
-              key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-3 font-medium transition-all border-b-2 ${
                 activeTab === tab
@@ -207,10 +199,7 @@ export default function ProfileClient() {
         </nav>
 
         {/* Tab Content */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
+        <div
         >
           {/* Account Tab */}
           {activeTab === 'account' && (
@@ -423,7 +412,7 @@ export default function ProfileClient() {
                 <p className="text-slate-400 text-sm mb-4">Customize which signal types you want to receive notifications for.</p>
                 <div className="space-y-3">
                   {['Whale Signals', 'Sentiment Signals', 'Diamond Signals'].map((type) => (
-                    <label key={type} className="flex items-center gap-3 cursor-pointer p-3 hover:bg-slate-700/20 rounded-lg transition">
+                    <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-slate-700/20 rounded-lg transition">
                       <input type="checkbox" defaultChecked className="w-4 h-4" />
                       <span className="text-white">{type}</span>
                     </label>
@@ -460,7 +449,7 @@ export default function ProfileClient() {
 
             </div>
           )}
-        </motion.div>
+        </div>
       </main>
     </div>
   )

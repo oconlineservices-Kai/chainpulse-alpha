@@ -1,17 +1,12 @@
 "use client"
 
-import { motion } from "framer-motion"
-
 interface SkeletonProps {
   className?: string
 }
 
 export function Skeleton({ className = "" }: SkeletonProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0.5 }}
-      animate={{ opacity: [0.5, 1, 0.5] }}
-      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+    <div
       className={`bg-slate-800 rounded-lg ${className}`}
     />
   )

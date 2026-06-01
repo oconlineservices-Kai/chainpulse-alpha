@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
-import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import Link from 'next/link'
 
@@ -53,9 +52,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="w-full max-w-md"
       >
         {/* Logo */}
@@ -158,7 +155,7 @@ function LoginForm() {
             ← Back to home
           </Link>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { ArrowRight, Activity } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 import { AnimatedBackground } from '../animations/FloatingElements'
@@ -27,20 +26,17 @@ export default function Hero() {
         <div className="max-w-4xl mx-auto text-center">
           {/* Status Badge */}
           <FadeIn delay={0.1}>
-            <motion.div
+            <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card border text-primary-400 text-sm mb-8"
-              whileHover={{ scale: 1.05 }}
             >
               <div className="relative">
                 <Activity className="w-4 h-4" />
-                <motion.div
+                <div
                   className="absolute -top-1 -right-1 w-2 h-2 bg-success-400 rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>
               <span>Now in Early Access</span>
-            </motion.div>
+            </div>
           </FadeIn>
           
           {/* Main Headline */}
@@ -63,11 +59,9 @@ export default function Hero() {
           
           {/* CTA Form */}
           <FadeIn delay={0.4}>
-            <motion.form 
+            <form 
               onSubmit={handleSubmit} 
               className="max-w-md mx-auto mb-8"
-              whileHover={{ y: -2 }}
-              transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
@@ -81,19 +75,17 @@ export default function Hero() {
                   />
                 </div>
                 
-                <motion.button
+                <button
                   type="submit"
                   className="button-primary min-w-[160px] group h-[52px]"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   <>
                     Get Free Alerts →
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </>
-                </motion.button>
+                </button>
               </div>
-            </motion.form>
+            </form>
           </FadeIn>
           
           {/* Reassurance Text */}
@@ -130,19 +122,15 @@ export default function Hero() {
       
       {/* Scroll Indicator */}
       <FadeIn delay={1}>
-        <motion.div 
+        <div 
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
         >
           <div className="w-6 h-10 border-2 border-border rounded-full flex justify-center">
-            <motion.div
+            <div
               className="w-1 h-2 bg-text-muted rounded-full mt-2"
-              animate={{ y: [0, 12, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
             />
           </div>
-        </motion.div>
+        </div>
       </FadeIn>
     </section>
   )

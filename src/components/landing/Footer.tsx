@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { MessageCircle, Shield, Zap, Activity } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 
@@ -50,14 +49,12 @@ export default function Footer() {
         <FadeIn>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-8 mb-8">
             {trustBadges.map((badge, index) => (
-              <motion.div
-                key={index}
+              <div
                 className="flex items-center gap-2 text-sm"
-                whileHover={{ scale: 1.05 }}
               >
                 <badge.icon className={`w-4 h-4 ${badge.color}`} />
                 <span className="text-text-secondary">{badge.text}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </FadeIn>
@@ -90,14 +87,13 @@ export default function Footer() {
               </h3>
               <ul className="space-y-2">
                 {footerLinks.product.map((link) => (
-                  <li key={link.label}>
-                    <motion.a
+                  <li>
+                    <a
                       href={link.href}
                       className="text-text-secondary hover:text-primary-400 transition-colors text-sm"
-                      whileHover={{ x: 2 }}
                     >
                       {link.label}
-                    </motion.a>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -112,14 +108,13 @@ export default function Footer() {
               </h3>
               <ul className="space-y-2">
                 {footerLinks.resources.map((link) => (
-                  <li key={link.label}>
-                    <motion.a
+                  <li>
+                    <a
                       href={link.href}
                       className="text-text-secondary hover:text-primary-400 transition-colors text-sm"
-                      whileHover={{ x: 2 }}
                     >
                       {link.label}
-                    </motion.a>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -134,14 +129,13 @@ export default function Footer() {
               </h3>
               <ul className="space-y-2">
                 {footerLinks.legal.map((link) => (
-                  <li key={link.label}>
-                    <motion.a
+                  <li>
+                    <a
                       href={link.href}
                       className="text-text-secondary hover:text-primary-400 transition-colors text-sm"
-                      whileHover={{ x: 2 }}
                     >
                       {link.label}
-                    </motion.a>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -163,13 +157,11 @@ export default function Footer() {
                   placeholder="Enter your email"
                   className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm focus:outline-none focus:border-primary-500 transition-colors"
                 />
-                <motion.button
+                <button
                   className="w-full bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                 >
                   Subscribe
-                </motion.button>
+                </button>
               </div>
             </div>
           </FadeIn>

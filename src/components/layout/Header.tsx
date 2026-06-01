@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Menu, X, Activity, LogIn, UserPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -70,34 +69,25 @@ export default function Header() {
       <nav className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
+          <div
           >
             <Link href="/" className="flex items-center gap-3 group">
               <div className="relative">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center transition-transform group-hover:scale-105">
                   <span className="font-bold text-lg">C</span>
                 </div>
-                <motion.div
+                <div
                   className="absolute -top-1 -right-1 w-3 h-3 bg-success-400 rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.7, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
                 />
               </div>
               <span className="font-bold text-xl hidden sm:block">ChainPulse Alpha</span>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
             {navigation.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+              <div
               >
                 <Link
                   href={item.href}
@@ -111,24 +101,16 @@ export default function Header() {
                 >
                   {item.name}
                   {pathname === item.href && (
-                    <motion.div
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary-400"
-                      layoutId="activeNav"
-                      initial={false}
-                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                    />
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary-400" />
                   )}
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Auth Buttons - Desktop */}
-          <motion.div
+          <div
             className="hidden lg:flex items-center space-x-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
           >
             <Link
               href="/login"
@@ -144,7 +126,7 @@ export default function Header() {
               <UserPlus className="w-4 h-4" />
               Sign Up
             </Link>
-          </motion.div>
+          </div>
 
           {/* Mobile menu button */}
           <div className="lg:hidden">
@@ -159,13 +141,7 @@ export default function Header() {
         </div>
 
         {/* Mobile Navigation */}
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{
-            opacity: isOpen ? 1 : 0,
-            height: isOpen ? 'auto' : 0
-          }}
-          transition={{ duration: 0.3 }}
+        <div
           className={cn(
             'lg:hidden overflow-hidden',
             isOpen ? 'border-t border-border/50' : ''
@@ -174,7 +150,6 @@ export default function Header() {
           <div className="py-4 space-y-4">
             {navigation.map((item) => (
               <Link
-                key={item.name}
                 href={item.href}
                 onClick={(e) => handleNavClick(item.href, e)}
                 className={cn(
@@ -206,7 +181,7 @@ export default function Header() {
               </Link>
             </div>
           </div>
-        </motion.div>
+        </div>
       </nav>
     </header>
   )

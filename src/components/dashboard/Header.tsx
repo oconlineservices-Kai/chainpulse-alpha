@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Bell, 
   Search, 
@@ -46,24 +45,20 @@ export default function Header() {
               className="w-full pl-10 pr-4 py-2 rounded-xl bg-background-hover border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary-500 transition-colors"
             />
             {searchQuery && (
-              <motion.button
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
+              <button
                 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-text-muted hover:bg-primary-500 flex items-center justify-center transition-colors"
                 onClick={() => setSearchQuery('')}
               >
                 <span className="text-xs text-white">×</span>
-              </motion.button>
+              </button>
             )}
           </div>
           
-          <motion.button
+          <button
             className="hidden lg:flex p-2 rounded-xl bg-background-hover border border-border hover:border-primary-500 transition-all"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             <Filter className="w-4 h-4 text-text-muted" />
-          </motion.button>
+          </button>
         </div>
 
         {/* Right Section */}
@@ -72,10 +67,8 @@ export default function Header() {
           <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-success-500/10 border border-success-500/20 flex-shrink-0">
             <div className="relative">
               <div className="w-2 h-2 bg-success-400 rounded-full" />
-              <motion.div
+              <div
                 className="absolute inset-0 bg-success-400 rounded-full"
-                animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
               />
             </div>
             <span className="text-success-400 text-sm font-medium">Live</span>
@@ -89,28 +82,22 @@ export default function Header() {
 
           {/* Notifications */}
           <div className="relative">
-            <motion.button
+            <button
               className="p-2 rounded-xl bg-background-hover border border-border hover:border-primary-500 transition-all relative"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
               <Bell className="w-5 h-5 text-text-muted" />
               {/* Notification dot */}
-              <motion.div
+              <div
                 className="absolute -top-1 -right-1 w-3 h-3 bg-warning-500 rounded-full border-2 border-background-card"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
               />
-            </motion.button>
+            </button>
           </div>
 
           {/* Profile Dropdown */}
           <div className="relative">
-            <motion.button
+            <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="flex items-center gap-3 p-2 rounded-xl bg-background-hover border border-border hover:border-primary-500 transition-all"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-semibold text-sm">
                 {userInitials}
@@ -123,10 +110,10 @@ export default function Header() {
                 "w-4 h-4 text-text-muted transition-transform",
                 isProfileOpen && "rotate-180"
               )} />
-            </motion.button>
+            </button>
 
             {/* Dropdown Menu */}
-            <AnimatePresence>
+            
               {isProfileOpen && (
                 <>
                   {/* Backdrop */}
@@ -135,10 +122,7 @@ export default function Header() {
                     onClick={() => setIsProfileOpen(false)}
                   />
                   
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  <div
                     className="absolute top-full right-0 mt-2 w-64 bg-background-card border border-border rounded-xl shadow-xl z-20"
                   >
                     <div className="p-4 border-b border-border">
@@ -165,37 +149,34 @@ export default function Header() {
                     </div>
 
                     <div className="p-2">
-                      <motion.button
+                      <button
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-hover transition-all text-sm"
-                        whileHover={{ x: 2 }}
                       >
                         <User className="w-4 h-4" />
                         <span>Profile Settings</span>
-                      </motion.button>
+                      </button>
                       
-                      <motion.button
+                      <button
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-hover transition-all text-sm"
-                        whileHover={{ x: 2 }}
                       >
                         <Settings className="w-4 h-4" />
                         <span>Preferences</span>
-                      </motion.button>
+                      </button>
                       
                       <div className="my-2 h-px bg-border" />
                       
-                      <motion.button
+                      <button
                         className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-danger-400 hover:bg-danger-500/10 transition-all text-sm"
-                        whileHover={{ x: 2 }}
                         onClick={() => signOut({ callbackUrl: '/' })}
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Sign Out</span>
-                      </motion.button>
+                      </button>
                     </div>
-                  </motion.div>
+                  </div>
                 </>
               )}
-            </AnimatePresence>
+            
           </div>
         </div>
       </div>

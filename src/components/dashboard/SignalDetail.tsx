@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { motion } from 'framer-motion'
 import { 
   X, 
   TrendingUp, 
@@ -227,11 +226,8 @@ export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetai
       aria-modal="true"
       aria-labelledby="signal-detail-title"
     >
-      <motion.div
+      <div
         ref={modalRef}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-background-card border border-border"
         onClick={(e) => e.stopPropagation()}
       >
@@ -450,7 +446,7 @@ export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetai
                 <div className="space-y-3">
                   <p className="text-sm text-text-muted">Recent trending tweets:</p>
                   {mockTweets.slice(0, 2).map((tweet) => (
-                    <div key={tweet.id} className="p-3 rounded-lg bg-background-hover text-sm">
+                    <div className="p-3 rounded-lg bg-background-hover text-sm">
                       <p className="text-text-secondary mb-2">"{tweet.content}"</p>
                       <div className="flex items-center justify-between text-xs text-text-muted">
                         <span className="text-blue-400">{tweet.author}</span>
@@ -479,7 +475,7 @@ export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetai
                 <div className="space-y-2">
                   <p className="text-sm text-text-muted">Top whale wallets:</p>
                   {signal.whaleWallets.map((wallet, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-background-hover">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-background-hover">
                       <code className="text-sm text-text-secondary font-mono">
                         {truncateAddress(wallet, 6)}
                       </code>
@@ -587,7 +583,7 @@ export default function SignalDetail({ signal, onClose, onRefetch }: SignalDetai
           </Card>
         </div>
         )}
-      </motion.div>
+      </div>
     </div>
   )
 }

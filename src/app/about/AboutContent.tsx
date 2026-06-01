@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import {
   Target,
   Shield,
@@ -209,10 +208,9 @@ export default function AboutContent() {
             </h2>
             <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {stats.map((stat) => (
-                <HoverScale key={stat.label}>
-                  <motion.div
+                <HoverScale>
+                  <div
                     className="glass-card p-6 text-center border border-border hover:border-primary-500/30 transition-all duration-300"
-                    whileHover={{ y: -4 }}
                   >
                     <div className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br ${stat.color} p-0.5`}>
                       <div className="w-full h-full rounded-xl bg-background-card flex items-center justify-center">
@@ -221,7 +219,7 @@ export default function AboutContent() {
                     </div>
                     <div className="text-3xl font-bold gradient-text mb-1">{stat.value}</div>
                     <div className="text-text-muted text-sm">{stat.label}</div>
-                  </motion.div>
+                  </div>
                 </HoverScale>
               ))}
             </div>
@@ -236,10 +234,9 @@ export default function AboutContent() {
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               {values.map((value) => (
-                <HoverScale key={value.title}>
-                  <motion.div
+                <HoverScale>
+                  <div
                     className="glass-card p-8 rounded-2xl border border-border hover:border-primary-500/30 transition-all duration-300 h-full"
-                    whileHover={{ y: -4 }}
                   >
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${value.color} p-0.5 mb-4`}>
                       <div className="w-full h-full rounded-xl bg-background-card flex items-center justify-center">
@@ -248,7 +245,7 @@ export default function AboutContent() {
                     </div>
                     <h3 className="text-lg font-semibold mb-2">{value.title}</h3>
                     <p className="text-text-secondary text-sm leading-relaxed">{value.description}</p>
-                  </motion.div>
+                  </div>
                 </HoverScale>
               ))}
             </div>
@@ -272,12 +269,7 @@ export default function AboutContent() {
 
               <div className="space-y-8 md:space-y-12">
                 {methodologySteps.map((step, index) => (
-                  <motion.div
-                    key={step.step}
-                    initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  <div
                     className={cn(
                       "flex flex-col md:flex-row items-start gap-6",
                       index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
@@ -303,7 +295,7 @@ export default function AboutContent() {
 
                     {/* Spacer for odd side */}
                     <div className="hidden md:block flex-1" />
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { CheckCircle2, Zap, Crown, Sparkles, Lock, Unlock, ArrowLeft, Loader2, AlertCircle, Check } from 'lucide-react'
 import PaymentButton from '@/components/PaymentButton'
 import FadeIn, { FadeInStagger } from '@/components/animations/FadeIn'
@@ -303,8 +302,8 @@ export default function PricingClient() {
             const showBuyButton = !isPremium || plan.id === 'payper'
 
             return (
-              <HoverScale key={plan.id}>
-                <motion.div
+              <HoverScale>
+                <div
                   className={cn(
                     'relative p-8 rounded-2xl border transition-all duration-300',
                     plan.popular
@@ -312,30 +311,23 @@ export default function PricingClient() {
                       : 'glass-card hover:border-primary-500/30',
                     isCurrentPlan && 'border-success-500/50',
                   )}
-                  whileHover={{ y: -4 }}
                 >
                   {/* Popular Badge */}
                   {plan.popular && !isCurrentPlan && (
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
+                    <div
                       className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-primary-600 to-secondary-600 text-white text-sm font-semibold"
                     >
                       Most Popular
-                    </motion.div>
+                    </div>
                   )}
 
                   {/* Your Current Plan Badge */}
                   {isCurrentPlan && (
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.2 }}
+                    <div
                       className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-success-500 text-white text-sm font-semibold"
                     >
                       ✓ Your Plan
-                    </motion.div>
+                    </div>
                   )}
 
                   {/* Plan Header */}
@@ -376,7 +368,7 @@ export default function PricingClient() {
                   <div className="mb-8">
                     <ul className="space-y-3">
                       {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-center gap-3">
+                        <li className="flex items-center gap-3">
                           <CheckCircle2 className="w-5 h-5 text-success-400 flex-shrink-0" />
                           <span className="text-text-secondary text-sm">{feature}</span>
                         </li>
@@ -388,7 +380,7 @@ export default function PricingClient() {
                         <p className="text-xs text-text-muted mb-2">Not included:</p>
                         <ul className="space-y-2">
                           {plan.limitations.map((limitation) => (
-                            <li key={limitation} className="flex items-center gap-3">
+                            <li className="flex items-center gap-3">
                               <Lock className="w-4 h-4 text-text-muted flex-shrink-0" />
                               <span className="text-text-muted text-xs">{limitation}</span>
                             </li>
@@ -425,7 +417,6 @@ export default function PricingClient() {
                           const Icon = pack.icon
                           return (
                             <button
-                              key={pack.id}
                               onClick={() => handleCreditPurchase(pack.id)}
                               disabled={creditLoading !== null}
                               className={cn(
@@ -455,26 +446,22 @@ export default function PricingClient() {
 
                       {/* Success message */}
                       {creditSuccess && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
+                        <div
                           className="flex items-center gap-2 justify-center text-success-400 text-sm bg-success-500/10 rounded-lg px-3 py-2 border border-success-500/20"
                         >
                           <Check className="w-4 h-4" />
                           {creditSuccess}
-                        </motion.div>
+                        </div>
                       )}
 
                       {/* Error message */}
                       {creditError && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
+                        <div
                           className="flex items-center gap-2 justify-center text-danger-400 text-xs bg-danger-500/10 rounded-lg px-3 py-2 border border-danger-500/20"
                         >
                           <AlertCircle className="w-4 h-4 flex-shrink-0" />
                           <span>{creditError}</span>
-                        </motion.div>
+                        </div>
                       )}
 
                       {!creditSuccess && !isLoggedIn && (
@@ -492,12 +479,10 @@ export default function PricingClient() {
                   )}
 
                   {/* Background Effect */}
-                  <motion.div
+                  <div
                     className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-[0.01] rounded-2xl pointer-events-none`}
-                    whileHover={{ opacity: 0.02 }}
-                    transition={{ duration: 0.3 }}
                   />
-                </motion.div>
+                </div>
               </HoverScale>
             )
           })}

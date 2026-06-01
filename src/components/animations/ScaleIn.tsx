@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { ReactNode } from 'react'
 
 interface ScaleInProps {
@@ -19,19 +18,11 @@ export default function ScaleIn({
   className = '' 
 }: ScaleInProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ 
-        duration, 
-        delay,
-        ease: [0.25, 0.46, 0.45, 0.94] 
-      }}
+    <div
       className={className}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }
 
@@ -47,13 +38,10 @@ export function HoverScale({
   className?: string
 }) {
   return (
-    <motion.div
-      whileHover={{ scale }}
-      whileTap={{ scale: scale * 0.98 }}
-      transition={{ duration, ease: 'easeOut' }}
+    <div
       className={className}
     >
       {children}
-    </motion.div>
+    </div>
   )
 }

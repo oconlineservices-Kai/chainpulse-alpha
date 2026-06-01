@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { CheckCircle2, Zap, Crown, Sparkles, Lock, Unlock, Loader2, AlertCircle, Check } from 'lucide-react'
 import PaymentButton from '../PaymentButton'
 import FadeIn, { FadeInStagger } from '../animations/FadeIn'
@@ -282,26 +281,22 @@ export default function Pricing() {
         {/* Pricing Cards */}
         <FadeInStagger stagger={0.1} className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
           {plans.map((plan) => (
-            <HoverScale key={plan.id}>
-              <motion.div
+            <HoverScale>
+              <div
                 className={cn(
                   'relative p-8 rounded-2xl border transition-all duration-300',
                   plan.popular
                     ? 'glass-card border-primary-500/50 hover:border-primary-500'
                     : 'glass-card hover:border-primary-500/30',
                 )}
-                whileHover={{ y: -4 }}
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
+                  <div
                     className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-primary-600 to-secondary-600 text-white text-sm font-semibold"
                   >
                     Most Popular
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* Plan Header */}
@@ -342,7 +337,7 @@ export default function Pricing() {
                 <div className="mb-8">
                   <ul className="space-y-3">
                     {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-3">
+                      <li className="flex items-center gap-3">
                         <CheckCircle2 className="w-5 h-5 text-success-400 flex-shrink-0" />
                         <span className="text-text-secondary text-sm">{feature}</span>
                       </li>
@@ -354,7 +349,7 @@ export default function Pricing() {
                       <p className="text-xs text-text-muted mb-2">Not included:</p>
                       <ul className="space-y-2">
                         {plan.limitations.map((limitation) => (
-                          <li key={limitation} className="flex items-center gap-3">
+                          <li className="flex items-center gap-3">
                             <Lock className="w-4 h-4 text-text-muted flex-shrink-0" />
                             <span className="text-text-muted text-xs">{limitation}</span>
                           </li>
@@ -383,7 +378,6 @@ export default function Pricing() {
                         const Icon = pack.icon
                         return (
                           <button
-                            key={pack.id}
                             onClick={() => handleCreditPurchase(pack.id)}
                             disabled={creditLoading !== null}
                             className={cn(
@@ -413,26 +407,22 @@ export default function Pricing() {
 
                     {/* Success message */}
                     {creditSuccess && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
+                      <div
                         className="flex items-center gap-2 justify-center text-success-400 text-sm bg-success-500/10 rounded-lg px-3 py-2 border border-success-500/20"
                       >
                         <Check className="w-4 h-4" />
                         {creditSuccess}
-                      </motion.div>
+                      </div>
                     )}
 
                     {/* Error message */}
                     {creditError && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
+                      <div
                         className="flex items-center gap-2 justify-center text-danger-400 text-xs bg-danger-500/10 rounded-lg px-3 py-2 border border-danger-500/20"
                       >
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
                         <span>{creditError}</span>
-                      </motion.div>
+                      </div>
                     )}
 
                     {!creditSuccess && !isLoggedIn && (
@@ -448,26 +438,22 @@ export default function Pricing() {
                     )}
                   </div>
                 ) : (
-                  <motion.a
+                  <a
                     href="/signup"
                     className={cn(
                       'w-full py-3 rounded-xl font-semibold transition-all block text-center',
                       plan.popular ? 'button-primary' : 'button-secondary',
                     )}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     {plan.cta}
-                  </motion.a>
+                  </a>
                 )}
 
                 {/* Background Effect */}
-                <motion.div
+                <div
                   className={`absolute inset-0 bg-gradient-to-br ${plan.color} opacity-[0.01] rounded-2xl`}
-                  whileHover={{ opacity: 0.02 }}
-                  transition={{ duration: 0.3 }}
                 />
-              </motion.div>
+              </div>
             </HoverScale>
           ))}
         </FadeInStagger>

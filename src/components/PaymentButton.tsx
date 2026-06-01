@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 
@@ -142,12 +141,10 @@ export default function PaymentButton({
 
   return (
     <div className="w-full">
-      <motion.button
+      <button
         onClick={handlePayment}
         disabled={loading}
         className={`relative ${className}`}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
       >
         {loading ? (
           <>
@@ -157,7 +154,7 @@ export default function PaymentButton({
         ) : (
           buttonText
         )}
-      </motion.button>
+      </button>
     </div>
   )
 }

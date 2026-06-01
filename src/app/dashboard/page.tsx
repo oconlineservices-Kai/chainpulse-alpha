@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AnimatePresence } from 'framer-motion'
 import { LogOut, Crown, Zap, Lock, RefreshCw } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import AlphaFeed from '@/components/dashboard/AlphaFeed'
@@ -249,7 +248,7 @@ export default function DashboardPage() {
           <AlphaFeed signals={signals} onSelectSignal={setSelectedSignal} onRefetch={fetchData} />
 
           {/* Signal Detail Modal */}
-          <AnimatePresence>
+          
             {selectedSignal && (
               <SignalDetail
                 signal={selectedSignal}
@@ -257,7 +256,7 @@ export default function DashboardPage() {
                 onRefetch={fetchData}
               />
             )}
-          </AnimatePresence>
+          
         </div>
       </ErrorBoundary>
     </div>

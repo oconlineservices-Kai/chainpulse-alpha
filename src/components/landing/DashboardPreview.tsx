@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { TrendingUp, TrendingDown, Eye, Wallet, Diamond } from 'lucide-react'
 
@@ -42,21 +41,16 @@ const mockSignals = [
 
 export default function DashboardPreview() {
   return (
-    <motion.div
+    <div
       className="relative max-w-4xl mx-auto mt-16 px-0 overflow-hidden"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.6 }}
     >
       {/* Floating Browser Mockup */}
-      <motion.div
+      <div
         className="relative bg-background-card border border-border rounded-2xl shadow-2xl overflow-hidden"
-        whileHover={{ y: -8, rotateX: 2 }}
         style={{ 
           transformStyle: 'preserve-3d',
           perspective: '1000px'
         }}
-        transition={{ type: 'spring', stiffness: 300 }}
       >
         {/* Browser Header */}
         <div className="flex items-center gap-2 px-4 py-3 bg-background border-b border-border">
@@ -92,47 +86,38 @@ export default function DashboardPreview() {
 
         {/* Stats Cards */}
         <div className="px-6 py-4 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <motion.div 
+          <div 
             className="bg-primary-500/10 border border-primary-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
-            whileHover={{ scale: 1.02 }}
           >
             <div className="text-primary-400 text-lg font-bold mb-1">47</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Active Signals</div>
-          </motion.div>
-          <motion.div 
+          </div>
+          <div 
             className="bg-success-500/10 border border-success-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
-            whileHover={{ scale: 1.02 }}
           >
             <div className="text-success-400 text-lg font-bold mb-1">82.4%</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Success Rate</div>
-          </motion.div>
-          <motion.div 
+          </div>
+          <div 
             className="bg-warning-500/10 border border-warning-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
-            whileHover={{ scale: 1.02 }}
           >
             <div className="text-warning-400 text-lg font-bold mb-1">1,247</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Whale Wallets</div>
-          </motion.div>
-          <motion.div 
+          </div>
+          <div 
             className="bg-secondary-500/10 border border-secondary-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
-            whileHover={{ scale: 1.02 }}
           >
             <div className="text-secondary-400 text-lg font-bold mb-1">12.3K</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Twitter Mentions</div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Signals List */}
         <div className="px-6 pb-6">
           <div className="space-y-3">
             {mockSignals.map((signal, index) => (
-              <motion.div
-                key={signal.symbol}
+              <div
                 className="bg-background border border-border rounded-lg p-4 hover:border-primary-500/30 transition-colors"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                whileHover={{ x: 4 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -182,7 +167,7 @@ export default function DashboardPreview() {
                     </div>
                     
                     <Link href="/signup">
-                      <motion.button
+                      <button
                         className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] flex items-center justify-center ${
                           signal.recommendation === 'Strong Buy' 
                             ? 'bg-success-500 text-white hover:bg-success-600'
@@ -190,51 +175,30 @@ export default function DashboardPreview() {
                             ? 'bg-primary-500 text-white hover:bg-primary-600'
                             : 'bg-background-hover text-text-secondary hover:bg-background-card'
                         }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
                       >
                         {signal.recommendation}
-                      </motion.button>
+                      </button>
                     </Link>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Floating Elements */}
-      <motion.div
+      <div
         className="absolute -top-8 -right-8 w-16 h-16 bg-success-500/20 rounded-full flex items-center justify-center"
-        animate={{ 
-          y: [0, -10, 0],
-          rotate: [0, 5, 0]
-        }}
-        transition={{ 
-          duration: 3, 
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
       >
         <TrendingUp className="w-8 h-8 text-success-400" />
-      </motion.div>
+      </div>
 
-      <motion.div
+      <div
         className="absolute -bottom-4 -left-4 w-12 h-12 bg-primary-500/20 rounded-full flex items-center justify-center"
-        animate={{ 
-          y: [0, 8, 0],
-          rotate: [0, -5, 0]
-        }}
-        transition={{ 
-          duration: 2.5, 
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.5
-        }}
       >
         <Eye className="w-6 h-6 text-primary-400" />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }

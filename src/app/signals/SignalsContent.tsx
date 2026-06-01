@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { useSession } from 'next-auth/react'
 import { 
   TrendingUp, 
@@ -246,7 +245,7 @@ export default function SignalsContent() {
         <FadeIn delay={0.1}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             {performanceStats.map((stat) => (
-              <div key={stat.label} className="glass-card p-5 rounded-xl">
+              <div className="glass-card p-5 rounded-xl">
                 <div className="text-2xl font-bold text-primary-400 mb-1">{stat.value}</div>
                 <div className="text-text-secondary text-sm font-medium">{stat.label}</div>
                 <div className="text-text-muted text-xs mt-1">{stat.sub}</div>
@@ -262,7 +261,6 @@ export default function SignalsContent() {
             <span className="text-sm text-text-muted">Filter:</span>
             {(['all', 'diamond', 'whale', 'sentiment'] as const).map((f) => (
               <button
-                key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
                   "px-4 py-1.5 rounded-lg text-sm font-medium transition-all",
@@ -298,7 +296,7 @@ export default function SignalsContent() {
         {loading && !error && (
           <div className="space-y-4 mb-12">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="glass-card p-6 rounded-2xl border border-border animate-pulse">
+              <div className="glass-card p-6 rounded-2xl border border-border animate-pulse">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-background-card" />
@@ -340,13 +338,12 @@ export default function SignalsContent() {
                 const isLocked = signal.locked === true || (idx >= 3 && !meta?.isRealTime) || isTierLocked
 
                 return (
-                  <HoverScale key={signal.id}>
-                    <motion.div
+                  <HoverScale>
+                    <div
                       className={cn(
                         "glass-card p-6 rounded-2xl border transition-all duration-300",
                         isLocked ? "opacity-70 hover:opacity-80 border-border" : `border-border ${style.border}`
                       )}
-                      whileHover={{ y: -2 }}
                     >
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         {/* Left: Token Info */}
@@ -454,7 +451,7 @@ export default function SignalsContent() {
                           )}
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   </HoverScale>
                 )
               })}

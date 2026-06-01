@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Activity, 
   Wallet, 
@@ -58,35 +57,25 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
   return (
     <>
       {/* Mobile Menu Button */}
-      <motion.button
+      <button
         className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl bg-background-card border border-border flex items-center justify-center"
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
       >
         {isMobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-      </motion.button>
+      </button>
 
       {/* Mobile Overlay */}
-      <AnimatePresence>
+      
         {isMobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             onClick={() => setIsMobileOpen(false)}
           />
         )}
-      </AnimatePresence>
+      
 
       {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -280 }}
-        animate={{ 
-          x: isMobileOpen ? 0 : -280,
-          transition: { type: "spring", stiffness: 300, damping: 30 }
-        }}
+      <aside
         className={cn(
           "fixed lg:relative lg:translate-x-0 top-0 left-0 h-screen w-70 bg-background-card/95 backdrop-blur-xl border-r border-border z-40 flex flex-col",
           "lg:w-64"
@@ -110,8 +99,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
           {navigation.map((item) => {
             const isActive = activeTab === item.id
             return (
-              <motion.button
-                key={item.id}
+              <button
                 onClick={() => {
                   onTabChange(item.id)
                   setIsMobileOpen(false)
@@ -122,8 +110,6 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                     ? "bg-primary-500/20 text-primary-400 border border-primary-500/30"
                     : "text-text-secondary hover:text-text-primary hover:bg-background-hover"
                 )}
-                whileHover={{ x: isActive ? 0 : 4 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <item.icon className={cn(
                   "w-5 h-5",
@@ -135,13 +121,9 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 </div>
                 
                 {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="w-2 h-2 rounded-full bg-primary-400"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
+                  <div className="w-2 h-2 rounded-full bg-primary-400" />
                 )}
-              </motion.button>
+              </button>
             )
           })}
         </nav>
@@ -161,27 +143,23 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
           {/* User Menu */}
           <div className="space-y-2">
-            <motion.button
+            <button
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-hover transition-all text-sm"
-              whileHover={{ x: 2 }}
-              whileTap={{ scale: 0.98 }}
             >
               <User className="w-4 h-4" />
               <span>Profile</span>
-            </motion.button>
+            </button>
 
-            <motion.button
+            <button
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-danger-400 hover:bg-danger-500/10 transition-all text-sm"
-              whileHover={{ x: 2 }}
-              whileTap={{ scale: 0.98 }}
               onClick={() => signOut({ callbackUrl: '/' })}
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
-            </motion.button>
+            </button>
           </div>
         </div>
-      </motion.aside>
+      </aside>
     </>
   )
 }

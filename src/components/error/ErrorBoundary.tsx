@@ -2,8 +2,6 @@
 
 import { Component, ErrorInfo, ReactNode } from "react"
 import { AlertTriangle, RefreshCw } from "lucide-react"
-import { motion } from "framer-motion"
-
 interface Props {
   children: ReactNode
   fallback?: ReactNode
@@ -40,9 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div
           className="min-h-[400px] flex items-center justify-center p-8"
         >
           <div className="bg-[#12121a] border border-red-500/20 rounded-2xl p-8 max-w-md w-full text-center">
@@ -74,7 +70,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Retry
             </button>
           </div>
-        </motion.div>
+        </div>
       )
     }
 
