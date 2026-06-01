@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import Navigation from '@/components/layout/Navigation'
+import MobileStickyBar from '@/components/layout/MobileStickyBar'
 import SessionProvider from '@/components/providers/SessionProvider'
 import CookieConsent from '@/components/CookieConsent'
 
@@ -216,6 +217,7 @@ export default function RootLayout({
             <main id="main-content">
               {children}
             </main>
+            <MobileStickyBar />
             <CookieConsent />
           </SessionProvider>
         </div>

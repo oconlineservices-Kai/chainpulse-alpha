@@ -66,7 +66,7 @@ const basePlans = [
       'Priority support',
     ],
     limitations: [],
-    cta: 'Upgrade to Premium',
+    cta: 'Get Premium Access',
     popular: true,
   },
   {
@@ -88,7 +88,7 @@ const basePlans = [
     limitations: [
       'No bulk discounts',
     ],
-    cta: 'Buy Credits',
+    cta: 'Buy Alpha Credits',
     popular: false,
   },
 ]
@@ -254,8 +254,16 @@ export default function PricingClient() {
               }
             </p>
 
-            {/* Billing Toggle — only show when Premium is available */}
-            <div className="inline-flex items-center gap-2 p-1 rounded-xl bg-background-card border border-border">
+            {/* Scarcity + Billing Toggle */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-warning-500/10 border border-warning-500/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-warning-500"></span>
+                </span>
+                <span className="text-xs text-warning-400 font-medium">47 early spots left this month</span>
+              </div>
+              <div className="inline-flex items-center gap-2 p-1 rounded-xl bg-background-card border border-border">
               <button
                 onClick={() => setBillingPeriod('monthly')}
                 className={cn(
@@ -282,7 +290,7 @@ export default function PricingClient() {
                 </span>
               </button>
             </div>
-
+            </div>
 
           </div>
         </FadeIn>

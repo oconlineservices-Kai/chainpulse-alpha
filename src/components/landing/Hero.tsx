@@ -1,38 +1,22 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowRight, CheckCircle2, Activity, Zap } from 'lucide-react'
+import { ArrowRight, Activity } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 import { AnimatedBackground } from '../animations/FloatingElements'
 import DashboardPreview from './DashboardPreview'
 import { cn } from '@/lib/utils'
 
 export default function Hero() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || status === 'loading') return
-    
-    setStatus('loading')
-    try {
-      const res = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      
-      if (res.ok) {
-        setStatus('success')
-        setEmail('')
-      } else {
-        setStatus('error')
-      }
-    } catch {
-      setStatus('error')
-    }
+    if (!email) return
+    router.push(`/signup?email=${encodeURIComponent(email)}`)
   }
 
   return (
@@ -92,69 +76,23 @@ export default function Hero() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className={cn(
-                      "input-field pr-12 transition-all duration-300",
-                      status === 'success' && "border-success-500 focus:border-success-500"
-                    )}
+                    className="input-field pr-12 transition-all duration-300"
                     required
                   />
-                  {status === 'success' && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-success-400" />
-                    </motion.div>
-                  )}
                 </div>
                 
                 <motion.button
                   type="submit"
-                  disabled={status === 'loading'}
-                  className={cn(
-                    "button-primary min-w-[160px] group h-[52px]",
-                    status === 'success' && "bg-success-500 hover:bg-success-600"
-                  )}
+                  className="button-primary min-w-[160px] group h-[52px]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {status === 'loading' ? (
-                    <div className="loading-spinner" />
-                  ) : status === 'success' ? (
-                    <>
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
-                      You're In!
-                    </>
-                  ) : (
-                    <>
-                      Get Free Alerts →
-                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
+                  <>
+                    Get Free Alerts →
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
                 </motion.button>
               </div>
-              
-              {status === 'success' && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-3 text-success-400 flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-4 h-4" />
-                  You're on the list! Check your inbox.
-                </motion.p>
-              )}
-              
-              {status === 'error' && (
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-3 text-danger-400"
-                >
-                  Something went wrong. Please try again.
-                </motion.p>
-              )}
             </motion.form>
           </FadeIn>
           

@@ -1,15 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import Link from 'next/link'
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   
   const [email, setEmail] = useState('')
+
+  // Prefill email from ?email= URL param (via hero CTA redirect)
+  useEffect(() => {
+    const prefilled = searchParams.get('email')
+    if (prefilled) {
+      setEmail(prefilled)
+    }
+  }, [searchParams])
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
