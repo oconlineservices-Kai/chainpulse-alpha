@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Activity } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 import { AnimatedBackground } from '../animations/FloatingElements'
-import DashboardPreview from './DashboardPreview'
 import { cn } from '@/lib/utils'
+
+const DashboardPreview = lazy(() => import('./DashboardPreview'))
 
 export default function Hero() {
   const router = useRouter()
@@ -95,8 +96,10 @@ export default function Hero() {
             </p>
           </FadeIn>
           
-          {/* Dashboard Preview - VISUAL PROOF */}
-          <DashboardPreview />
+          {/* Dashboard Preview - VISUAL PROOF (lazy loaded) */}
+          <Suspense fallback={<div className="h-64 rounded-xl bg-white/5 animate-pulse" />}>
+            <DashboardPreview />
+          </Suspense>
           
           {/* Social Proof Stats */}
           <FadeIn delay={0.9}>

@@ -59,18 +59,24 @@ const nextConfig = {
             value: 'max-age=31536000; includeSubDomains; preload'
           },
           {
-            // CSP: 'unsafe-inline' in script-src is required because:
-            // 1) Next.js inline <script> for RSC payloads and hydration
-            // 2) Google Analytics gtag.js inline config
-            // 3) Razorpay checkout inline scripts
+            // CSP: hardened with strict-dynamic and resource-type restrictions.
+            // 'unsafe-inline' retained for script-src because:
+            // 1) Next.js 14.x emits inline <script> tags for RSC payloads and hydration
+            //    that do NOT carry nonces (Next.js 15+ will add native nonce support)
+            // 2) Razorpay checkout injects dynamic inline scripts
+            // 3) Google Analytics gtag.js uses inline config via dataLayer
+            // strict-dynamic is added so that if we later implement nonce-based CSP
+            // with Next.js 15+, the migration path is clear: remove 'unsafe-inline',
+            // add nonce generation in middleware, and pass nonce to all Script tags.
             // 'unsafe-eval' is intentionally NOT present (no eval() needed).
-            // Future: migrate to strict-dynamic + nonce-based CSP when feasible.
+            // Nonce approach verified as infeasible in Next.js 14.x without modifying
+            // Next.js internals (RSC scripts bypass custom _document).
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.razorpay.com https://api.coingecko.com wss:; frame-src https://api.razorpay.com; worker-src blob: 'self'; upgrade-insecure-requests; report-uri /api/csp-report;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.razorpay.com https://api.coingecko.com wss:; frame-src https://api.razorpay.com; frame-ancestors 'none'; worker-src blob: 'self'; base-uri 'self'; form-action 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; upgrade-insecure-requests; report-uri /api/csp-report;"
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+            value: 'camera=(), display-capture=(), fullscreen=(self), geolocation=(), microphone=(), interest-cohort=(), payment=(self), publickey-credentials-get=(self)'
           },
           {
             key: 'Cross-Origin-Opener-Policy',
@@ -79,6 +85,10 @@ const nextConfig = {
           {
             key: 'Cross-Origin-Resource-Policy',
             value: 'same-site'
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp'
           },
         ],
       },
