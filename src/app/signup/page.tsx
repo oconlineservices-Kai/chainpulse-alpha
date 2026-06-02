@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Eye, EyeOff, Lock, Mail, User } from 'lucide-react'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -50,7 +51,17 @@ export default function SignupPage() {
       const data = await res.json()
 
       if (res.ok) {
-        router.push('/login?registered=true')
+        // Auto-login after successful registration, then redirect to welcome tour
+        const autoLogin = await signIn('credentials', {
+          email,
+          password,
+          redirect: false,
+        })
+        if (autoLogin?.ok) {
+          router.push('/welcome?registered=true')
+        } else {
+          router.push('/login?registered=true')
+        }
       } else {
         setError(data.error || 'Failed to create account')
       }

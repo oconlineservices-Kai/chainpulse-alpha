@@ -133,6 +133,8 @@ export default function BuySignalButton({
 
             if (verifyData.success) {
               setBuyStatus('success')
+              // Clear abandonment tracking on successful purchase
+              try { localStorage.removeItem('abandoned_checkout') } catch {}
               onUnlocked?.()
             } else {
               throw new Error(verifyData.error || 'Verification failed')
@@ -153,6 +155,17 @@ export default function BuySignalButton({
           },
         },
       }
+
+      // Track checkout initiation for abandonment recovery
+      try {
+        localStorage.setItem('abandoned_checkout', JSON.stringify({
+          signalId,
+          signalType,
+          timestamp: Date.now(),
+          amount: PRICE_LABELS[signalType] ?? '$1.00',
+        }))
+        localStorage.setItem('abandoned_checkout_dismissed', 'false')
+      } catch { /* localStorage may be unavailable */ }
 
       const rzp = new window.Razorpay(options)
       rzp.open()

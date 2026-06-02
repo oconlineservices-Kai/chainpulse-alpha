@@ -212,6 +212,17 @@ export default function PricingClient() {
         },
       }
 
+      // Track checkout initiation for abandonment recovery
+      try {
+        localStorage.setItem('abandoned_checkout', JSON.stringify({
+          packId,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          timestamp: Date.now(),
+        }))
+        localStorage.setItem('abandoned_checkout_dismissed', 'false')
+      } catch { /* localStorage may be unavailable */ }
+
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (error) {

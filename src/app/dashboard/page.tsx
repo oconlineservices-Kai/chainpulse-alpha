@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LogOut, Crown, Zap, Lock, RefreshCw } from 'lucide-react'
+import { LogOut, Crown, Zap, Lock, RefreshCw, ShoppingCart, X, ArrowRight } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import AlphaFeed from '@/components/dashboard/AlphaFeed'
 import SignalDetail from '@/components/dashboard/SignalDetail'
@@ -24,6 +24,28 @@ export default function DashboardPage() {
   const [signals, setSignals] = useState<Signal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAbandonedBanner, setShowAbandonedBanner] = useState(false)
+
+  // Check for abandoned checkout on mount
+  useEffect(() => {
+    if (status !== 'authenticated') return
+    try {
+      const raw = localStorage.getItem('abandoned_checkout')
+      const dismissed = localStorage.getItem('abandoned_checkout_dismissed')
+      if (raw && dismissed !== 'true') {
+        const data = JSON.parse(raw)
+        const age = Date.now() - (data.timestamp || 0)
+        if (age < 24 * 60 * 60 * 1000) {
+          setShowAbandonedBanner(true)
+        }
+      }
+    } catch {}
+  }, [status])
+
+  const dismissAbandonedBanner = () => {
+    setShowAbandonedBanner(false)
+    try { localStorage.setItem('abandoned_checkout_dismissed', 'true') } catch {}
+  }
 
   // Pull premiumStatus from session — refreshed after payment via JWT callback
   const isPremium = (session?.user as any)?.premiumStatus === 'premium'
@@ -195,6 +217,38 @@ export default function DashboardPage() {
                 <RefreshCw className="w-3 h-3" />
                 Refresh
               </button>
+            </div>
+          )}
+
+          {/* Abandoned checkout recovery banner */}
+          {showAbandonedBanner && !isPremiumActive && (
+            <div className="mb-4 p-4 rounded-xl border border-warning-500/40 bg-gradient-to-r from-warning-500/10 to-orange-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-warning-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                  <ShoppingCart className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-text-primary">You left something behind 🛒</p>
+                  <p className="text-xs text-text-muted">
+                    Your checkout was interrupted. Continue where you left off and unlock premium signals.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={dismissAbandonedBanner}
+                  className="text-xs text-text-muted hover:text-text-secondary px-3 py-1.5"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <Link
+                  href="/pricing"
+                  className="bg-gradient-to-r from-warning-500 to-orange-500 hover:from-warning-600 hover:to-orange-600 text-white px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+                >
+                  <ArrowRight className="w-4 h-4" />
+                  Complete Purchase
+                </Link>
+              </div>
             </div>
           )}
 
