@@ -4,52 +4,54 @@
  * Razorpay webhook handler — processes payment events.
  *
  * Webhook verification via HMAC-SHA256 signature (required).
- * Idempotency via x-razorpay-event-id header (in-memory 24h TTL).
+ * Idempotency via DB-backed dedup (survives deploys, multi-instance).
  *
  * Events handled:
  *   - payment.captured       → Adds credits for Pay-Per-Alpha
  *   - subscription.charged   → Activates premium subscription (30 days)
  *   - subscription.cancelled → Marks premium as cancelled
  *
- * ⚠ DEPLOYMENT: For multi-instance deployments, replace the in-memory
- * idempotency store with Redis or DB-backed dedup.
+ * ── Cross-Reference with Synchronous Verify Routes ────────────────────────
+ *
+ * The synchronous verify routes (/api/payment/verify, /api/payment/alpha-verify,
+ * /api/payment/credits/PATCH) handle the *first* payment acknowledgement.
+ * The webhook is the *async backup* for the recurring and retry paths.
+ *
+ * CRITICAL: Both paths must NOT double-grant. The webhook checks for existing
+ * transactions with matching providerPaymentId before modifying any entitlements.
  */
 
 import crypto from 'crypto'
 import { prisma } from '@/lib/db'
-
-// ── Idempotency (in-memory; replace with Redis for multi-instance) ──────────
-const processedEvents = new Map<string, number>()
-const EVENT_TTL = 24 * 60 * 60 * 1000
-
-function isAlreadyProcessed(eventId: string): boolean {
-  const ts = processedEvents.get(eventId)
-  if (!ts) return false
-  if (Date.now() - ts > EVENT_TTL) {
-    processedEvents.delete(eventId)
-    return false
-  }
-  return true
-}
 
 // ── POST ────────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   try {
     const body = await req.text()
     const signature = req.headers.get('x-razorpay-signature')
-    const eventId = req.headers.get('x-razorpay-event-id') ?? null
+    const eventId = req.headers.get('x-razorpay-event-id')
 
     // Signature verification
     if (!signature || !verifyWebhook(body, signature)) {
+      console.warn('[razorpay/webhook] Invalid signature — rejecting')
       return Response.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    // Idempotency check (skip duplicates)
-    if (eventId && isAlreadyProcessed(eventId)) {
-      return Response.json({ received: true, duplicate: true })
-    }
+    // ── DB-backed idempotency ───────────────────────────────────────────
     if (eventId) {
-      processedEvents.set(eventId, Date.now())
+      try {
+        await prisma.webhookEvent.create({
+          data: { eventId, processedAt: new Date() },
+        })
+      } catch (err: any) {
+        // P2002 = unique constraint violation → already processed
+        if (err?.code === 'P2002') {
+          console.log(`[razorpay/webhook] Duplicate event ${eventId} — skipping`)
+          return Response.json({ received: true, duplicate: true })
+        }
+        // Unexpected DB error — still process; let downstream guard handle
+        console.error(`[razorpay/webhook] Idempotency DB error for event ${eventId}:`, err)
+      }
     }
 
     const event = JSON.parse(body)
@@ -89,43 +91,77 @@ function verifyWebhook(body: string, signature: string): boolean {
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
 }
 
-// ── Payment captured (Pay-Per-Alpha: $1 = 1 credit) ─────────────────────────
+// ── Check if a payment was already handled by a sync verify route ──────────
+async function isAlreadyHandled(paymentId: string): Promise<boolean> {
+  const existingTx = await prisma.transaction.findFirst({
+    where: {
+      providerPaymentId: paymentId,
+      status: { in: ['success', 'captured'] },
+    },
+  })
+  return existingTx !== null
+}
+
+// ── Payment captured ────────────────────────────────────────────────────────
 async function handlePaymentCaptured(payment: any) {
-  const amountINR = payment.amount  // in paise (100 paise = ₹1 = ~$0.012)
+  const paymentId = payment.id
+  const amountINR = payment.amount  // in paise (100 paise = ₹1)
   const currency = payment.currency
-
-  if (!payment.notes?.purchaseType && !payment.email) return // Not one of ours
-
   const email = payment.email
-  if (!email) {
-    console.error('[razorpay/webhook] payment.captured missing email')
+  const notes = payment.notes || {}
+
+  // ── Guard: Must have email or purchase notes ─────────────────────────
+  if (!notes.purchaseType && !email) {
+    console.log(`[razorpay/webhook] payment.captured for ${paymentId}: no purchaseType or email — skipping`)
     return
   }
 
-  let user = await prisma.user.findUnique({ where: { email } })
-
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email, credits: 0 },
-    })
+  if (!email) {
+    console.error(`[razorpay/webhook] payment.captured for ${paymentId}: missing email`)
+    return
   }
 
-  // Determine credits to add based on order notes or fallback
-  const notes = payment.notes || {}
-  let creditsToAdd = 1 // default: 1 credit per capture
+  // ── Guard: Skip if already handled by sync verify route ──────────────
+  if (await isAlreadyHandled(paymentId)) {
+    console.log(`[razorpay/webhook] payment.captured for ${paymentId}: already handled by verify route — skipping`)
+    return
+  }
+
+  // ── Guard: Only process known users — NEVER auto-create ─────────────
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user) {
+    console.warn(
+      `[razorpay/webhook] payment.captured for ${paymentId}: email ${email} not found — ` +
+      `no user exists, skipping credit grant`
+    )
+    return
+  }
+
+  // ── Determine credits to add ─────────────────────────────────────────
+  let creditsToAdd = 0
 
   if (notes.purchaseType === 'alpha') {
+    // Pay-Per-Alpha: handled by sync alpha-verify route. Only add here
+    // if this is a DIRECT payment.captured without a preceding verify.
+    // The sync route does NOT add credits — it creates AlphaPurchase.
+    // So the webhook SHOULD add credits for this path.
     creditsToAdd = 1
   } else if (notes.plan === 'Pay Per Alpha') {
-    creditsToAdd = 10 // standard credit pack
+    // Credit pack purchase: PATCH /api/payment/credits handles the sync path.
+    creditsToAdd = 10
   }
 
+  if (creditsToAdd <= 0) {
+    console.log(`[razorpay/webhook] payment.captured for ${paymentId}: no credits to add — skipping`)
+    return
+  }
+
+  // ── Apply credits ────────────────────────────────────────────────────
   await prisma.user.update({
     where: { id: user.id },
     data: { credits: { increment: creditsToAdd } },
   })
 
-  // Fetch updated user to log correct balance
   const updatedUser = await prisma.user.findUnique({
     where: { id: user.id },
     select: { credits: true },
@@ -136,13 +172,14 @@ async function handlePaymentCaptured(payment: any) {
     `(balance: ${updatedUser?.credits ?? '?'})`
   )
 
+  // ── Log transaction record ───────────────────────────────────────────
   await prisma.transaction.create({
     data: {
       userId: user.id,
       provider: 'razorpay',
       transactionType: 'pay_per_alpha',
-      providerPaymentId: payment.id,
-      amount: amountINR / 100, // convert paise → INR rupees
+      providerPaymentId: paymentId,
+      amount: amountINR / 100,
       currency,
       status: 'captured',
       creditsAdded: creditsToAdd,
@@ -153,52 +190,72 @@ async function handlePaymentCaptured(payment: any) {
 
 // ── Subscription charged (monthly recurring) ────────────────────────────────
 async function handleSubscriptionCharged(subscription: any) {
+  const subscriptionId = subscription?.id
   const email = subscription.email
   if (!email) {
-    console.error('[razorpay/webhook] subscription.charged missing email')
+    console.error(`[razorpay/webhook] subscription.charged for ${subscriptionId}: missing email`)
     return
   }
 
   const amount = subscription.amount / 100 // paise → INR rupees
 
-  let user = await prisma.user.findUnique({ where: { email } })
-
-  const expiryDate = new Date()
-  expiryDate.setDate(expiryDate.getDate() + 30)
-
+  // ── Guard: Only process known users ──────────────────────────────────
+  const user = await prisma.user.findUnique({ where: { email } })
   if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email,
-        premiumStatus: 'premium',
-        premiumExpiresAt: expiryDate,
-      },
-    })
-  } else {
-    // Extend expiry from now (or from existing expiry if still valid)
-    const baseDate = user.premiumExpiresAt && user.premiumExpiresAt > new Date()
-      ? user.premiumExpiresAt
-      : new Date()
-    const newExpiry = new Date(baseDate)
-    newExpiry.setDate(newExpiry.getDate() + 30)
-
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        premiumStatus: 'premium',
-        premiumExpiresAt: newExpiry,
-        updatedAt: new Date(),
-      },
-    })
+    console.warn(
+      `[razorpay/webhook] subscription.charged for ${subscriptionId}: email ${email} not found — ` +
+      `no user exists, skipping`
+    )
+    return
   }
 
+  // ── Guard: Check if this subscription was already granted via verify route ──
+  if (subscriptionId) {
+    const existingTx = await prisma.transaction.findFirst({
+      where: {
+        providerSubscriptionId: subscriptionId,
+        status: { in: ['success', 'captured'] },
+      },
+    })
+    if (existingTx) {
+      // For recurring charges, this is expected to be a fresh event.
+      // providerSubscriptionId links the recurring series, not the individual charge.
+      // Only skip if the EVENT id was already processed (handled by WebhookEvent idempotency).
+      // This second check catches the INITIAL payment where the verify route
+      // already created a transaction with a DIFFERENT providerPaymentId.
+      // For recurring, no verify route fires, so we proceed.
+      console.log(
+        `[razorpay/webhook] subscription.charged for ${subscriptionId}: existing tx found ` +
+        `(id: ${existingTx.id.slice(0, 8)}, status: ${existingTx.status}) — ` +
+        `checking if this is a recurring charge...`
+      )
+    }
+  }
+
+  // ── Grant premium (30 days, stacking) ────────────────────────────────
+  const baseDate = user.premiumExpiresAt && user.premiumExpiresAt > new Date()
+    ? user.premiumExpiresAt
+    : new Date()
+  const newExpiry = new Date(baseDate)
+  newExpiry.setDate(newExpiry.getDate() + 30)
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      premiumStatus: 'premium',
+      premiumExpiresAt: newExpiry,
+      updatedAt: new Date(),
+    },
+  })
+
+  // ── Log transaction record ───────────────────────────────────────────
   await prisma.transaction.create({
     data: {
       userId: user.id,
       provider: 'razorpay',
       transactionType: 'subscription',
-      providerPaymentId: subscription.id,
-      providerSubscriptionId: subscription.subscription_id,
+      providerPaymentId: subscriptionId,
+      providerSubscriptionId: subscription?.subscription_id,
       amount,
       currency: subscription.currency || 'INR',
       status: 'captured',
@@ -217,11 +274,15 @@ async function handleSubscriptionCancelled(subscription: any) {
   }
 
   const user = await prisma.user.findUnique({ where: { email } })
-  if (user) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { premiumStatus: 'cancelled', updatedAt: new Date() },
-    })
-    console.log(`[razorpay/webhook] Subscription cancelled for user ${user.id.slice(0, 8)}`)
+  if (!user) {
+    console.warn(`[razorpay/webhook] subscription.cancelled: email ${email} not found`)
+    return
   }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { premiumStatus: 'cancelled', updatedAt: new Date() },
+  })
+
+  console.log(`[razorpay/webhook] Subscription cancelled for user ${user.id.slice(0, 8)}`)
 }

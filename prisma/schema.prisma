@@ -98,6 +98,14 @@ model Signal {
   @@map("signals")
 }
 
+model WebhookEvent {
+  id          String   @id @default(uuid())
+  eventId     String   @unique @map("event_id")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@map("webhook_events")
+}
+
 model PasswordReset {
   id      String   @id @default(uuid())
   email   String
