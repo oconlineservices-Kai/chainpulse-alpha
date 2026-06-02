@@ -345,48 +345,29 @@ export const GET = auth(async (req) => {
     }
     
     if (isFree) {
-      const FREE_PREVIEW_LIMIT = 3
-      allSignals = allSignals.map((s, idx) => {
-        const isPreview = idx < FREE_PREVIEW_LIMIT
-        const isPurchased = purchasedSignalIds.includes(s.id)
-        const isUnlocked = isPreview || isPurchased
-        if (!isUnlocked) {
-          // 🔴 SECURITY: Zero out all proprietary data for locked/premium signals
-          // Frontend uses `locked: true` + `status: 'Locked'` to gate display,
-          // but we MUST NOT trust client-side enforcement alone.
-          // A malicious user inspecting the API response via DevTools gets
-          // tokenSymbol and tokenName only — no signal data.
-          return {
-            id: s.id,
-            tokenSymbol: s.tokenSymbol,
-            tokenName: s.tokenName,
-            price: 0,
-            priceChange: 0,
-            volume24h: 0,
-            marketCap: 0,
-            sentimentScore: 0,
-            whaleConfidence: 0,
-            correlationScore: 0,
-            twitterMentions: 0,
-            isDiamondSignal: true,
-            whaleWallets: [],
-            createdAt: s.createdAt,
-            expiresAt: s.expiresAt,
-            delayHours: 24,
-            delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * HOUR_MS).toISOString(),
-            locked: true,
-            status: 'Locked',
-          }
-        }
-        return {
-          ...s,
-          whaleWallets: usingDemoSignals ? s.whaleWallets : s.whaleWallets,
-          twitterMentions: s.twitterMentions ?? 0,
-          delayHours: 0,
-          locked: false,
-          status: 'Free',
-        }
-      })
+      // 🛡️ SECURITY: Only return preview signals to free users.
+      // Premium tokens are NEVER exposed — not even name/symbol.
+      const availableSignals = purchasedSignalIds.length > 0
+        ? allSignals.filter(s => purchasedSignalIds.includes(s.id))
+        : []
+      const previewLimit = 3
+      const previewSignals = allSignals.slice(0, previewLimit).map(s => ({
+        ...s,
+        whaleWallets: usingDemoSignals ? s.whaleWallets : s.whaleWallets,
+        twitterMentions: s.twitterMentions ?? 0,
+        delayHours: 0,
+        locked: false,
+        status: 'Free' as const,
+      }))
+
+      allSignals = [...previewSignals, ...availableSignals.map(s => ({
+        ...s,
+        whaleWallets: usingDemoSignals ? s.whaleWallets : s.whaleWallets,
+        twitterMentions: s.twitterMentions ?? 0,
+        delayHours: 0,
+        locked: false,
+        status: 'Free' as const,
+      }))]
     }
 
     // Strip wallet addresses for non-admin, non-premium users
@@ -429,6 +410,7 @@ export const GET = auth(async (req) => {
           signalSource: dbSignals.length > 0 ? 'live' : 'demo',
           signalsVisible: allSignals.length,
           totalAvailable: totalCount,
+          lockedCount: isFree ? (totalCount || DEMO_SIGNALS.length) - allSignals.length : 0,
         },
         performance: isPremiumActive
           ? PERFORMANCE_STATS
@@ -458,7 +440,7 @@ export const GET = auth(async (req) => {
     })
 
     if (isFree) {
-      // Fetch purchased signal IDs for the fallback path too
+      // 🛡️ SECURITY: Same gating for fallback path — premium tokens never exposed.
       let purchasedIds: string[] = []
       if (req.auth?.user?.email) {
         try {
@@ -476,38 +458,11 @@ export const GET = auth(async (req) => {
           // Non-fatal
         }
       }
-      demoSignals = demoSignals.map((s, idx) => {
-        const isUnlocked = idx < 3 || purchasedIds.includes(s.id)
-        if (!isUnlocked) {
-          return {
-            id: s.id,
-            tokenSymbol: s.tokenSymbol,
-            tokenName: s.tokenName,
-            price: 0,
-            priceChange: 0,
-            volume24h: 0,
-            marketCap: 0,
-            sentimentScore: 0,
-            whaleConfidence: 0,
-            correlationScore: 0,
-            twitterMentions: 0,
-            isDiamondSignal: true,
-            whaleWallets: [],
-            createdAt: s.createdAt,
-            expiresAt: s.expiresAt,
-            delayHours: 24,
-            delayedTimestamp: new Date(new Date(s.createdAt).getTime() - 24 * 3600000).toISOString(),
-            locked: true,
-            status: 'Locked',
-          }
-        }
-        return {
-          ...s,
-          delayHours: 0,
-          locked: false,
-          status: 'Free',
-        }
-      })
+      const availableSignals = purchasedIds.length > 0
+        ? demoSignals.filter(s => purchasedIds.includes(s.id))
+        : []
+      demoSignals = demoSignals.slice(0, 3).map(s => ({ ...s, delayHours: 0, locked: false, status: 'Free' }))
+      demoSignals = [...demoSignals, ...availableSignals.map(s => ({ ...s, delayHours: 0, locked: false, status: 'Free' }))]
     }
 
     logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined, extras: { source: 'demo-fallback', count: demoSignals.length } })
@@ -525,6 +480,7 @@ export const GET = auth(async (req) => {
           delayHours: isFree ? 24 : 0,
           signalsVisible: demoSignals.length,
           totalAvailable: demoSignals.length,
+          lockedCount: isFree ? DEMO_SIGNALS.length - Math.min(3, demoSignals.length) : 0,
           signalSource: 'demo',
         },
         performance: { overall: { winRate: 85, totalSignals: 1247 } },

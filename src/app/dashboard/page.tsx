@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAbandonedBanner, setShowAbandonedBanner] = useState(false)
+  const [lockedCount, setLockedCount] = useState(0)
 
   // Check for abandoned checkout on mount
   useEffect(() => {
@@ -69,10 +70,8 @@ export default function DashboardPage() {
         const json = await res.json()
         const apiSignals = json?.data?.signals ?? []
 
-        // Map API signals to the Signal type expected by AlphaFeed
-        // The backend already stamps 'locked: true' for indices 3+
-        // and strips premium metadata (wallets, etc.)
-        const mapped = apiSignals.map((s: any, idx: number) => ({
+        // Map API signals — API now only returns unlocked signals for free users
+        const mapped = apiSignals.map((s: any) => ({
           id: s.id,
           tokenSymbol: s.tokenSymbol,
           tokenName: s.tokenName ?? s.tokenSymbol,
@@ -82,54 +81,29 @@ export default function DashboardPage() {
           whaleConfidence: s.whaleConfidence ?? 0,
           correlationScore: s.correlationScore ?? 0,
           timestamp: s.createdAt ?? new Date().toISOString(),
-          status: (s.locked === true || s.status === 'Premium' ? 'Locked' : 'Free') as 'Free' | 'Premium' | 'Locked',
+          status: 'Free' as 'Free' | 'Premium' | 'Locked',
           twitterMentions: s.twitterMentions ?? 0,
           whaleWallets: s.whaleWallets ?? [],
           recommendation: (s.recommendation ?? 'Skip') as 'Buy' | 'Sell' | 'Skip',
           volume24h: s.volume24h ?? 0,
           marketCap: s.marketCap ?? 0,
-          locked: s.locked === true,
+          locked: false,
         }))
 
+        // Extract locked count from API meta for upgrade CTA
+        setLockedCount(json?.data?.meta?.lockedCount ?? 0)
         setSignals(mapped)
       }
     } catch (err) {
       console.error('Failed to fetch crypto data:', err)
       setError('Live market data temporarily unavailable. Showing fallback signals.')
 
-      // Build sufficient fallback signals so locked cards appear at indices 3+
-      // mockSignals only has 2 entries — pad with our own premium-style entries
-      const FALLBACK_SIGNALS = [
-        ...mockSignals,
-        ...[{ id: 'solana', tokenSymbol: 'SOL', tokenName: 'Solana', sentimentScore: 76, whaleConfidence: 85, correlationScore: 81 },
-          { id: 'avalanche', tokenSymbol: 'AVAX', tokenName: 'Avalanche', sentimentScore: 71, whaleConfidence: 93, correlationScore: 82 },
-          { id: 'bnb', tokenSymbol: 'BNB', tokenName: 'BNB Chain', sentimentScore: 65, whaleConfidence: 78, correlationScore: 71 },
-          { id: 'polygon', tokenSymbol: 'MATIC', tokenName: 'Polygon', sentimentScore: 84, whaleConfidence: 88, correlationScore: 86 },
-          { id: 'optimism', tokenSymbol: 'OP', tokenName: 'Optimism', sentimentScore: 73, whaleConfidence: 69, correlationScore: 71 },
-          { id: 'chainlink', tokenSymbol: 'LINK', tokenName: 'Chainlink', sentimentScore: 79, whaleConfidence: 55, correlationScore: 67 },
-        ].map(s => ({
-          ...s,
-          price: 0,
-          priceChange: 0,
-          timestamp: new Date().toISOString(),
-          status: 'Free' as const,
-          twitterMentions: 0,
-          whaleWallets: [],
-          recommendation: 'Skip' as const,
-          volume24h: 0,
-          marketCap: 0,
-          signalSource: 'cached' as const,
-        })),
-      ]
-
-      const rawSignals = isPremiumActive ? FALLBACK_SIGNALS : FALLBACK_SIGNALS.slice(0, 8)
-      const fallback = rawSignals.map((s, idx) => ({
+      // Fallback: show only the mock signals (free preview)
+      setLockedCount(isPremiumActive ? 0 : 5)
+      const fallback = mockSignals.map(s => ({
         ...s,
-        locked: !isPremiumActive && idx >= 3,
-        // Override status: preview signals (idx<3) get 'Free', locked get 'Locked'
-        status: !isPremiumActive
-          ? (idx >= 3 ? 'Locked' as const : 'Free' as const)
-          : s.status,
+        locked: false,
+        status: 'Free' as const,
       }))
       setSignals(fallback)
     } finally {
@@ -278,16 +252,33 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Premium-locked signals count — clean, minimal */}
-          {!isPremiumActive && signals.length > 0 && (
-            <div className="mb-6 text-center">
-              <p className="text-xs text-text-muted">
-                You can see the first <span className="text-text-secondary font-medium">3 signals</span> for free.
-                Unlock individual signals with 1 credit or{' '}
-                <Link href="/pricing" className="text-primary-400 hover:text-primary-300 underline underline-offset-2">upgrade to Premium</Link>
-                {' '}for real-time access to all signals plus <span className="text-text-secondary font-medium">Diamond tier</span> and{' '}
-                <span className="text-text-secondary font-medium">whale analytics</span>.
+          {/* Premium upgrade CTA — no locked tokens shown */}
+          {!isPremiumActive && signals.length > 0 && lockedCount > 0 && (
+            <div className="mb-6 p-6 rounded-2xl border border-primary-500/30 bg-gradient-to-r from-primary-500/5 to-secondary-500/5 text-center">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">
+                {lockedCount} Premium Signals Hidden
+              </h3>
+              <p className="text-text-muted text-sm mb-4 max-w-md mx-auto">
+                Upgrade to unlock real-time access to all signals including Diamond tier, whale wallet analysis, and priority alerts. Pay-per-signal also available from $1.
               </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  href="/pricing"
+                  className="button-primary px-6 py-2.5 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2"
+                >
+                  <Crown className="w-4 h-4" />
+                  Upgrade to Premium
+                </Link>
+                <Link
+                  href="/signals"
+                  className="button-secondary px-6 py-2.5 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2"
+                >
+                  View Preview Signals
+                </Link>
+              </div>
             </div>
           )}
 
