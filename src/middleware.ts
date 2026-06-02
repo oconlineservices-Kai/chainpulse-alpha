@@ -20,6 +20,8 @@ export default auth((req) => {
     '/signals',
     '/payment/success',
     '/payment/failed',
+    '/payment/cancel',
+    '/welcome',
     '/privacy',
     '/terms',
     '/contact',

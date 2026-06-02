@@ -151,7 +151,15 @@ export default function BuySignalButton({
         theme: { color: '#6366f1' },
         modal: {
           ondismiss: () => {
-            if (buyStatus === 'loading') setBuyStatus('idle')
+            if (buyStatus === 'loading') {
+              setBuyStatus('idle')
+              // Track modal dismissal for analytics
+              try {
+                const events = JSON.parse(localStorage.getItem('payment_analytics') || '[]')
+                events.push({ event: 'modal_dismissed', timestamp: Date.now(), signalId })
+                localStorage.setItem('payment_analytics', JSON.stringify(events.slice(-20)))
+              } catch {}
+            }
           },
         },
       }
