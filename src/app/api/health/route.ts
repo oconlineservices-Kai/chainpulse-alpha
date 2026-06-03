@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getGeneratorStatus } from "@/lib/signal-generator";
+import { getCachedINRRate } from "@/lib/exchange-rate";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ function isPlaceholder(value?: string) {
 export async function GET() {
   try {
     const signalStatus = getSignalGeneratorStatus();
+    const cachedRate = getCachedINRRate();
     
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -44,7 +46,14 @@ export async function GET() {
     const paypalClientId = process.env.PAYPAL_CLIENT_ID;
     const paypalClientSecret = process.env.PAYPAL_CLIENT_SECRET;
 
+    const exchangeRate = {
+      cachedRate: cachedRate ?? 'never_fetched',
+      hardcodedFallback: 85.34,
+      note: 'Rate is live-fetched with in-memory cache. Fallback used only if both free APIs fail.',
+    };
+
     const razorpay = {
+      exchangeRate,
       keyIdConfigured: isConfigured(razorpayKeyId),
       keySecretConfigured: isConfigured(razorpayKeySecret),
       keySecretPlaceholder: isPlaceholder(razorpayKeySecret),
