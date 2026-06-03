@@ -48,8 +48,9 @@ export default function ProfileClient() {
       const response = await fetch('/api/user/profile')
       if (!response.ok) throw new Error('Failed to fetch profile')
       const data = await response.json()
-      setProfile(data)
-      setNewName(data.name || '')
+      const userData = data.user || data
+      setProfile(userData)
+      setNewName(userData.name || '')
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load profile' })
     } finally {
@@ -71,9 +72,13 @@ export default function ProfileClient() {
         body: JSON.stringify({ name: newName }),
       })
 
-      if (!response.ok) throw new Error('Failed to update name')
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || `Server error: ${response.status}`)
+      }
       
-      setProfile(prev => prev ? { ...prev, name: newName } : null)
+      const result = await response.json()
+      setProfile(result.user)
       setEditingName(false)
       setMessage({ type: 'success', text: 'Name updated successfully' })
       setTimeout(() => setMessage(null), 3000)
