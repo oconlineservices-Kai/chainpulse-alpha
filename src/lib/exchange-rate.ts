@@ -63,7 +63,7 @@ export async function getUSDToINR(): Promise<number> {
     }
   }
 
-  // Final fallback — try Stale Cache first, then se ASTMINT
+  // Final fallback — try stale cache first, then use seed rate
   const stale = getCachedINRRate()
   if (stale !== null) {
     console.warn(`[ExchangeRate] Both APIs failed — using stale rate from cache: ${stale}`)
