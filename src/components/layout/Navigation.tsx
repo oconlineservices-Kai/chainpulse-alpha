@@ -1,25 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
-import { Activity, UserPlus, Zap, Menu, X, LayoutDashboard, Shield } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
+import { Activity, UserPlus, Zap, Menu, X, LayoutDashboard, Shield, User, Settings, LogOut } from 'lucide-react'
 
 export default function PremiumNavigationSimple() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const profileDropdownRef = useRef<HTMLDivElement>(null)
   const { data: session } = useSession()
+
+  // Close profile dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target as Node)) {
+        setIsProfileDropdownOpen(false)
+      }
+    }
+    if (isProfileDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isProfileDropdownOpen])
 
   const user = session?.user
   const isLoggedIn = !!user
   const isAdmin = (user as { isAdmin?: boolean })?.isAdmin
-  // Show authenticated nav only on dashboard route, public nav everywhere else
-  const [currentPath, setCurrentPath] = useState('')
-  useEffect(() => {
-    setCurrentPath(window.location.pathname)
-  }, [])
-  const isDashboardRoute = currentPath.startsWith('/dashboard')
-  const showAuthNav = isLoggedIn && isDashboardRoute
+  // Show authenticated nav for ALL pages when logged in
+  // Public marketing nav only for unauthenticated users
+  const showAuthNav = isLoggedIn
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -49,26 +60,67 @@ export default function PremiumNavigationSimple() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
             {showAuthNav ? (
-              /* ── Authenticated dashboard nav — clean, focused ── */
+              /* ── Authenticated nav — clean workspace, shown on ALL routes when logged in ── */
               <>
                 <Link href="/dashboard" className="text-cyan-400 font-medium transition flex items-center gap-1.5">
                   <LayoutDashboard className="w-4 h-4" /> Dashboard
                 </Link>
-                <Link href="/pricing" className="text-gray-300 hover:text-white transition">
-                  Pricing
-                </Link>
                 <Link href="/signals" className="text-gray-300 hover:text-white transition">
                   Signals
+                </Link>
+                <Link href="/pricing" className="text-gray-300 hover:text-white transition">
+                  Pricing
                 </Link>
                 {isAdmin && (
                   <Link href="/admin/dashboard" className="text-orange-400 hover:text-orange-300 transition flex items-center gap-1.5">
                     <Shield className="w-4 h-4" /> Admin
                   </Link>
                 )}
-                {/* Profile — opens dropdown from dashboard header */}
-                <Link href="/profile" className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm hover:opacity-90 transition">
-                  {(user?.email || 'U').slice(0, 2).toUpperCase()}
-                </Link>
+
+                {/* Profile dropdown in nav — visible on non-dashboard pages too */}
+                <div className="relative" ref={profileDropdownRef}>
+                  <button
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm hover:opacity-90 transition"
+                  >
+                    {(user?.email || 'U').slice(0, 2).toUpperCase()}
+                  </button>
+
+                  {isProfileDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50">
+                      <div className="px-4 py-3 border-b border-gray-700">
+                        <p className="text-sm text-white font-medium truncate">{user?.email || 'User'}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{isAdmin ? 'Admin' : 'Free Plan'}</p>
+                      </div>
+                      <div className="p-2">
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-all text-sm"
+                        >
+                          <User className="w-4 h-4" />
+                          Profile Settings
+                        </Link>
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-all text-sm"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Preferences
+                        </Link>
+                        <div className="my-2 h-px bg-gray-700" />
+                        <button
+                          onClick={() => signOut({ callbackUrl: '/' })}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all text-sm"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               /* ── Public marketing nav ── */

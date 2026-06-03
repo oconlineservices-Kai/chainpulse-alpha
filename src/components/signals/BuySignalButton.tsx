@@ -65,18 +65,32 @@ export default function BuySignalButton({
   const loadRazorpayScript = (retries = 2): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) return resolve(true)
+
       const attempt = () => {
         const script = document.createElement('script')
         script.src = 'https://checkout.razorpay.com/v1/checkout.js'
         script.async = true
-        script.onload = () => resolve(true)
+        script.onload = () => {
+          // Script body loaded but Razorpay must initialize on window
+          // Poll up to 3s for it to appear
+          let elapsed = 0
+          const poll = setInterval(() => {
+            elapsed += 200
+            if (window.Razorpay) {
+              clearInterval(poll)
+              resolve(true)
+            } else if (elapsed >= 3000) {
+              clearInterval(poll)
+              console.warn('[BuySignalButton] Razorpay script loaded but not found on window after 3s')
+              resolve(false)
+            }
+          }, 200)
+        }
         script.onerror = () => {
           if (retries > 0) {
             console.warn(`[BuySignalButton] Razorpay script load failed, retrying (${retries} left)...`)
-            setTimeout(() => {
-              script.remove()
-              attempt()
-            }, 1500)
+            script.remove()
+            setTimeout(() => attempt(), 1500)
           } else {
             resolve(false)
           }
