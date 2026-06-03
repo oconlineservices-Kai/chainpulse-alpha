@@ -10,8 +10,16 @@ export default function PremiumNavigationSimple() {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const { data: session } = useSession()
 
-  const isLoggedIn = !!session
-  const isAdmin = (session?.user as { isAdmin?: boolean })?.isAdmin
+  const user = session?.user
+  const isLoggedIn = !!user
+  const isAdmin = (user as { isAdmin?: boolean })?.isAdmin
+  // Show authenticated nav only on dashboard route, public nav everywhere else
+  const [currentPath, setCurrentPath] = useState('')
+  useEffect(() => {
+    setCurrentPath(window.location.pathname)
+  }, [])
+  const isDashboardRoute = currentPath.startsWith('/dashboard')
+  const showAuthNav = isLoggedIn && isDashboardRoute
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20)
@@ -40,36 +48,60 @@ export default function PremiumNavigationSimple() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
-            <Link href="/" className="text-gray-300 hover:text-white transition">Home</Link>
-            <Link href="/features" className="text-gray-300 hover:text-white transition">Features</Link>
-            <Link href="/signals" className="text-gray-300 hover:text-white transition">Signals</Link>
-            <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
-            <Link href="/about" className="text-gray-300 hover:text-white transition">About</Link>
-            <Link href="/contact" className="text-gray-300 hover:text-white transition">Contact</Link>
-
-            {/* Admin link — only visible to admins */}
-            {isAdmin && (
-              <Link href="/admin/dashboard" className="text-orange-400 hover:text-orange-300 transition flex items-center gap-1.5">
-                <Shield className="w-4 h-4" /> Admin
-              </Link>
-            )}
-
-            {isLoggedIn ? (
+            {showAuthNav ? (
+              /* ── Authenticated dashboard nav — clean, focused ── */
               <>
-                <Link href="/pricing" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-purple-500/40 px-3 py-1.5 rounded-lg hover:border-purple-400 transition flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-purple-400" /> Upgrade
+                <Link href="/dashboard" className="text-cyan-400 font-medium transition flex items-center gap-1.5">
+                  <LayoutDashboard className="w-4 h-4" /> Dashboard
                 </Link>
-                <Link href="/dashboard" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-1.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-1.5">
-                  <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+                <Link href="/pricing" className="text-gray-300 hover:text-white transition">
+                  Pricing
+                </Link>
+                <Link href="/signals" className="text-gray-300 hover:text-white transition">
+                  Signals
+                </Link>
+                {isAdmin && (
+                  <Link href="/admin/dashboard" className="text-orange-400 hover:text-orange-300 transition flex items-center gap-1.5">
+                    <Shield className="w-4 h-4" /> Admin
+                  </Link>
+                )}
+                {/* Profile — opens dropdown from dashboard header */}
+                <Link href="/profile" className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white font-semibold text-sm hover:opacity-90 transition">
+                  {(user?.email || 'U').slice(0, 2).toUpperCase()}
                 </Link>
               </>
             ) : (
-              <Link 
-                href="/signup" 
-                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-2"
-              >
-                <UserPlus className="w-4 h-4" /> Get Started
-              </Link>
+              /* ── Public marketing nav ── */
+              <>
+                <Link href="/" className="text-gray-300 hover:text-white transition">Home</Link>
+                <Link href="/features" className="text-gray-300 hover:text-white transition">Features</Link>
+                <Link href="/signals" className="text-gray-300 hover:text-white transition">Signals</Link>
+                <Link href="/pricing" className="text-gray-300 hover:text-white transition">Pricing</Link>
+                <Link href="/about" className="text-gray-300 hover:text-white transition">About</Link>
+                <Link href="/contact" className="text-gray-300 hover:text-white transition">Contact</Link>
+                {isAdmin && (
+                  <Link href="/admin/dashboard" className="text-orange-400 hover:text-orange-300 transition flex items-center gap-1.5">
+                    <Shield className="w-4 h-4" /> Admin
+                  </Link>
+                )}
+                {isLoggedIn ? (
+                  <>
+                    <Link href="/pricing" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-purple-500/40 px-3 py-1.5 rounded-lg hover:border-purple-400 transition flex items-center gap-1.5">
+                      <Zap className="w-4 h-4 text-purple-400" /> Upgrade
+                    </Link>
+                    <Link href="/dashboard" className="text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-1.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-1.5">
+                      <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+                    </Link>
+                  </>
+                ) : (
+                  <Link 
+                    href="/signup" 
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all flex items-center gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" /> Get Started
+                  </Link>
+                )}
+              </>
             )}
           </div>
 
@@ -86,35 +118,56 @@ export default function PremiumNavigationSimple() {
         {isMobileOpen && (
           <div className="lg:hidden bg-black/95 backdrop-blur-lg border-t border-gray-800">
             <div className="px-4 py-6 space-y-4">
-              <Link href="/" className="block text-gray-300 hover:text-white py-2">Home</Link>
-              <Link href="/features" className="block text-gray-300 hover:text-white py-2">Features</Link>
-              <Link href="/signals" className="block text-gray-300 hover:text-white py-2">Signals</Link>
-              <Link href="/pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
-              <Link href="/about" className="block text-gray-300 hover:text-white py-2">About</Link>
-              <Link href="/contact" className="block text-gray-300 hover:text-white py-2">Contact</Link>
-              {isAdmin && (
-                <Link href="/admin/dashboard" className="block text-orange-400 hover:text-orange-300 py-2 flex items-center gap-2">
-                  <Shield className="w-4 h-4" /> Admin Dashboard
-                </Link>
-              )}
-              {isLoggedIn ? (
+              {showAuthNav ? (
                 <>
-                  <Link href="/dashboard" className="block text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-2.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-2">
-                    <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+                  <Link href="/dashboard" className="block text-cyan-400 font-medium py-2 flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
-                  <Link href="/pricing" className="block text-center text-sm text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg mt-2">
-                    Upgrade Plan
+                  <Link href="/pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
+                  <Link href="/signals" className="block text-gray-300 hover:text-white py-2">Signals</Link>
+                  {isAdmin && (
+                    <Link href="/admin/dashboard" className="block text-orange-400 hover:text-orange-300 py-2 flex items-center gap-2">
+                      <Shield className="w-4 h-4" /> Admin Dashboard
+                    </Link>
+                  )}
+                  <Link href="/profile" className="block text-gray-300 hover:text-white py-2 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-md bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center text-white text-xs font-bold">{(user?.email || 'U').slice(0, 2).toUpperCase()}</span>
+                    Profile
                   </Link>
                 </>
               ) : (
-                <div className="pt-4 border-t border-gray-800">
-                  <Link 
-                    href="/signup" 
-                    className="block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-lg text-center"
-                  >
-                    Get Started
-                  </Link>
-                </div>
+                <>
+                  <Link href="/" className="block text-gray-300 hover:text-white py-2">Home</Link>
+                  <Link href="/features" className="block text-gray-300 hover:text-white py-2">Features</Link>
+                  <Link href="/signals" className="block text-gray-300 hover:text-white py-2">Signals</Link>
+                  <Link href="/pricing" className="block text-gray-300 hover:text-white py-2">Pricing</Link>
+                  <Link href="/about" className="block text-gray-300 hover:text-white py-2">About</Link>
+                  <Link href="/contact" className="block text-gray-300 hover:text-white py-2">Contact</Link>
+                  {isAdmin && (
+                    <Link href="/admin/dashboard" className="block text-orange-400 hover:text-orange-300 py-2 flex items-center gap-2">
+                      <Shield className="w-4 h-4" /> Admin Dashboard
+                    </Link>
+                  )}
+                  {isLoggedIn ? (
+                    <>
+                      <Link href="/dashboard" className="block text-white font-semibold bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 px-3 py-2.5 rounded-lg hover:border-cyan-400 transition flex items-center gap-2">
+                        <LayoutDashboard className="w-4 h-4 text-cyan-400" /> Dashboard
+                      </Link>
+                      <Link href="/pricing" className="block text-center text-sm text-gray-400 hover:text-white border border-gray-700 px-3 py-2 rounded-lg mt-2">
+                        Upgrade Plan
+                      </Link>
+                    </>
+                  ) : (
+                    <div className="pt-4 border-t border-gray-800">
+                      <Link 
+                        href="/signup" 
+                        className="block bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-lg text-center"
+                      >
+                        Get Started
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

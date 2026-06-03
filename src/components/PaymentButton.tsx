@@ -50,14 +50,29 @@ export default function PaymentButton({
   const [loading, setLoading] = useState(false)
   const { data: session, status } = useSession()
 
-  const loadRazorpayScript = (): Promise<boolean> => {
+  const loadRazorpayScript = (retries = 2): Promise<boolean> => {
     return new Promise((resolve) => {
       if (window.Razorpay) return resolve(true)
-      const script = document.createElement('script')
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
-      script.onload = () => resolve(true)
-      script.onerror = () => resolve(false)
-      document.body.appendChild(script)
+      
+      const attempt = () => {
+        const script = document.createElement('script')
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+        script.async = true
+        script.onload = () => resolve(true)
+        script.onerror = () => {
+          if (retries > 0) {
+            console.warn(`[PaymentButton] Razorpay script load failed, retrying (${retries} left)...`)
+            setTimeout(() => {
+              script.remove()
+              attempt()
+            }, 1500)
+          } else {
+            resolve(false)
+          }
+        }
+        document.body.appendChild(script)
+      }
+      attempt()
     })
   }
 
@@ -81,7 +96,13 @@ export default function PaymentButton({
       const orderData = await orderRes.json()
 
       if (!orderRes.ok) {
-        throw new Error(orderData.error || 'Failed to create order')
+        throw new Error(orderData.error || `Server error: ${orderRes.status}`)
+      }
+
+      // Validate required response fields before proceeding
+      if (!orderData.keyId || !orderData.orderId || !orderData.amount || !orderData.currency) {
+        console.error('[PaymentButton] Invalid order response:', orderData)
+        throw new Error('Payment gateway returned invalid order data')
       }
 
       // Step 2: Load Razorpay script if not already loaded
@@ -129,8 +150,20 @@ export default function PaymentButton({
       const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (error) {
-      console.error('Payment error:', error)
-      alert('Payment failed. Please try again.')
+      const errMsg = error instanceof Error ? error.message : 'Unknown error'
+      console.error('[PaymentButton] Payment error:', errMsg)
+      
+      // Tell the user exactly what went wrong
+      const displayMessages: Record<string, string> = {
+        'Failed to load payment gateway': 'Could not load payment gateway. Check your network or ad blocker and try again.',
+        'Failed to create order': 'Could not create payment order. Please try again.',
+        'Invalid order data': 'Payment system returned invalid data. Please contact support.',
+      }
+      const friendlyMsg = Object.entries(displayMessages).find(([key]) => 
+        errMsg.includes(key)
+      )?.[1] || 'Payment failed. Please try again.'
+      
+      alert(friendlyMsg)
     } finally {
       // Don't reset loading immediately — Razorpay modal is async; reset on dismiss or completion
       // The ondismiss handler above resets loading. Completion redirects away.

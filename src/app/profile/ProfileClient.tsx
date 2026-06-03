@@ -27,6 +27,10 @@ export default function ProfileClient() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [editingName, setEditingName] = useState(false)
   const [newName, setNewName] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -77,6 +81,43 @@ export default function ProfileClient() {
       setMessage({ type: 'error', text: 'Failed to update name' })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!currentPassword.trim()) {
+      setPasswordMessage({ type: 'error', text: 'Enter your current password' })
+      return
+    }
+    if (newPassword.length < 8) {
+      setPasswordMessage({ type: 'error', text: 'New password must be at least 8 characters' })
+      return
+    }
+
+    try {
+      setChangingPassword(true)
+      setPasswordMessage(null)
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setPasswordMessage({ type: 'error', text: data.error || 'Failed to update password' })
+        return
+      }
+
+      setPasswordMessage({ type: 'success', text: 'Password updated successfully' })
+      setCurrentPassword('')
+      setNewPassword('')
+      setTimeout(() => setPasswordMessage(null), 5000)
+    } catch (error) {
+      setPasswordMessage({ type: 'error', text: 'Network error. Please try again.' })
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -427,9 +468,44 @@ export default function ProfileClient() {
             <div className="space-y-6">
               <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
                 <h3 className="text-lg font-semibold mb-4">Password</h3>
-                <button className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition">
-                  Change Password
-                </button>
+                
+                {/* Password change form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">Current Password</label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-400 mb-1">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password (min 8 characters)"
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 transition"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={changingPassword}
+                      className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-6 py-2 rounded-lg font-medium transition"
+                    >
+                      {changingPassword ? 'Updating...' : 'Update Password'}
+                    </button>
+                    {passwordMessage && (
+                      <span className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                        {passwordMessage.text}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">

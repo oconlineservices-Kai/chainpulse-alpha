@@ -164,12 +164,12 @@ export default function FAQ() {
                   Contact Support
                 </Link>
                 <a
-                  href="https://discord.gg/chainpulsealpha"
+                  href="https://t.me/chainpulse_alpha"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="button-ghost text-sm"
                 >
-                  Join Discord
+                  Join Telegram
                 </a>
               </div>
             </div>
