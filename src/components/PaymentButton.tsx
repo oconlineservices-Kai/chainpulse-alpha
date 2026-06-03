@@ -114,6 +114,7 @@ export default function PaymentButton({
       const orderData = await orderRes.json()
 
       if (!orderRes.ok) {
+        console.error('[PaymentButton] Order creation failed:', JSON.stringify(orderData, null, 2))
         throw new Error(orderData.error || `Server error: ${orderRes.status}`)
       }
 
@@ -150,6 +151,8 @@ export default function PaymentButton({
           if (verifyRes.ok) {
             window.location.href = '/payment/success'
           } else {
+            const verifyErr = await verifyRes.json().catch(() => ({ error: 'Unknown verification error' }))
+            console.error('[PaymentButton] Payment verification failed:', JSON.stringify(verifyErr, null, 2))
             window.location.href = '/payment/failed'
           }
         },
@@ -160,6 +163,7 @@ export default function PaymentButton({
         theme: { color: '#0ea5e9' },
         modal: {
           ondismiss: () => {
+            console.log('[PaymentButton] Razorpay modal dismissed by user')
             setLoading(false)
           },
         },

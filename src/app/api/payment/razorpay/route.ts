@@ -121,6 +121,18 @@ export const POST = auth(async (req) => {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create order'
+    // Log full error object for Razorpay SDK failures
+    if (error && typeof error === 'object') {
+      // Razorpay SDK errors often have statusCode, error, description fields
+      console.error('RAZORPAY_ORDER_CREATION_ERROR:', JSON.stringify({
+        message,
+        statusCode: (error as any).statusCode,
+        error: (error as any).error,
+        description: (error as any).description,
+        field: (error as any).field,
+        stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : undefined,
+      }, null, 2))
+    }
     logApiResponse('POST', '/api/payment/razorpay', 500, { email, error: message })
     return NextResponse.json({ error: message }, { status: 500 })
   }

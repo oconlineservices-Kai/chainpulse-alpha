@@ -357,6 +357,17 @@ export async function POST(req: NextRequest) {
       }, { status: 503 })
     }
 
+    // Log full Razorpay SDK error for debugging
+    if (error && typeof error === 'object') {
+      console.error('RAZORPAY_ALPHA_ORDER_CREATION_ERROR:', JSON.stringify({
+        message: msg,
+        statusCode: (error as any).statusCode,
+        error: (error as any).error,
+        description: (error as any).description,
+        field: (error as any).field,
+        stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : undefined,
+      }, null, 2))
+    }
     logApiResponse('POST', '/api/payment/alpha-purchase', 500, { error: msg })
     return NextResponse.json({ error: msg }, { status: 500 })
   }

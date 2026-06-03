@@ -117,6 +117,7 @@ export default function BuySignalButton({
       const orderData = await orderRes.json()
 
       if (!orderRes.ok) {
+        console.error('[BuySignalButton] Order creation failed:', JSON.stringify(orderData, null, 2))
         if (orderData.alreadyOwned) {
           setBuyStatus('success')
           onUnlocked?.()
