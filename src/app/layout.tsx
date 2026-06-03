@@ -106,10 +106,8 @@ const jsonLd = [
       height: 512,
     },
     sameAs: [
-      'https://twitter.com/chainpulsealpha',
-      'https://github.com/chainpulsealpha',
-      'https://discord.gg/chainpulsealpha',
-      'https://t.me/chainpulsealpha'
+      // Only active accounts
+      'https://t.me/chainpulse_alpha',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
