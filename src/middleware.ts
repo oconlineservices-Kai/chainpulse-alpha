@@ -41,6 +41,12 @@ export default auth((req) => {
 
   // Allow public routes
   if (isPublicRoute) {
+    // 🛡️ CACHE BUSTING — signals page must never serve stale blur/locked state
+    if (nextUrl.pathname === '/signals') {
+      const response = NextResponse.next()
+      response.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate')
+      return response
+    }
     return NextResponse.next()
   }
 

@@ -100,72 +100,7 @@ const typeStyles = {
   sentiment: { badge: '💬 Sentiment', border: 'border-emerald-500/30 hover:border-emerald-400/50', tag: 'bg-emerald-500/20 text-emerald-300', gradient: 'from-emerald-500 to-teal-500' },
 }
 
-// ── Blurred/Locked Placeholder Card ──────────────────────────────────────────
-function LockedSignalCard({ index }: { index: number }) {
-  // Generate a deterministic "ghost" identity for the placeholder
-  const ghostSymbols = ['BTC', 'LINK', 'AAVE', 'UNI', 'DOT', 'ADA', 'ATOM', 'FTM', 'NEAR', 'ALGO']
-  const gType = ghostSymbols[(index * 7 + 3) % ghostSymbols.length]
-  const gScore = 70 + (index * 13) % 30
-  const gTypeStyle = index % 3 === 0
-    ? typeStyles.diamond
-    : index % 3 === 1
-    ? typeStyles.whale
-    : typeStyles.sentiment
-
-  return (
-    <HoverScale>
-      <div className="glass-card p-6 rounded-2xl border border-border relative overflow-hidden select-none">
-        {/* Blur overlay */}
-        <div className="absolute inset-0 backdrop-blur-md bg-background/40 z-10 flex flex-col items-center justify-center gap-3 p-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500/40 to-gray-600/40 flex items-center justify-center">
-            <Lock className="w-6 h-6 text-text-muted/60" />
-          </div>
-          <div className="text-center">
-            <p className="text-sm font-semibold text-text-primary/80">
-              Premium Signal — Locked
-            </p>
-            <p className="text-xs text-text-muted/70 mt-1">
-              Upgrade to Premium or use Pay-Per-Alpha to unlock this signal
-            </p>
-          </div>
-          <Link
-            href="/pricing"
-            className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-all flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Zap className="w-3.5 h-3.5" />
-            Unlock Premium Access to View Live Alpha
-          </Link>
-        </div>
-
-        {/* Ghost content (visible beneath blur) */}
-        <div className="flex items-center justify-between flex-wrap gap-4 opacity-30 blur-sm">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gTypeStyle.gradient} flex items-center justify-center text-white font-bold text-lg`}>
-              {gType[0]}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-lg">{gType}</span>
-                <span className={cn("text-xs px-2 py-0.5 rounded-full font-semibold", gTypeStyle.tag)}>
-                  {gTypeStyle.badge}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-text-muted text-xs mb-1">Score</div>
-              <div className="font-bold text-lg text-text-muted">{gScore}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </HoverScale>
-  )
-}
-
-export default function SignalsContent() {
+export default function SignalsContent({ serverIsGated, serverLockedCount }: { serverIsGated?: boolean; serverLockedCount?: number }) {
   usePageMeta({
     title: 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha',
     description: 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Browse live crypto trading signals, free tier available.',
@@ -263,11 +198,15 @@ export default function SignalsContent() {
   //          of meta.lockedCount. Fallback is always 3.
   // ===================================================================
   const isGated = !isPremium && !meta?.isRealTime
-  const isLoggedInFree = isLoggedIn && !isPremium
   // 🛡️ CRITICAL: Force slice at 3 for gated users — even if backend leaks more
   const visibleSignals = isGated ? filtered.slice(0, 3) : filtered
   // 🛡️ CRITICAL: lockedCount defaults to 3 if meta is missing or corrupted
   const lockedCount = meta?.lockedCount ?? 3
+
+  // SSR fallback: if server passed isGated=true but client hasn't resolved session yet,
+  // use the server values to avoid flash-of-reveal
+  const effectiveIsGated = (isGated && meta !== null) || (serverIsGated === true && meta === null)
+  const effectiveLockedCount = meta?.lockedCount ?? serverLockedCount ?? 3
 
   return (
     <main className="min-h-screen bg-background">
@@ -536,21 +475,76 @@ export default function SignalsContent() {
             </FadeInStagger>
 
             {/* 🔒 LOCKED/PAYWALL SIGNAL PLACEHOLDERS — only for free users */}
-            {isGated && lockedCount > 0 && (
+            {effectiveIsGated && effectiveLockedCount > 0 && (
               <div className="space-y-4 mb-8">
                 <div className="flex items-center gap-2 px-1 py-2">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-warning-500/30 to-transparent" />
                   <span className="text-xs text-warning-400 font-semibold uppercase tracking-widest whitespace-nowrap">
                     <EyeOff className="w-3.5 h-3.5 inline mr-1" />
-                    {lockedCount} Premium Signal{lockedCount !== 1 ? 's' : ''} Locked
+                    {effectiveLockedCount} Premium Signal{effectiveLockedCount !== 1 ? 's' : ''} Locked
                   </span>
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent via-warning-500/30 to-transparent" />
                 </div>
-                <FadeInStagger stagger={0.08} className="space-y-4">
-                  {[...Array(Math.min(lockedCount, 3))].map((_, i) => (
-                    <LockedSignalCard key={`locked-${i}`} index={i} />
-                  ))}
-                </FadeInStagger>
+                <div className="space-y-4">
+                  {[...Array(Math.min(effectiveLockedCount, 3))].map((_, i) => {
+                    // SSR-safe locked placeholder — renders server side
+                    const ghostSymbols = ['BTC', 'LINK', 'AAVE', 'UNI', 'DOT', 'ADA', 'ATOM', 'FTM', 'NEAR', 'ALGO']
+                    const gType = ghostSymbols[(i * 7 + 3) % ghostSymbols.length]
+                    const gScore = 70 + (i * 13) % 30
+                    const gTypeStyle = i % 3 === 0 ? typeStyles.diamond : i % 3 === 1 ? typeStyles.whale : typeStyles.sentiment
+                    return (
+                      <HoverScale key={`locked-${i}`}>
+                        <div className="glass-card p-6 rounded-2xl border border-border relative overflow-hidden select-none">
+                          {/* 🔒 Blur overlay — rendered SSR, no client hydration needed */}
+                          <div className="absolute inset-0 backdrop-blur-md bg-background/40 z-10 flex flex-col items-center justify-center gap-3 p-6">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500/40 to-gray-600/40 flex items-center justify-center">
+                              <Lock className="w-6 h-6 text-text-muted/60" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-semibold text-text-primary/80">
+                                Premium Signal — Locked
+                              </p>
+                              <p className="text-xs text-text-muted/70 mt-1">
+                                Upgrade to Premium or use Pay-Per-Alpha to unlock this signal
+                              </p>
+                            </div>
+                            <Link
+                              href="/pricing"
+                              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-all flex items-center gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Zap className="w-3.5 h-3.5" />
+                              Unlock Premium Access to View Live Alpha
+                            </Link>
+                          </div>
+
+                          {/* Ghost content (visible beneath blur) */}
+                          <div className="flex items-center justify-between flex-wrap gap-4 opacity-30 blur-sm">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gTypeStyle.gradient} flex items-center justify-center text-white font-bold text-lg`}>
+                                {gType[0]}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-lg">{gType}</span>
+                                  <span className={cn("text-xs px-2 py-0.5 rounded-full font-semibold", gTypeStyle.tag)}>
+                                    {gTypeStyle.badge}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-center">
+                                <div className="text-text-muted text-xs mb-1">Score</div>
+                                <div className="font-bold text-lg text-text-muted">{gScore}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </HoverScale>
+                    )
+                  })}
+                </div>
 
                 {/* CTA bar below locked cards */}
                 <FadeIn delay={0.35}>
@@ -562,7 +556,7 @@ export default function SignalsContent() {
                         </div>
                         <div>
                           <h3 className="text-sm font-bold text-text-primary">
-                            Unlock {lockedCount} Premium Signal{lockedCount !== 1 ? 's' : ''}
+                            Unlock {effectiveLockedCount} Premium Signal{effectiveLockedCount !== 1 ? 's' : ''}
                           </h3>
                           <p className="text-xs text-text-muted">
                             {userCredits > 0
