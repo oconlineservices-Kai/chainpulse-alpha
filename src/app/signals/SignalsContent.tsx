@@ -12,6 +12,8 @@ import {
   Filter,
   RefreshCw,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import FadeIn, { FadeInStagger } from '@/components/animations/FadeIn'
 import { HoverScale } from '@/components/animations/ScaleIn'
@@ -34,6 +36,7 @@ interface LiveSignal {
   delayHours?: number
   delayedTimestamp?: string
   locked?: boolean
+  isPreview?: boolean
 }
 
 interface SignalMeta {
@@ -43,6 +46,8 @@ interface SignalMeta {
   delayHours: number
   signalsVisible: number
   totalAvailable: number
+  lockedCount: number
+  lockoutThreshold: number | null
   source?: string
 }
 
@@ -93,6 +98,71 @@ const typeStyles = {
   diamond: { badge: '💎 Diamond', border: 'border-purple-500/30 hover:border-purple-400/50', tag: 'bg-purple-500/20 text-purple-300', gradient: 'from-purple-500 to-indigo-500' },
   whale: { badge: '🐋 Whale', border: 'border-blue-500/30 hover:border-blue-400/50', tag: 'bg-blue-500/20 text-blue-300', gradient: 'from-blue-500 to-cyan-500' },
   sentiment: { badge: '💬 Sentiment', border: 'border-emerald-500/30 hover:border-emerald-400/50', tag: 'bg-emerald-500/20 text-emerald-300', gradient: 'from-emerald-500 to-teal-500' },
+}
+
+// ── Blurred/Locked Placeholder Card ──────────────────────────────────────────
+function LockedSignalCard({ index }: { index: number }) {
+  // Generate a deterministic "ghost" identity for the placeholder
+  const ghostSymbols = ['BTC', 'LINK', 'AAVE', 'UNI', 'DOT', 'ADA', 'ATOM', 'FTM', 'NEAR', 'ALGO']
+  const gType = ghostSymbols[(index * 7 + 3) % ghostSymbols.length]
+  const gScore = 70 + (index * 13) % 30
+  const gTypeStyle = index % 3 === 0
+    ? typeStyles.diamond
+    : index % 3 === 1
+    ? typeStyles.whale
+    : typeStyles.sentiment
+
+  return (
+    <HoverScale>
+      <div className="glass-card p-6 rounded-2xl border border-border relative overflow-hidden select-none">
+        {/* Blur overlay */}
+        <div className="absolute inset-0 backdrop-blur-md bg-background/40 z-10 flex flex-col items-center justify-center gap-3 p-6">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500/40 to-gray-600/40 flex items-center justify-center">
+            <Lock className="w-6 h-6 text-text-muted/60" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-text-primary/80">
+              Premium Signal — Locked
+            </p>
+            <p className="text-xs text-text-muted/70 mt-1">
+              Upgrade to Premium or use Pay-Per-Alpha to unlock this signal
+            </p>
+          </div>
+          <Link
+            href="/pricing"
+            className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-all flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            Unlock Premium Access to View Live Alpha
+          </Link>
+        </div>
+
+        {/* Ghost content (visible beneath blur) */}
+        <div className="flex items-center justify-between flex-wrap gap-4 opacity-30 blur-sm">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gTypeStyle.gradient} flex items-center justify-center text-white font-bold text-lg`}>
+              {gType[0]}
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-lg">{gType}</span>
+                <span className={cn("text-xs px-2 py-0.5 rounded-full font-semibold", gTypeStyle.tag)}>
+                  {gTypeStyle.badge}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="text-text-muted text-xs mb-1">Score</div>
+              <div className="font-bold text-lg text-text-muted">{gScore}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </HoverScale>
+  )
 }
 
 export default function SignalsContent() {
@@ -184,6 +254,15 @@ export default function SignalsContent() {
     return getSignalType(s) === filter
   })
 
+  // 🛡️ FRONTEND GATING LAYER:
+  // Even though the backend already caps free users to 3 signals,
+  // we add a frontend ceiling as defense-in-depth.
+  // Free users only see the first 3 visible signals; beyond that are placeholder lock cards.
+  const isGated = !isPremium && !meta?.isRealTime
+  const isLoggedInFree = isLoggedIn && !isPremium
+  const visibleSignals = isGated ? filtered.slice(0, 3) : filtered
+  const lockedCount = meta?.lockedCount ?? (meta ? Math.max(0, (meta?.totalAvailable ?? 0) - 3) : 3)
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
@@ -204,7 +283,7 @@ export default function SignalsContent() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-success-500/20 text-success-400 text-sm mb-6">
               <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
               <span>
-                {meta?.isRealTime ? 'Live Alpha Feed' : 'Alpha Feed — 24hr Delay (Free)'}
+                {meta?.isRealTime ? 'Live Alpha Feed' : 'Alpha Feed — Free Preview'}
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -215,8 +294,8 @@ export default function SignalsContent() {
               {meta?.isRealTime
                 ? 'Real-time AI-generated signals from on-chain data and market momentum analysis.'
                 : meta?.authenticated
-                  ? 'You are logged in on the Free plan. Upgrade to Premium for real-time signals with zero delay, or unlock individual signals with Pay-Per-Alpha.'
-                  : 'A preview of signals our system generates. Signals shown with 24hr delay. Login and upgrade for real-time access.'}
+                  ? `You are on the Free plan. See ${visibleSignals.length} preview signals — unlock the rest for real-time access.`
+                  : 'A preview of signals our system generates. Login and upgrade for real-time access.'}
             </p>
             {/* Credits Banner — show for logged-in free users with credits */}
             {isLoggedIn && !isPremium && userCredits > 0 && (
@@ -245,7 +324,7 @@ export default function SignalsContent() {
         <FadeIn delay={0.1}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             {performanceStats.map((stat) => (
-              <div className="glass-card p-5 rounded-xl">
+              <div className="glass-card p-5 rounded-xl" key={stat.label}>
                 <div className="text-2xl font-bold text-primary-400 mb-1">{stat.value}</div>
                 <div className="text-text-secondary text-sm font-medium">{stat.label}</div>
                 <div className="text-text-muted text-xs mt-1">{stat.sub}</div>
@@ -261,6 +340,7 @@ export default function SignalsContent() {
             <span className="text-sm text-text-muted">Filter:</span>
             {(['all', 'diamond', 'whale', 'sentiment'] as const).map((f) => (
               <button
+                key={f}
                 onClick={() => setFilter(f)}
                 className={cn(
                   "px-4 py-1.5 rounded-lg text-sm font-medium transition-all",
@@ -296,7 +376,7 @@ export default function SignalsContent() {
         {loading && !error && (
           <div className="space-y-4 mb-12">
             {[...Array(3)].map((_, i) => (
-              <div className="glass-card p-6 rounded-2xl border border-border animate-pulse">
+              <div key={`skeleton-${i}`} className="glass-card p-6 rounded-2xl border border-border animate-pulse">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-background-card" />
@@ -315,7 +395,7 @@ export default function SignalsContent() {
         {/* Signal Cards */}
         {!loading && (
           <>
-            {filtered.length === 0 && !error && (
+            {visibleSignals.length === 0 && !error && (
               <div className="glass-card p-12 rounded-2xl border border-dashed border-border text-center mb-12">
                 <div className="text-4xl mb-4">📡</div>
                 <h3 className="text-xl font-semibold text-text-secondary mb-2">No signals found</h3>
@@ -327,22 +407,21 @@ export default function SignalsContent() {
               </div>
             )}
 
-            <FadeInStagger stagger={0.08} className="space-y-4 mb-12">
-              {filtered.map((signal, idx) => {
+            <FadeInStagger stagger={0.08} className="space-y-4 mb-8">
+              {/* 🔓 UNLOCKED PREVIEW SIGNALS — first 3 for free users, all for premium */}
+              {visibleSignals.map((signal, idx) => {
                 const type = getSignalType(signal)
                 const style = typeStyles[type]
                 const confidence = getConfidence(signal)
                 const recommendation = getRecommendation(signal)
                 const isDiamondOrHighConf = type === 'diamond' || confidence >= 80
-                const isTierLocked = meta?.authenticated && !meta?.isRealTime && isDiamondOrHighConf
-                const isLocked = signal.locked === true || (idx >= 3 && !meta?.isRealTime) || isTierLocked
 
                 return (
-                  <HoverScale>
+                  <HoverScale key={signal.id}>
                     <div
                       className={cn(
                         "glass-card p-6 rounded-2xl border transition-all duration-300",
-                        isLocked ? "opacity-70 hover:opacity-80 border-border" : `border-border ${style.border}`
+                        `border-border ${style.border}`
                       )}
                     >
                       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -401,8 +480,8 @@ export default function SignalsContent() {
                             </div>
                           </div>
 
-                          {/* Buy / Unlock button — shown for ALL Premium/Diamond signals (locked or not) on Free tier, always if user has credits */}
-                          {(isDiamondOrHighConf || isLocked || userCredits > 0) && meta?.authenticated && !meta?.isRealTime && (
+                          {/* Buy / Unlock button — for Diamond/High-Conf signals that user might want */}
+                          {(isDiamondOrHighConf || userCredits > 0) && meta?.authenticated && !meta?.isRealTime && (
                             <div className="flex items-center gap-2">
                               <BuySignalButton
                                 signalId={signal.id}
@@ -410,85 +489,95 @@ export default function SignalsContent() {
                                 compact
                                 onUnlocked={() => fetchSignals()}
                               />
-                              <Link href="/pricing" className="text-xs text-primary-400 hover:text-primary-300 font-medium whitespace-nowrap">
-                                Premium →
-                              </Link>
                             </div>
                           )}
                         </div>
 
                         {/* Right: Recommendation */}
-                        {!isLocked && (
-                          <div className={cn(
-                            "px-4 py-2 rounded-lg text-sm font-bold",
-                            recommendation === 'Buy' ? "bg-success-500/20 text-success-400" :
-                            recommendation === 'Sell' ? "bg-danger-500/20 text-danger-400" :
-                            "bg-text-muted/20 text-text-muted"
-                          )}>
-                            {recommendation}
-                          </div>
-                        )}
+                        <div className={cn(
+                          "px-4 py-2 rounded-lg text-sm font-bold",
+                          recommendation === 'Buy' ? "bg-success-500/20 text-success-400" :
+                          recommendation === 'Sell' ? "bg-danger-500/20 text-danger-400" :
+                          "bg-text-muted/20 text-text-muted"
+                        )}>
+                          {recommendation}
+                        </div>
                       </div>
 
                       {/* Footer row */}
-                      {!isLocked && (
-                        <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-xs text-text-muted flex-wrap">
-                          {signal.twitterMentions != null && (
-                            <span className="flex items-center gap-1">
-                              <MessageCircle className="w-3 h-3" />
-                              ~{signal.twitterMentions.toLocaleString()} social mentions
-                            </span>
-                          )}
-                          {signal.isDiamondSignal && (
-                            <span className="flex items-center gap-1 text-purple-400">
-                              💎 Diamond Signal — High Confidence
-                            </span>
-                          )}
-                          {signal.expiresAt && (
-                            <span>
-                              Expires: {new Date(signal.expiresAt).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      <div className="mt-4 pt-4 border-t border-border flex items-center gap-6 text-xs text-text-muted flex-wrap">
+                        {signal.twitterMentions != null && (
+                          <span className="flex items-center gap-1">
+                            <MessageCircle className="w-3 h-3" />
+                            ~{signal.twitterMentions.toLocaleString()} social mentions
+                          </span>
+                        )}
+                        {signal.isDiamondSignal && (
+                          <span className="flex items-center gap-1 text-purple-400">
+                            💎 Diamond Signal — High Confidence
+                          </span>
+                        )}
+                        {signal.expiresAt && (
+                          <span>
+                            Expires: {new Date(signal.expiresAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </HoverScale>
                 )
               })}
             </FadeInStagger>
 
-            {/* Unlock action bar for free users — prominent with Buy button */}
-            {!meta?.isRealTime && meta?.authenticated && (
-              <FadeIn delay={0.35}>
-                <div className="glass-card p-6 rounded-2xl border border-warning-500/30 bg-gradient-to-r from-warning-500/5 via-warning-500/10 to-warning-500/5 mb-8">
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-warning-500 to-orange-500 flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-white" />
+            {/* 🔒 LOCKED/PAYWALL SIGNAL PLACEHOLDERS — only for free users */}
+            {isGated && lockedCount > 0 && (
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-2 px-1 py-2">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-warning-500/30 to-transparent" />
+                  <span className="text-xs text-warning-400 font-semibold uppercase tracking-widest whitespace-nowrap">
+                    <EyeOff className="w-3.5 h-3.5 inline mr-1" />
+                    {lockedCount} Premium Signal{lockedCount !== 1 ? 's' : ''} Locked
+                  </span>
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-warning-500/30 to-transparent" />
+                </div>
+                <FadeInStagger stagger={0.08} className="space-y-4">
+                  {[...Array(Math.min(lockedCount, 3))].map((_, i) => (
+                    <LockedSignalCard key={`locked-${i}`} index={i} />
+                  ))}
+                </FadeInStagger>
+
+                {/* CTA bar below locked cards */}
+                <FadeIn delay={0.35}>
+                  <div className="glass-card p-6 rounded-2xl border border-warning-500/30 bg-gradient-to-r from-warning-500/5 via-warning-500/10 to-warning-500/5">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-warning-500 to-orange-500 flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-text-primary">
+                            Unlock {lockedCount} Premium Signal{lockedCount !== 1 ? 's' : ''}
+                          </h3>
+                          <p className="text-xs text-text-muted">
+                            {userCredits > 0
+                              ? `You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}. Use Pay-Per-Alpha or upgrade to Premium.`
+                              : `Get credits to unlock individual signals, or upgrade for full Premium access.`}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-text-primary">
-                          Unlock Premium Signals
-                        </h3>
-                        <p className="text-xs text-text-muted">
-                          {userCredits > 0
-                            ? `You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}. Click Buy on any locked signal above to unlock it instantly.`
-                            : `Get credits to unlock individual signals, or upgrade for full Premium access.`}
-                        </p>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <Link
+                          href="/pricing"
+                          className="bg-gradient-to-r from-warning-500 to-orange-500 hover:from-warning-600 hover:to-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
+                        >
+                          <Zap className="w-4 h-4" />
+                          {userCredits > 0 ? 'Buy More Credits' : 'Upgrade to Premium'}
+                        </Link>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Link
-                        href="/pricing"
-                        className="bg-gradient-to-r from-warning-500 to-orange-500 hover:from-warning-600 hover:to-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2"
-                      >
-                        <Zap className="w-4 h-4" />
-                        {userCredits > 0 ? 'Buy More Credits' : 'Upgrade to Premium'}
-                      </Link>
                     </div>
                   </div>
-                </div>
-              </FadeIn>
+                </FadeIn>
+              </div>
             )}
           </>
         )}

@@ -2,8 +2,8 @@
  * /api/signals — ChainPulse Alpha Signal Feed
  *
  * Returns AI-generated crypto signals with tier-based access control.
- * - Unauthenticated / free users: max 3 demo signals
- * - Authenticated users: full signal list with real-time data
+ * - Unauthenticated / free users: max 3 demo signals (no premium data leak)
+ * - Authenticated paid users: full signal list
  * - Admin users: all signals with full metadata
  *
  * Query params:
@@ -123,58 +123,9 @@ const DEMO_SIGNALS = [
     createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(),
     expiresAt: new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString(),
   },
-  {
-    id: 'demo-006',
-    tokenSymbol: 'LINK',
-    tokenName: 'Chainlink',
-    sentimentScore: 79,
-    whaleConfidence: 55,
-    correlationScore: 67,
-    isDiamondSignal: false,
-    twitterMentions: 11300,
-    whaleWallets: [
-      '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
-      '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
-    ],
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'demo-007',
-    tokenSymbol: 'MATIC',
-    tokenName: 'Polygon',
-    sentimentScore: 84,
-    whaleConfidence: 88,
-    correlationScore: 86,
-    isDiamondSignal: true,
-    twitterMentions: 27600,
-    whaleWallets: [
-      '0x2b1a6a34c56a89b2e91f255c89771738ec2c6ea9',
-      '0x87b9cfdae290f8e81c0b8eb17b8a0c6c3e0c42d2',
-    ],
-    createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 10 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'demo-008',
-    tokenSymbol: 'OP',
-    tokenName: 'Optimism',
-    sentimentScore: 73,
-    whaleConfidence: 69,
-    correlationScore: 71,
-    isDiamondSignal: false,
-    twitterMentions: 9800,
-    whaleWallets: [
-      '0xfb27a551004c2655cc8b45af70fca8342c8c588f',
-      '0x0cbca0bd94a30fd319716e29a35f0af2876c7a1c',
-    ],
-    createdAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-  },
 ]
 
 // ── Demo signal enrichment (add Dashboard-required fields) ──────────────────
-// Demo signals lack price/volume/marketCap/status etc that the dashboard needs
 const DEMO_ENRICHMENT: Record<string, Partial<{
   price: number
   priceChange: number
@@ -189,9 +140,6 @@ const DEMO_ENRICHMENT: Record<string, Partial<{
   'demo-003': { price: 0.85, priceChange: 5.67, volume24h: 1_200_000_000, marketCap: 3_200_000_000, recommendation: 'Buy', status: 'Free', timestamp: new Date(Date.now() - 6 * 3600000).toISOString() },
   'demo-004': { price: 35.22, priceChange: 1.89, volume24h: 2_800_000_000, marketCap: 13_400_000_000, recommendation: 'Buy', status: 'Premium', timestamp: new Date(Date.now() - 8 * 3600000).toISOString() },
   'demo-005': { price: 578.10, priceChange: -0.45, volume24h: 3_500_000_000, marketCap: 88_000_000_000, recommendation: 'Skip', status: 'Premium', timestamp: new Date(Date.now() - 10 * 3600000).toISOString() },
-  'demo-006': { price: 14.55, priceChange: 3.12, volume24h: 900_000_000, marketCap: 8_500_000_000, recommendation: 'Buy', status: 'Premium', timestamp: new Date(Date.now() - 12 * 3600000).toISOString() },
-  'demo-007': { price: 0.52, priceChange: -2.18, volume24h: 1_100_000_000, marketCap: 4_800_000_000, recommendation: 'Sell', status: 'Premium', timestamp: new Date(Date.now() - 14 * 3600000).toISOString() },
-  'demo-008': { price: 2.86, priceChange: 0.93, volume24h: 600_000_000, marketCap: 3_100_000_000, recommendation: 'Skip', status: 'Premium', timestamp: new Date(Date.now() - 16 * 3600000).toISOString() },
 }
 
 type AnySignal = { id: string; tokenSymbol: string; tokenName: string; sentimentScore: number; whaleConfidence: number; correlationScore: number; isDiamondSignal: boolean; twitterMentions: number; whaleWallets: string[]; createdAt: string; expiresAt: string; [key: string]: any }
@@ -250,12 +198,10 @@ export const GET = auth(async (req) => {
   // Auth check — determine user access level
   const isAdmin = req.auth?.user?.isAdmin === true
   const isAuthenticated = !!req.auth?.user
-  // BUGFIX: 'isFree' was previously `!isAuthenticated`, which gave ALL logged-in users
-  // (even free-tier) full real-time access. Now we check DB premiumStatus.
   const userPremiumStatus = (req.auth?.user as any)?.premiumStatus as string | undefined
   const premiumExpiresAt = (req.auth?.user as any)?.premiumExpiresAt as string | undefined
   const isPremium = isAuthenticated && userPremiumStatus === 'premium'
-  const isPremiumActive = isPremium && premiumExpiresAt && new Date(premiumExpiresAt) > new Date()
+  const isPremiumActive = isPremium && !!premiumExpiresAt && new Date(premiumExpiresAt) > new Date()
   const isFree = !isPremiumActive
 
   try {
@@ -272,17 +218,21 @@ export const GET = auth(async (req) => {
     else if (typeFilter === 'whale') dbWhere.whaleConfidence = { gt: 70 }
     else if (typeFilter === 'sentiment') dbWhere.sentimentScore = { gt: 70 }
 
-    // Only show non-expired signals (authenticated), or all (admin)
     if (!isAdmin) {
       dbWhere.expiresAt = { gt: new Date() }
     }
+
+    // 🛡️ SECURITY LAYER: For free users, we NEVER query more than 3 signals.
+    // This prevents any premium data from being returned even if the query would match.
+    const effectiveLimit = isFree ? 3 : limit
+    const canPaginate = !isFree
 
     const [dbSignals, dbCount] = await Promise.all([
       prisma.signal.findMany({
         where: dbWhere,
         orderBy: { createdAt: 'desc' },
-        take: limit,
-        skip: (page - 1) * limit,
+        take: effectiveLimit,
+        skip: canPaginate ? (page - 1) * effectiveLimit : 0,
       }),
       prisma.signal.count({ where: dbWhere }),
     ])
@@ -310,19 +260,16 @@ export const GET = auth(async (req) => {
         })
 
     const totalCount = dbSignals.length > 0 ? dbCount : allSignals.length
-
-    // Free users: show first 3 as unlocked preview, remaining as locked (premium)
-    // DEMO signal wallets remain visible - BUILD CACHE BUSTER (they're hardcoded demo addresses, not real wallet data)
-    const HOUR_MS = 3600000
     const usingDemoSignals = dbSignals.length === 0
 
     // Enrich demo signals with dashboard-required fields (price, volume24h, recommendation, etc)
     if (usingDemoSignals) {
       allSignals = allSignals.map(s => enrichDemoSignal(s))
     }
-    
-    // Fetch purchased signal IDs so purchased signals stay unlocked even after re-fetch
-    // Look up the user by email (same approach as /api/user/purchased-signals)
+
+    // 🛡️ CRITICAL: Free users — hard cap at 3 signals with NO premium data leak.
+    // Even the tokenSymbol/tokenName of premium signals must NOT be exposed.
+    // Purchased signals (via Pay-Per-Alpha) are appended after the 3 preview slots.
     let purchasedSignalIds: string[] = []
     if (isFree && req.auth?.user?.email) {
       try {
@@ -339,54 +286,48 @@ export const GET = auth(async (req) => {
           purchasedSignalIds = dbUser.alphaPurchases.map(p => p.signalId)
         }
       } catch (e) {
-        // Non-fatal — if this query fails, purchased signals just stay locked
         console.error('[signals] Failed to fetch purchases:', e)
       }
     }
-    
+
     if (isFree) {
-      // 🛡️ SECURITY: Only return preview signals to free users.
-      // Premium tokens are NEVER exposed — not even name/symbol.
-      const availableSignals = purchasedSignalIds.length > 0
-        ? allSignals.filter(s => purchasedSignalIds.includes(s.id))
-        : []
-      const previewLimit = 3
-      const previewSignals = allSignals.slice(0, previewLimit).map(s => ({
+      // Take first 3 as unlocked preview (always)
+      const previewCount = 3
+      const previewSignals = allSignals.slice(0, previewCount).map(s => ({
         ...s,
-        whaleWallets: usingDemoSignals ? s.whaleWallets : s.whaleWallets,
+        whaleWallets: usingDemoSignals ? s.whaleWallets : [],
         twitterMentions: s.twitterMentions ?? 0,
         delayHours: 0,
         locked: false,
+        isPreview: true,
         status: 'Free' as const,
       }))
 
-      allSignals = [...previewSignals, ...availableSignals.map(s => ({
-        ...s,
-        whaleWallets: usingDemoSignals ? s.whaleWallets : s.whaleWallets,
-        twitterMentions: s.twitterMentions ?? 0,
-        delayHours: 0,
-        locked: false,
-        status: 'Free' as const,
-      }))]
+      // Append purchased signals (unlocked via Pay-Per-Alpha)
+      const purchasedSignals = purchasedSignalIds.length > 0
+        ? allSignals
+            .filter(s => purchasedSignalIds.includes(s.id))
+            .map(s => ({
+              ...s,
+              whaleWallets: usingDemoSignals ? s.whaleWallets : [],
+              twitterMentions: s.twitterMentions ?? 0,
+              delayHours: 0,
+              locked: false,
+              isPreview: false,
+              status: 'Free' as const,
+            }))
+        : []
+
+      // How many premium signals exist beyond what we show
+      const premiumCount = Math.max(0, (totalCount || DEMO_SIGNALS.length) - previewSignals.length)
+
+      allSignals = [...previewSignals, ...purchasedSignals]
     }
 
     // Strip wallet addresses for non-admin, non-premium users
-    // EXEMPTION: demo/test addresses are always visible (they're hardcoded, not real wallet data)
     if (!isAdmin && !isPremiumActive) {
       allSignals = allSignals.map(s => {
-        const DEMO_WALLETS = [
-          '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
-          '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
-          '0x000000000000000000000000000000000000a1b2',
-          '0x00000000219ab540356cbb839cbe05303d7705fa',
-          '7VJ9dhBMkq3KUAhUXQZFQfBPJQzKdN8K5fYCVSG5Pf1u',
-          '3bLggfFhRFNDQqUys1SLaLLDCBkHjNBFTxCjCnPLYcKx',
-          '0x4e5cf134502894ce1ee7f4c7b05af4aafb9b4e19',
-          '0x081441a0d8b6a04cc694da4c4acd3710315e636b',
-        ]
-        const walletIsDemo = s.whaleWallets?.length > 0 && s.whaleWallets.every(w => DEMO_WALLETS.includes(w))
-        if (walletIsDemo) return s // demo wallets always visible
-        return { ...s, whaleWallets: s.isDiamondSignal ? [] : [] }
+        return { ...s, whaleWallets: [] }
       })
     }
 
@@ -397,8 +338,8 @@ export const GET = auth(async (req) => {
         pagination: {
           page,
           limit,
-          total: totalCount,
-          hasMore: isFree ? false : page * limit < totalCount,
+          total: isFree ? allSignals.length : totalCount,
+          hasMore: canPaginate ? page * effectiveLimit < totalCount : false,
         },
         meta: {
           authenticated: isAuthenticated,
@@ -411,6 +352,7 @@ export const GET = auth(async (req) => {
           signalsVisible: allSignals.length,
           totalAvailable: totalCount,
           lockedCount: isFree ? (totalCount || DEMO_SIGNALS.length) - allSignals.length : 0,
+          lockoutThreshold: isFree ? 3 : null,
         },
         performance: isPremiumActive
           ? PERFORMANCE_STATS
@@ -429,9 +371,8 @@ export const GET = auth(async (req) => {
   } catch (error) {
     console.error('[/api/signals] DB error, falling back to demo data:', error)
 
-    // Graceful fallback to demo data
+    // Graceful fallback to demo data — same security gating applies
     let demoSignals = DEMO_SIGNALS.filter(s => {
-      // Enrich with dashboard fields (price, volume24h, etc)
       Object.assign(s, DEMO_ENRICHMENT[s.id] || {})
       if (typeFilter === 'diamond') return s.isDiamondSignal
       if (typeFilter === 'whale') return (s.whaleConfidence || 0) > 70
@@ -440,7 +381,6 @@ export const GET = auth(async (req) => {
     })
 
     if (isFree) {
-      // 🛡️ SECURITY: Same gating for fallback path — premium tokens never exposed.
       let purchasedIds: string[] = []
       if (req.auth?.user?.email) {
         try {
@@ -454,15 +394,14 @@ export const GET = auth(async (req) => {
             },
           })
           if (dbUser) purchasedIds = dbUser.alphaPurchases.map(p => p.signalId)
-        } catch (e) {
-          // Non-fatal
-        }
+        } catch (e) { /* non-fatal */ }
       }
-      const availableSignals = purchasedIds.length > 0
-        ? demoSignals.filter(s => purchasedIds.includes(s.id))
+      // Only return 3 preview + purchased unlock
+      const preview = demoSignals.slice(0, 3).map(s => ({ ...s, delayHours: 0, locked: false, isPreview: true, status: 'Free' }))
+      const purchased = purchasedIds.length > 0
+        ? demoSignals.filter(s => purchasedIds.includes(s.id)).map(s => ({ ...s, delayHours: 0, locked: false, isPreview: false, status: 'Free' }))
         : []
-      demoSignals = demoSignals.slice(0, 3).map(s => ({ ...s, delayHours: 0, locked: false, status: 'Free' }))
-      demoSignals = [...demoSignals, ...availableSignals.map(s => ({ ...s, delayHours: 0, locked: false, status: 'Free' }))]
+      demoSignals = [...preview, ...purchased]
     }
 
     logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined, extras: { source: 'demo-fallback', count: demoSignals.length } })
@@ -479,8 +418,9 @@ export const GET = auth(async (req) => {
           isRealTime: isPremiumActive,
           delayHours: isFree ? 24 : 0,
           signalsVisible: demoSignals.length,
-          totalAvailable: demoSignals.length,
-          lockedCount: isFree ? DEMO_SIGNALS.length - Math.min(3, demoSignals.length) : 0,
+          totalAvailable: DEMO_SIGNALS.length,
+          lockedCount: isFree ? DEMO_SIGNALS.length - demoSignals.length : 0,
+          lockoutThreshold: isFree ? 3 : null,
           signalSource: 'demo',
         },
         performance: { overall: { winRate: 85, totalSignals: 1247 } },
@@ -490,7 +430,6 @@ export const GET = auth(async (req) => {
       headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
     })
   }
-  logApiResponse('GET', '/api/signals', 200, { email: req.auth?.user?.email ?? undefined })
 })
 
 // ── OPTIONS (CORS preflight) ───────────────────────────────────────────────────
