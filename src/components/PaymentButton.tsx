@@ -55,23 +55,61 @@ export default function PaymentButton({
       // Immediate guard — if already loaded, resolve instantly
       if (window.Razorpay) return resolve(true)
 
+      // Check for existing script tag to avoid duplicates
+      if (document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')) {
+        // Script tag exists but Razorpay isn't on window yet — wait for it
+        let elapsed = 0
+        const poll = setInterval(() => {
+          elapsed += 200
+          if (window.Razorpay) {
+            clearInterval(poll)
+            resolve(true)
+          } else if (elapsed >= 5000) {
+            clearInterval(poll)
+            console.warn('[PaymentButton] Existing script but Razorpay never initialized')
+            resolve(false)
+          }
+        }, 200)
+        return
+      }
+
       const attempt = () => {
         const script = document.createElement('script')
         script.src = 'https://checkout.razorpay.com/v1/checkout.js'
         script.async = true
 
+        // Detect CSP violations that might block Razorpay
+        if (!document.querySelector('meta[name="csp-check-razorpay"]')) {
+          const cspMeta = document.createElement('meta')
+          cspMeta.name = 'csp-check-razorpay'
+          cspMeta.content = '1'
+          document.head.appendChild(cspMeta)
+          // Check if frame-src allows razorpay domains
+          try {
+            const testFrame = document.createElement('iframe')
+            testFrame.src = 'https://api.razorpay.com/ping'
+            testFrame.style.display = 'none'
+            testFrame.onerror = () => {
+              console.warn('[CSP] Razorpay iframe blocked by CSP. Check frame-src directive.')
+            }
+            // Timeout — iframe loads successfully, CSP allows it
+            setTimeout(() => testFrame.remove(), 2000)
+            document.body.appendChild(testFrame)
+          } catch { /* CSP error doesn't throw, onerror handles it */ }
+        }
+
         script.onload = () => {
           // Script loaded but Razorpay may not be on window yet.
-          // Poll up to 3 seconds for it to initialize.
+          // Poll up to 5 seconds for it to initialize.
           let elapsed = 0
           const poll = setInterval(() => {
             elapsed += 200
             if (window.Razorpay) {
               clearInterval(poll)
               resolve(true)
-            } else if (elapsed >= 3000) {
+            } else if (elapsed >= 5000) {
               clearInterval(poll)
-              console.warn('[PaymentButton] Razorpay loaded but not found on window after 3s')
+              console.warn('[PaymentButton] Razorpay script loaded but Razorpay not on window after 5s')
               resolve(false)
             }
           }, 200)
@@ -170,14 +208,20 @@ export default function PaymentButton({
       }
 
       const rzp = new window.Razorpay(options)
-      rzp.open()
+      try {
+        rzp.open()
+      } catch (openError) {
+        console.error('[PaymentButton] Razorpay open() threw:', openError)
+        // If open() throws, it may be CSP blocking the modal creation
+        throw new Error('Payment gateway blocked by browser security settings. Check CSP frame-src.')
+      }
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : 'Unknown error'
       console.error('[PaymentButton] Payment error:', errMsg)
       
       // Tell the user exactly what went wrong
       const displayMessages: Record<string, string> = {
-        'Failed to load payment gateway': 'Could not load payment gateway. Check your network or ad blocker and try again.',
+        'Failed to load payment gateway': 'Could not load payment gateway. Ensure your browser allows popups from this site and no ad blocker is blocking checkout.razorpay.com.',
         'Failed to create order': 'Could not create payment order. Please try again.',
         'Invalid order data': 'Payment system returned invalid data. Please contact support.',
       }

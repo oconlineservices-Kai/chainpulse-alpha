@@ -224,7 +224,12 @@ export default function PricingClient() {
       } catch { /* localStorage may be unavailable */ }
 
       const rzp = new window.Razorpay(options)
-      rzp.open()
+      try {
+        rzp.open()
+      } catch (openError) {
+        console.error('[PricingClient] Razorpay open() threw:', openError)
+        throw new Error('Payment gateway blocked by browser security settings. Check CSP frame-src.')
+      }
     } catch (error) {
       console.error('Credit purchase error:', error)
       setCreditError(error instanceof Error ? error.message : 'Payment failed. Please try again.')

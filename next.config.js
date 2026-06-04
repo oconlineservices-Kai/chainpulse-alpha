@@ -72,7 +72,7 @@ const nextConfig = {
             // Nonce approach verified as infeasible in Next.js 14.x without modifying
             // Next.js internals (RSC scripts bypass custom _document).
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.razorpay.com https://api.coingecko.com wss:; frame-src https://api.razorpay.com; frame-ancestors 'none'; worker-src blob: 'self'; base-uri 'self'; form-action 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; upgrade-insecure-requests; report-uri /api/csp-report;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://*.razorpay.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com https://api.coingecko.com wss:; frame-src https://api.razorpay.com https://checkout.razorpay.com https://*.razorpay.com; frame-ancestors 'none'; worker-src blob: 'self'; base-uri 'self'; form-action 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; upgrade-insecure-requests; report-uri /api/csp-report;"
           },
           {
             key: 'Permissions-Policy',
@@ -82,14 +82,19 @@ const nextConfig = {
             key: 'Cross-Origin-Opener-Policy',
             value: 'same-origin-allow-popups'
           },
-          {
-            key: 'Cross-Origin-Resource-Policy',
-            value: 'same-site'
-          },
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp'
-          },
+          // NOTE: Removed to avoid conflict with COEP removal. Not needed standalone.
+          // {
+          //   key: 'Cross-Origin-Resource-Policy',
+          //   value: 'same-site'
+          // },
+          // NOTE: 'require-corp' was removed because Razorpay checkout dynamically
+          // loads cross-origin resources (images, fonts, frames) that lack the
+          // required Cross-Origin-Resource-Policy headers, causing the modal to fail.
+          // Razorpay security is handled by CSP frame-src + X-Frame-Options instead.
+          // {
+          //   key: 'Cross-Origin-Embedder-Policy',
+          //   value: 'require-corp'
+          // },
         ],
       },
     ];
