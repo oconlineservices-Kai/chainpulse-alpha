@@ -195,14 +195,21 @@ export const GET = auth(async (req) => {
   const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
   const page = Math.max(parseInt(searchParams.get('page') || '1'), 1)
 
-  // Auth check — determine user access level
-  const isAdmin = req.auth?.user?.isAdmin === true
-  const isAuthenticated = !!req.auth?.user
-  const userPremiumStatus = (req.auth?.user as any)?.premiumStatus as string | undefined
-  const premiumExpiresAt = (req.auth?.user as any)?.premiumExpiresAt as string | undefined
+  // 🛡️ FREEMIUM GATE — EXPLICIT NULL-SESSION SAFETY GUARD
+  // If session token is null/undefined or failed to decode (e.g.
+  // NEXTAUTH_SECRET mismatch), clamp to 3 signals even before DB.
+  const sessionUser = req.auth?.user ?? null
+  const isAdmin = sessionUser?.isAdmin === true
+  const isAuthenticated = !!sessionUser
+  const userPremiumStatus = (sessionUser as any)?.premiumStatus as string | undefined
+  const premiumExpiresAt = (sessionUser as any)?.premiumExpiresAt as string | undefined
   const isPremium = isAuthenticated && userPremiumStatus === 'premium'
   const isPremiumActive = isPremium && !!premiumExpiresAt && new Date(premiumExpiresAt) > new Date()
   const isFree = !isPremiumActive
+
+  if (!req.auth || !req.auth.user) {
+    console.warn('[signals] null/undefined session — forcing free-tier response')
+  }
 
   try {
     // Build filter for DB query

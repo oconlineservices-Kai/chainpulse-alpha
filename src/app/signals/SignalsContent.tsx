@@ -254,14 +254,20 @@ export default function SignalsContent() {
     return getSignalType(s) === filter
   })
 
-  // 🛡️ FRONTEND GATING LAYER:
-  // Even though the backend already caps free users to 3 signals,
-  // we add a frontend ceiling as defense-in-depth.
-  // Free users only see the first 3 visible signals; beyond that are placeholder lock cards.
+  // 🛡️ FRONTEND GATING LAYER — DEFENSE IN DEPTH
+  // ===================================================================
+  // Layer 1: Backend already caps free API responses to 3 signals.
+  // Layer 2: Frontend slice — even if backend leaks extra signals,
+  //          free users only see 3. Anything beyond is blurred.
+  // Layer 3: LockedSignalCards render BY DEFAULT if isGated, regardless
+  //          of meta.lockedCount. Fallback is always 3.
+  // ===================================================================
   const isGated = !isPremium && !meta?.isRealTime
   const isLoggedInFree = isLoggedIn && !isPremium
+  // 🛡️ CRITICAL: Force slice at 3 for gated users — even if backend leaks more
   const visibleSignals = isGated ? filtered.slice(0, 3) : filtered
-  const lockedCount = meta?.lockedCount ?? (meta ? Math.max(0, (meta?.totalAvailable ?? 0) - 3) : 3)
+  // 🛡️ CRITICAL: lockedCount defaults to 3 if meta is missing or corrupted
+  const lockedCount = meta?.lockedCount ?? 3
 
   return (
     <main className="min-h-screen bg-background">
