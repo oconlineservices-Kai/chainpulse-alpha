@@ -36,7 +36,7 @@ const features = [
     description: 'Only when whale data + social sentiment align. No noise, just alpha.',
     gradient: 'from-warning-500 to-orange-500',
     benefits: [
-      '85%+ confidence threshold',
+      'High-confidence correlation threshold',
       'Multi-signal correlation',
       'Risk-adjusted recommendations',
       'Precision over quantity'

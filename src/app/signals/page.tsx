@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { cookies, headers } from 'next/headers'
+import { auth } from '@/lib/auth'
 import SignalsContent from './SignalsContent'
 
 export const dynamic = 'force-dynamic'
@@ -17,56 +17,6 @@ export const metadata: Metadata = {
   },
 }
 
-// ── Inline JWT verification (no NextAuth dependency) ───────────────────────────
-// We decode the session token cookie directly instead of relying on auth()
-// which fails in production (Fly.io NEXTAUTH_SECRET mismatch).
-async function decodeSessionToken(cookieValue: string): Promise<{ premiumStatus?: string; email?: string } | null> {
-  try {
-    // The NextAuth JWT is encrypted with the secret. Try to decode it.
-    // Format: "eyJ..." (encrypted JWE) or "eyJ..." (JWT directly)
-    const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || ''
-    if (!secret) return null
-
-    // NextAuth v5 uses the auth() helper which handles decryption internally.
-    // Since we can't use auth() (production auth failure), we'll check cookie
-    // presence and structure as a proxy. The server will attempt auth() via
-    // the API route anyway for actual data — this SSR layer is purely for
-    // render gating.
-    
-    // NextAuth v5 stores session as: "__Secure-authjs.session-token"
-    // or "authjs.session-token" (non-secure)
-    
-    // If a session cookie exists that looks valid, user has SOME session.
-    // We still force gate unless we can verify premium.
-    const parts = cookieValue.split('.')
-    if (parts.length < 2) return null
-
-    // Try to base64 decode the payload (standard JWT, non-encrypted)
-    // NextAuth v5 JWT strategy uses a simple JWT by default, not JWE
-    const payload = parts[1]
-    // Fix base64url -> base64
-    let base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
-    // Add padding
-    while (base64.length % 4) base64 += '='
-    
-    try {
-      const decoded = JSON.parse(Buffer.from(base64, 'base64').toString('utf-8'))
-      if (decoded && typeof decoded === 'object') {
-        return {
-          premiumStatus: decoded.premiumStatus as string | undefined,
-          email: decoded.email as string | undefined,
-        }
-      }
-    } catch {
-      // Payload isn't plain JSON — likely encrypted (JWE). Fall through.
-    }
-
-    return null
-  } catch {
-    return null
-  }
-}
-
 // ── Ghost token symbols for SSR blur cards ─────────────────────────────────────
 const GHOST_SYMBOLS = ['BTC', 'LINK', 'AAVE', 'UNI', 'DOT', 'ADA', 'ATOM', 'FTM', 'NEAR', 'ALGO']
 
@@ -78,57 +28,47 @@ const GHOST_STYLES = [
 
 export default async function SignalsPage() {
   // ============================================================================
-  // 🛡️ ABSOLUTE PRODUCTION FAIL-SAFE — FORCE HARD ARRAY LIMIT
+  // 🛡️ RESTRICTED-BY-DEFAULT — HARD SECURITY DEFAULT (Per Commander Directive)
   // ============================================================================
-  // We bypass NextAuth's auth() entirely because it fails in production on
-  // Fly.io (NEXTAUTH_SECRET or cookie domain mismatch).
+  // Security posture: The application DEFAULTS to a FIXED, RESTRICTED FREE TIER.
   //
-  // Instead, we read the session JWT cookie directly and decode the payload
-  // ourselves. If we can't verify premium status, we default to GATED=TRUE
-  // with exactly 3 signal slots visible and the rest blurred.
+  // ARCHITECTURE (binding):
+  //   const finalSignalsToRender = (session?.user?.premiumStatus === 'premium')
+  //     ? fullDatabaseArray
+  //     : fullDatabaseArray.slice(0, 3);
   //
-  // The signal DATA is fetched client-side via /api/signals which also
-  // enforces its own hard cap. This SSR layer is the render gate for GEO/crawlers.
+  // 1. Establish a stone-cold restriction default
+  //    finalRenderedSignals = fullDatabaseArray.slice(0, 3) → represented by
+  //    serverIsGated = true, serverLockedCount = 3
+  //
+  // 2. Only EXCEPTION: official auth() helper verifies explicit premium flag
+  //    session.user.tier === 'premium' → isExplicitPremium = true
+  //
+  // 3. If auth() errors, or JWT decryption fails, or keys mismatch → STAYS LOCKED
+  //
+  // CRITICAL: No manual cookie parsing. No atob(). No cookieStore.get().
+  // The auth() function from NextAuth handles JWE decryption internally.
   // ============================================================================
 
-  // Try multiple cookie names (NextAuth v5 variations)
-  const cookieStore = await cookies()
-  let sessionToken: string | undefined
-  const cookieNames = [
-    '__Secure-authjs.session-token',
-    'authjs.session-token',
-    '__Secure-next-auth.session-token',
-    'next-auth.session-token',
-  ]
-  for (const name of cookieNames) {
-    sessionToken = cookieStore.get(name)?.value
-    if (sessionToken) break
-  }
-
-  // Decode the JWT payload directly
+  // 1. Establish a stone-cold restriction default
+  // SECURE FORCE MAPPING — explicit slice before any data hits JSX
+  let serverIsGated = true
+  let serverLockedCount = 3
   let isExplicitPremium = false
-  let sessionEmail: string | undefined
 
-  if (sessionToken) {
-    try {
-      const decoded = await decodeSessionToken(sessionToken)
-      if (decoded) {
-        sessionEmail = decoded.email
-        // ABSOLUTE: only 'premium' string unlocks the full feed
-        isExplicitPremium = decoded.premiumStatus === 'premium'
-      }
-    } catch {
-      // Token decode failed — default to gated
+  try {
+    // 2. Use the official Auth.js/NextAuth session fetcher
+    const session = await auth()
+    
+    if (session?.user && (session.user as any)?.premiumStatus === 'premium') {
+      isExplicitPremium = true
+      serverIsGated = false
+      serverLockedCount = 0
     }
+  } catch (error) {
+    // 3. If an error occurs or keys mismatch, it stays locked at 3
+    console.error('[SignalsPage] Auth layer error, defaulting to secure gate:', error)
   }
-
-  // ============================================================================
-  // 🛡️ ABSOLUTE PRODUCTION FAIL-SAFE
-  // const isExplicitPremium = sessionUser?.tier === 'premium';
-  // const finalRenderedSignals = isExplicitPremium ? fullDatabaseArray : fullDatabaseArray.slice(0, 3);
-  // ============================================================================
-  const serverIsGated: boolean = !isExplicitPremium
-  const serverLockedCount: number = isExplicitPremium ? 0 : 3
 
   return (
     <>
@@ -188,14 +128,14 @@ export default async function SignalsPage() {
                 <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
                 <line x1="2" x2="22" y1="2" y2="22"/>
               </svg>
-              {serverLockedCount} Premium Signal{serverLockedCount !== 1 ? 's' : ''} Locked
+              Premium Content Locked — {serverLockedCount} Signals Blurred
             </span>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
           </div>
 
-          {/* 3 SSR Blur Cards */}
+          {/* SSR Blur Cards — exactly serverLockedCount (3 by default) */}
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => {
+            {[...Array(serverLockedCount)].map((_, i) => {
               const gType = GHOST_SYMBOLS[(i * 7 + 3) % GHOST_SYMBOLS.length]
               const gScore = 70 + (i * 13) % 30
               const gStyle = GHOST_STYLES[i % 3]
@@ -251,7 +191,7 @@ export default async function SignalsPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-gray-100">Unlock {serverLockedCount} Premium Signal{serverLockedCount !== 1 ? 's' : ''}</h3>
+                  <h3 className="text-sm font-bold text-gray-100">Unlock Premium Access</h3>
                   <p className="text-xs text-gray-500">Get credits to unlock individual signals, or upgrade for full Premium access.</p>
                 </div>
               </div>

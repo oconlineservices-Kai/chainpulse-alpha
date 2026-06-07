@@ -110,8 +110,8 @@ export default function Hero() {
               </div>
               <div className="w-px h-8 bg-border" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-success-400">85%</div>
-                <div className="text-text-muted">Diamond Signals Hit +20%</div>
+                <div className="text-2xl font-bold text-success-400">High</div>
+                <div className="text-text-muted">Signal Correlation</div>
               </div>
               <div className="w-px h-8 bg-border" />
               <div className="text-center">

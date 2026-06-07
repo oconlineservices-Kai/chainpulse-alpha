@@ -44,7 +44,7 @@ export default function FeaturesPage() {
           name: 'What is Twitter/X sentiment analysis and how accurate is it?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'We analyze 10,000+ crypto Twitter accounts using a proprietary NLP pipeline. Accounts are weighted by influence score. Sentiment is scored 0-100 and updated in near real-time. Combined with whale data, our Diamond Signals achieve 85%+ correlation accuracy.',
+            text: 'We analyze 10,000+ crypto Twitter accounts using a proprietary NLP pipeline. Accounts are weighted by influence score. Sentiment is scored 0-100 and updated in near real-time. Combined with whale data, our Diamond Signals use a high correlation threshold.',
           },
         },
         {
@@ -52,7 +52,7 @@ export default function FeaturesPage() {
           name: 'What are Diamond Signals?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Diamond Signals are our highest-conviction alerts where whale activity and social sentiment alignment exceed 85% correlation. These premium-only signals represent the strongest confluence between on-chain data and market sentiment, offering the highest probability trade setups.',
+            text: 'Diamond Signals are our highest-conviction alerts where whale activity and social sentiment alignment meet our correlation threshold. These premium-only signals represent the strongest confluence between on-chain data and market sentiment, offering the highest probability trade setups.',
           },
         },
         {

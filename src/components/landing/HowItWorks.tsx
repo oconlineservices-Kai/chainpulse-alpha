@@ -47,7 +47,7 @@ const steps = [
   {
     number: 4,
     title: 'Get Alerts',
-    description: 'You receive instant Diamond Signals when confidence scores exceed 85%.',
+    description: 'You receive instant Diamond Signals when our correlation threshold is met.',
     icon: Bell,
     color: 'from-green-500 to-emerald-500',
     details: [
@@ -167,10 +167,10 @@ export default function HowItWorks() {
             <div className="glass-card p-6 max-w-md mx-auto">
               <div className="text-center">
                 <div className="text-3xl font-bold gradient-text mb-2">
-                  85%+
+                  High
                 </div>
                 <div className="text-text-secondary">
-                  Minimum confidence score for Diamond Signals
+                  Multi-factor correlation threshold for Diamond Signals
                 </div>
               </div>
             </div>

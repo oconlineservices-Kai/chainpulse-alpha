@@ -186,7 +186,7 @@ export default function ContactPage() {
                     How accurate are the signals?
                   </h3>
                   <p className="text-slate-400">
-                    Our Diamond Signals have an 85% accuracy rate for predicting 20%+ price movements within 48 hours. Past performance doesn&apos;t guarantee future results.
+                    Our Diamond Signals are generated when our multi-factor correlation threshold is met. Past performance doesn&apos;t guarantee future results.
                   </p>
                 </div>
               </FadeIn>

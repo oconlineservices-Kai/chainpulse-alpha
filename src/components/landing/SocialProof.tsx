@@ -37,8 +37,8 @@ const stats = [
   },
   {
     icon: Zap,
-    value: "85%", 
-    label: "Diamond Signal Accuracy",
+    value: "High", 
+    label: "Signal Correlation Score",
     color: "text-warning-400"
   },
   {
@@ -65,7 +65,7 @@ export default function SocialProof() {
               <span className="gradient-text">serious crypto traders</span>
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto">
-              85% of our Diamond Signals hit +20% within 48 hours. 
+              Our correlation model combines whale activity with social sentiment.
               See what our community is saying.
             </p>
           </div>
@@ -133,7 +133,7 @@ export default function SocialProof() {
         {/* Featured In Section */}
         <FadeIn delay={0.5}>
           <div className="text-center mt-16">
-            <p className="text-text-muted text-sm mb-8">Featured in</p>
+            <p className="text-text-muted text-sm mb-8">Trusted by</p>
             <div className="flex items-center justify-center gap-8 mb-8 opacity-60">
               <div className="text-text-muted font-semibold text-lg tracking-wide">COINDESK</div>
               <div className="w-px h-6 bg-border" />

@@ -92,7 +92,10 @@ export default function DashboardPage() {
 
         // Extract locked count from API meta for upgrade CTA
         setLockedCount(json?.data?.meta?.lockedCount ?? 0)
-        setSignals(mapped)
+        // 🛡️ EXPLICIT ARRAY TRUNCATION: Free users NEVER get more than 3 signals,
+        // regardless of what the API returns. Safety layer against any backend leak.
+        const maxFreeSignals = 3
+        setSignals(mapped.length > maxFreeSignals ? mapped.slice(0, maxFreeSignals) : mapped)
       }
     } catch (err) {
       console.error('Failed to fetch crypto data:', err)
@@ -100,7 +103,9 @@ export default function DashboardPage() {
 
       // Fallback: show only the mock signals (free preview)
       setLockedCount(isPremiumActive ? 0 : 5)
-      const fallback = mockSignals.map(s => ({
+      // 🛡️ EXPLICIT ARRAY TRUNCATION: Free fallback NEVER shows more than 3 signals
+      const maxFreeSignals = 3
+      const fallback = mockSignals.slice(0, isPremiumActive ? undefined : maxFreeSignals).map(s => ({
         ...s,
         locked: false,
         status: 'Free' as const,

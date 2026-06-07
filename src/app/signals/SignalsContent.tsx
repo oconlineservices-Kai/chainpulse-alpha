@@ -142,10 +142,14 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
       // clean up on unmount (optional)
     }
   }, [])
-  const { data: session } = useSession()
+  const { data: session, status: sessionStatus } = useSession()
+  const isSessionLoading = sessionStatus === 'loading'
   const isLoggedIn = !!session
   const userCredits = (session?.user as any)?.credits ?? 0
   const isPremium = (session?.user as any)?.premiumStatus === 'premium'
+  // 🛡️ RESTRICTED-BY-DEFAULT: Do NOT trust isPremium until session is resolved
+  // isPremium is only trusted when sessionStatus === 'authenticated'
+  const isDefinitelyPremium = sessionStatus === 'authenticated' && isPremium
   const [filter, setFilter] = useState<'all' | 'diamond' | 'whale' | 'sentiment'>('all')
   const [signals, setSignals] = useState<LiveSignal[]>([])
   const [meta, setMeta] = useState<SignalMeta | null>(null)
@@ -161,7 +165,15 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
       const json: SignalsResponse = await res.json()
       
       if (json.success && json.data) {
-        setSignals(json.data.signals)
+        // 🛡️ EXPLICIT ARRAY TRUNCATION: Free users NEVER get more than 3 signals,
+        // regardless of what the API returns. Safety layer against any backend leak.
+        const rawSignals = json.data.signals
+        const isFreeTier = !json.data.meta?.isRealTime
+        const maxSignals = 3
+        const finalSignals = isFreeTier && rawSignals.length > maxSignals
+          ? rawSignals.slice(0, maxSignals)
+          : rawSignals
+        setSignals(finalSignals)
         setMeta(json.data.meta)
         setLastUpdated(new Date(json.data.updatedAt))
       } else {
@@ -189,24 +201,37 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
     return getSignalType(s) === filter
   })
 
-  // 🛡️ FRONTEND GATING LAYER — DEFENSE IN DEPTH
-  // ===================================================================
-  // Layer 1: Backend already caps free API responses to 3 signals.
-  // Layer 2: Frontend slice — even if backend leaks extra signals,
-  //          free users only see 3. Anything beyond is blurred.
-  // Layer 3: LockedSignalCards render BY DEFAULT if isGated, regardless
-  //          of meta.lockedCount. Fallback is always 3.
-  // ===================================================================
-  const isGated = !isPremium && !meta?.isRealTime
+  // ============================================================================
+  // 🛡️ RESTRICTED-BY-DEFAULT FRONTEND GATING (Per Commander Directive)
+  // ============================================================================
+  // Security posture: DEFAULT to restricted. Only unlock if EXPLICITLY verified.
+  //
+  // Layer 1: Backend API /api/signals caps free responses to 3.
+  // Layer 2: Frontend — even if backend leaks extra signals, free user sees only 3.
+  // Layer 3: LockedSignalCards render by default. Fallback is always 3.
+  // ============================================================================
+  
+  // 🛡️ isGated defaults to TRUE (restricted). Only false when:
+  //   (a) Session is fully resolved AND (b) user is definitely premium
+  //   OR the meta explicitly says isRealTime
+  //
+  // CRITICAL: When meta is null (initial load) and session is loading,
+  // isGated stays true. No flash-of-premium-data on hydration.
+  const isGated = !isDefinitelyPremium && !meta?.isRealTime
+  
   // 🛡️ CRITICAL: Force slice at 3 for gated users — even if backend leaks more
-  const visibleSignals = isGated ? filtered.slice(0, 3) : filtered
+  // MAX_SIGNALS_VISIBLE caps display to 3 for gated users
+  const MAX_FREE_SIGNALS = 3
+  const visibleSignals = isGated ? filtered.slice(0, MAX_FREE_SIGNALS) : filtered
+  
   // 🛡️ CRITICAL: lockedCount defaults to 3 if meta is missing or corrupted
-  const lockedCount = meta?.lockedCount ?? 3
-
-  // SSR fallback: if server passed isGated=true but client hasn't resolved session yet,
-  // use the server values to avoid flash-of-reveal
-  const effectiveIsGated = (isGated && meta !== null) || (serverIsGated === true && meta === null)
-  const effectiveLockedCount = meta?.lockedCount ?? serverLockedCount ?? 3
+  const lockedCount = meta?.lockedCount ?? MAX_FREE_SIGNALS
+  
+  // 🛡️ Effective gate state: combine SSR and client state
+  // When meta is null (still loading) — defer to server props (restricted by default)
+  // When meta is loaded — use client-side isGated
+  const effectiveIsGated = meta !== null ? isGated : (serverIsGated !== false)
+  const effectiveLockedCount = meta?.lockedCount ?? serverLockedCount ?? MAX_FREE_SIGNALS
 
   return (
     <main className="min-h-screen bg-background">

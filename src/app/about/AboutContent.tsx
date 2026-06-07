@@ -29,7 +29,7 @@ const stats = [
   { value: '250,000+', label: 'Tweets Analyzed Daily', icon: MessageCircle, color: 'from-sky-500 to-blue-600' },
   { value: '1,200+', label: 'Signals Generated/Month', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
   { value: '500+', label: 'Elite Wallets Tracked', icon: Activity, color: 'from-purple-500 to-pink-500' },
-  { value: '85%+', label: 'Signal Correlation Score', icon: BarChart3, color: 'from-orange-500 to-yellow-500' },
+  { value: 'High', label: 'Correlation Threshold', icon: BarChart3, color: 'from-orange-500 to-yellow-500' },
   { value: '10K+', label: 'Twitter Accounts Analyzed', icon: MessageSquare, color: 'from-violet-500 to-indigo-500' },
 ]
 
@@ -74,7 +74,7 @@ const methodologySteps = [
   {
     step: '3',
     title: 'Correlation Engine',
-    description: 'Our unique algorithm cross-references whale activity with social sentiment. When both align above 85%, a Diamond Signal is generated — our highest confidence alert.',
+    description: 'Our unique algorithm cross-references whale activity with social sentiment. When both align strongly, a Diamond Signal is generated — our highest confidence alert.',
   },
   {
     step: '4',
@@ -129,7 +129,7 @@ export default function AboutContent() {
         isRelatedTo: {
           '@type': 'Service',
           name: 'Diamond Signals',
-          description: 'High-confidence signals with 85%+ correlation score threshold'
+          description: 'High-confidence signals with multi-factor correlation threshold'
         }
       }
     })
@@ -364,7 +364,7 @@ export default function AboutContent() {
                     advice, investment recommendations, or solicitation to trade.
                   </p>
                   <p>
-                    Past performance of signals — including Diamond Signals with 85%+ correlation scores — does not 
+                    Past performance of signals — including high-conviction Diamond Signals — does not 
                     guarantee future results. Market conditions change rapidly, and all trading carries risk. 
                     Never trade with money you cannot afford to lose.
                   </p>
