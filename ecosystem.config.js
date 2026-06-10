@@ -5,14 +5,11 @@ module.exports = {
   // replacing the legacy standalone engine/signal-generator.js
   {
     name: 'signal-generator',
-    script: '/bin/sh',
-    args: '-c "curl -sf -X POST http://localhost:3000/api/signals/refresh -H \"x-auth-secret: ${AUTH_SECRET}\" >> /var/log/chainpulse/signals.log 2>&1"',
+    script: '/opt/chainpulse/app/scripts/generate-signals.sh',
     cron_restart: '0 */6 * * *',
     autorestart: false,
     watch: false,
-    env: {
-      AUTH_SECRET: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
-    },
+    interpreter: '/bin/bash',
     error_file: '/var/log/chainpulse/signals-error.log',
     out_file: '/var/log/chainpulse/signals.log',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -26,16 +23,16 @@ module.exports = {
       NODE_ENV: 'production',
       PORT: '3000',
       HOSTNAME: '0.0.0.0',
-      AUTH_SECRET: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
+      AUTH_SECRET: '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
       AUTH_URL: 'https://chainpulsealpha.com',
-      NEXTAUTH_SECRET: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
+      NEXTAUTH_SECRET: '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
       NEXTAUTH_URL: 'https://chainpulsealpha.com',
-      NEON_DATABASE_URL: process.env.NEON_DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
-      DATABASE_URL: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || 'postgresql://chainpulse:chainpulse123@localhost:5432/chainpulse',
-      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
-      RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || '',
-      ADMIN_EMAIL: process.env.ADMIN_EMAIL || 'admin@chainpulsealpha.com',
-      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'CHANGE-ME'
+      NEON_DATABASE_URL: 'postgresql://neondb_owner:npg_Va8kFWCvJ3EG@ep-dark-mouse-amw770sl-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+      DATABASE_URL: 'postgresql://neondb_owner:npg_Va8kFWCvJ3EG@ep-dark-mouse-amw770sl-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+      RAZORPAY_KEY_ID: 'rzp_test_xxxxxxxxxxxx',  # REPLACE with actual test key from Razorpay dashboard
+      RAZORPAY_KEY_SECRET: 'replace_with_your_secret',  # REPLACE with actual secret
+      ADMIN_EMAIL: 'admin@chainpulsealpha.com',
+      ADMIN_PASSWORD: 'CHANGE-ME'
     },
     max_memory_restart: '512M',
     restart_delay: 3000

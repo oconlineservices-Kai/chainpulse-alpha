@@ -1,29 +1,7 @@
-# ChainPulse Alpha - AI-Powered Crypto Signals
-# https://chainpulsealpha.com
+# ChainPulse Alpha — robots.txt
+# Allow all crawlers to index public content
 
 User-agent: *
 Allow: /
 
-# Sitemap
 Sitemap: https://chainpulsealpha.com/sitemap.xml
-
-# Crawl-delay for bots
-Crawl-delay: 3
-
-# Disallow admin and API routes
-Disallow: /admin/
-Disallow: /api/
-Disallow: /dashboard/
-
-# Allow specific API endpoints that are public
-Allow: /api/auth/
-
-# Specific AI bot allowances for faster indexing
-User-agent: GPTBot
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /

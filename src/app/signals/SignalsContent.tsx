@@ -58,6 +58,12 @@ interface SignalPerformance {
     avgReturn?: number
     diamondSignals?: number
   }
+  byType?: {
+    diamond?: { winRate: number; avgReturn: number; count: number }
+    whale?: { winRate: number; avgReturn: number; count: number }
+    sentiment?: { winRate: number; avgReturn: number; count: number }
+  }
+  topSignals?: { symbol: string; return: string; date: string; type: string }[]
 }
 
 interface SignalsResponse {
@@ -70,12 +76,37 @@ interface SignalsResponse {
   }
 }
 
-const performanceStats = [
-  { label: 'Signals This Month', value: '142', sub: '+23 vs last month' },
-  { label: 'Diamond Signal Win Rate', value: '78%', sub: 'Last 90 days' },
-  { label: 'Avg. Return per Signal', value: '+8.3%', sub: 'Buy signals only' },
-  { label: 'Max Drawdown', value: '-4.2%', sub: 'Worst losing streak' },
-]
+function usePerformanceStats(metaResponse: SignalMeta | null, perfResponse: SignalPerformance | undefined): { label: string; value: string; sub: string }[] {
+  // Default empty until API data loads
+  if (!perfResponse) return []
+
+  const o = perfResponse.overall
+
+  // API may return only overall data (no byType, no avgReturn)
+  // Show what's available, gracefully falling back
+  return [
+    {
+      label: 'Total Signals',
+      value: (o?.totalSignals ?? 0).toLocaleString(),
+      sub: 'All-time performance',
+    },
+    {
+      label: 'Win Rate',
+      value: o?.winRate != null ? `${o.winRate}%` : '—',
+      sub: o?.totalSignals ? `Based on ${(o.totalSignals).toLocaleString()} signals` : '—',
+    },
+    {
+      label: 'Avg. Return per Signal',
+      value: o?.avgReturn != null ? `${o.avgReturn >= 0 ? '+' : ''}${o.avgReturn.toFixed(1)}%` : 'Coming soon',
+      sub: o?.avgReturn != null ? 'Buy signals only' : 'Gathering data',
+    },
+    {
+      label: 'Access Level',
+      value: metaResponse?.authenticated ? (metaResponse?.isPremiumActive ? 'Premium' : 'Free') : 'Guest',
+      sub: metaResponse?.isRealTime ? 'Real-time feed' : '15-min delay',
+    },
+  ]
+}
 
 function getSignalType(signal: LiveSignal): 'diamond' | 'whale' | 'sentiment' {
   if (signal.isDiamondSignal) return 'diamond'
@@ -111,37 +142,6 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
     keywords: 'live crypto signals, trading signals, crypto alerts, whale tracking signals, sentiment analysis, AI trading signals'
   })
 
-  // Fallback metadata injection
-  useEffect(() => {
-    document.title = 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha'
-    
-    const setMetaTag = (name: string, content: string) => {
-      let el = document.querySelector(`meta[name="${name}"]`) || document.querySelector(`meta[property="${name}"]`)
-      if (!el) {
-        el = document.createElement('meta')
-        if (name.startsWith('og:')) {
-          el.setAttribute('property', name)
-        } else {
-          el.setAttribute('name', name)
-        }
-        document.head.appendChild(el)
-      }
-      el.setAttribute('content', content)
-    }
-
-    setMetaTag('description', 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Free tier available with daily signals.')
-    setMetaTag('og:title', 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha')
-    setMetaTag('og:description', 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis. Free tier available with daily signals.')
-    setMetaTag('og:type', 'website')
-    setMetaTag('og:url', 'https://chainpulsealpha.com/signals')
-    setMetaTag('twitter:card', 'summary_large_image')
-    setMetaTag('twitter:title', 'Live Crypto Signals & Alpha Feed | ChainPulse Alpha')
-    setMetaTag('twitter:description', 'Real-time AI-powered crypto signals with whale wallet tracking and Twitter sentiment analysis.')
-
-    return () => {
-      // clean up on unmount (optional)
-    }
-  }, [])
   const { data: session, status: sessionStatus } = useSession()
   const isSessionLoading = sessionStatus === 'loading'
   const isLoggedIn = !!session
@@ -153,6 +153,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
   const [filter, setFilter] = useState<'all' | 'diamond' | 'whale' | 'sentiment'>('all')
   const [signals, setSignals] = useState<LiveSignal[]>([])
   const [meta, setMeta] = useState<SignalMeta | null>(null)
+  const [performance, setPerformance] = useState<SignalPerformance | undefined>(undefined)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
@@ -175,6 +176,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
           : rawSignals
         setSignals(finalSignals)
         setMeta(json.data.meta)
+        setPerformance(json.data.performance)
         setLastUpdated(new Date(json.data.updatedAt))
       } else {
         setError('Failed to load signals')
@@ -233,6 +235,9 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
   const effectiveIsGated = meta !== null ? isGated : (serverIsGated !== false)
   const effectiveLockedCount = meta?.lockedCount ?? serverLockedCount ?? MAX_FREE_SIGNALS
 
+  // ── Performance stats from API data ──────────────────────────────────────
+  const perfStats = usePerformanceStats(meta, performance)
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-16">
@@ -280,6 +285,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                 {' '}
                 <button
                   onClick={fetchSignals}
+                  aria-label="Refresh signals"
                   className="inline-flex items-center gap-1 text-primary-400 hover:text-primary-300 ml-2"
                 >
                   <RefreshCw className="w-3 h-3" />
@@ -293,7 +299,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
         {/* Performance Stats */}
         <FadeIn delay={0.1}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-            {performanceStats.map((stat) => (
+            {perfStats.map((stat) => (
               <div className="glass-card p-5 rounded-xl" key={stat.label}>
                 <div className="text-2xl font-bold text-primary-400 mb-1">{stat.value}</div>
                 <div className="text-text-secondary text-sm font-medium">{stat.label}</div>
@@ -305,13 +311,15 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
 
         {/* Filter Bar */}
         <FadeIn delay={0.15}>
-          <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <div className="flex items-center gap-3 mb-6 flex-wrap" role="group" aria-label="Filter signals by type">
             <Filter className="w-4 h-4 text-text-muted" />
             <span className="text-sm text-text-muted">Filter:</span>
             {(['all', 'diamond', 'whale', 'sentiment'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
+                aria-pressed={filter === f}
+                aria-label={`Show ${f === 'all' ? 'all signals' : f === 'diamond' ? 'diamond signals only' : f === 'whale' ? 'whale signals only' : 'sentiment signals only'}`}
                 className={cn(
                   "px-4 py-1.5 rounded-lg text-sm font-medium transition-all",
                   filter === f
@@ -389,6 +397,10 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                 return (
                   <HoverScale key={signal.id}>
                     <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${signal.tokenSymbol} ${style.badge} signal with score ${confidence}`}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); /* card click handler */ } }}
                       className={cn(
                         "glass-card p-6 rounded-2xl border transition-all duration-300",
                         `border-border ${style.border}`
@@ -519,39 +531,22 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                     const gTypeStyle = i % 3 === 0 ? typeStyles.diamond : i % 3 === 1 ? typeStyles.whale : typeStyles.sentiment
                     return (
                       <HoverScale key={`locked-${i}`}>
-                        <div className="glass-card p-6 rounded-2xl border border-border relative overflow-hidden select-none">
-                          {/* 🔒 Blur overlay — rendered SSR, no client hydration needed */}
-                          <div className="absolute inset-0 backdrop-blur-md bg-background/40 z-10 flex flex-col items-center justify-center gap-3 p-6">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500/40 to-gray-600/40 flex items-center justify-center">
-                              <Lock className="w-6 h-6 text-text-muted/60" />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm font-semibold text-text-primary/80">
-                                Premium Signal — Locked
-                              </p>
-                              <p className="text-xs text-text-muted/70 mt-1">
-                                Upgrade to Premium or use Pay-Per-Alpha to unlock this signal
-                              </p>
-                            </div>
-                            <Link
-                              href="/pricing"
-                              className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-all flex items-center gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Zap className="w-3.5 h-3.5" />
-                              Unlock Premium Access to View Live Alpha
-                            </Link>
-                          </div>
-
-                          {/* Ghost content (visible beneath blur) */}
-                          <div className="flex items-center justify-between flex-wrap gap-4 opacity-30 blur-sm">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Locked premium signal ${gType}`}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); } }}
+                          className="glass-card p-6 rounded-2xl border border-border relative select-none"
+                        >
+                          {/* Ghost content beneath overlay — peek preview of what's locked */}
+                          <div className="flex items-center justify-between flex-wrap gap-4 blur-sm">
                             <div className="flex items-center gap-4">
                               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gTypeStyle.gradient} flex items-center justify-center text-white font-bold text-lg`}>
                                 {gType[0]}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-lg">{gType}</span>
+                                  <span className="font-bold text-lg text-text-secondary">{gType}</span>
                                   <span className={cn("text-xs px-2 py-0.5 rounded-full font-semibold", gTypeStyle.tag)}>
                                     {gTypeStyle.badge}
                                   </span>
@@ -563,6 +558,39 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                                 <div className="text-text-muted text-xs mb-1">Score</div>
                                 <div className="font-bold text-lg text-text-muted">{gScore}</div>
                               </div>
+                            </div>
+                          </div>
+
+                          {/* 🔒 Lock overlay — opaque cover with actions */}
+                          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 p-6"
+                            style={{ background: 'linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.75))' }}
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500/50 to-gray-600/50 flex items-center justify-center">
+                              <Lock className="w-6 h-6 text-text-muted" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-sm font-semibold text-gray-200">
+                                Premium Signal — Locked
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                Unlock with Pay-Per-Alpha or upgrade for full access.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 flex-wrap justify-center mt-1">
+                              <BuySignalButton
+                                signalId={`locked-${i}`}
+                                signalType={gTypeStyle === typeStyles.diamond ? 'diamond' : gTypeStyle === typeStyles.whale ? 'whale' : 'default'}
+                                compact
+                                onUnlocked={() => fetchSignals()}
+                              />
+                              <Link
+                                href="/pricing"
+                                className="bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-all flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Zap className="w-3.5 h-3.5" />
+                                Subscribe
+                              </Link>
                             </div>
                           </div>
                         </div>
@@ -615,7 +643,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
             <p className="text-text-secondary mb-6 max-w-md mx-auto">
               {meta?.authenticated
                 ? 'Your current plan limits you to preview signals. Upgrade to Premium for real-time access to all signals, Diamond tier, and whale deep dives.'
-                : 'Free users see 3 signals with 24hr delay. Premium members get all signals in real-time including Diamond tier.'}
+                : 'Free users see 3 signals with a 15-minute delay. Premium members get all signals in real-time including Diamond tier.'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {meta?.authenticated ? (

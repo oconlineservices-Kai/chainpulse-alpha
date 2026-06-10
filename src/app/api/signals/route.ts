@@ -354,7 +354,7 @@ export const GET = auth(async (req) => {
           isPremium,
           isPremiumActive,
           isRealTime: isPremiumActive,
-          delayHours: isFree ? 24 : 0,
+          delayHours: isFree ? 0.25 : 0,
           signalSource: dbSignals.length > 0 ? 'live' : 'demo',
           signalsVisible: allSignals.length,
           totalAvailable: totalCount,
@@ -404,9 +404,10 @@ export const GET = auth(async (req) => {
         } catch (e) { /* non-fatal */ }
       }
       // Only return 3 preview + purchased unlock
-      const preview = demoSignals.slice(0, 3).map(s => ({ ...s, delayHours: 0, locked: false, isPreview: true, status: 'Free' }))
+      const delayMs = 15 * 60 * 1000
+      const preview = demoSignals.slice(0, 3).map(s => ({ ...s, delayHours: 0.25, delayedTimestamp: new Date(new Date(s.createdAt).getTime() - delayMs).toISOString(), locked: false, isPreview: true, status: 'Free' }))
       const purchased = purchasedIds.length > 0
-        ? demoSignals.filter(s => purchasedIds.includes(s.id)).map(s => ({ ...s, delayHours: 0, locked: false, isPreview: false, status: 'Free' }))
+        ? demoSignals.filter(s => purchasedIds.includes(s.id)).map(s => ({ ...s, delayHours: 0.25, delayedTimestamp: new Date(new Date(s.createdAt).getTime() - delayMs).toISOString(), locked: false, isPreview: false, status: 'Free' }))
         : []
       demoSignals = [...preview, ...purchased]
     }
@@ -423,7 +424,7 @@ export const GET = auth(async (req) => {
           isPremium,
           isPremiumActive,
           isRealTime: isPremiumActive,
-          delayHours: isFree ? 24 : 0,
+          delayHours: isFree ? 0.25 : 0,
           signalsVisible: demoSignals.length,
           totalAvailable: DEMO_SIGNALS.length,
           lockedCount: isFree ? DEMO_SIGNALS.length - demoSignals.length : 0,
