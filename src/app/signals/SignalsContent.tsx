@@ -102,7 +102,7 @@ function usePerformanceStats(metaResponse: SignalMeta | null, perfResponse: Sign
     },
     {
       label: 'Access Level',
-      value: metaResponse?.authenticated ? (metaResponse?.isPremiumActive ? 'Premium' : 'Free') : 'Guest',
+      value: metaResponse?.authenticated ? (metaResponse?.isPremium ? 'Premium' : 'Free') : 'Guest',
       sub: metaResponse?.isRealTime ? 'Real-time feed' : '15-min delay',
     },
   ]

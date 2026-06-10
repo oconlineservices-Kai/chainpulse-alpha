@@ -298,9 +298,11 @@ export const GET = auth(async (req) => {
     }
 
     if (isFree) {
-      // Take first 3 as unlocked preview (always)
+      // 🛡️ FREE TIER: Show exactly 3 non-diamond signal previews only.
+      // Diamond signals are NEVER shown in preview — they are premium-locked.
       const previewCount = 3
-      const previewSignals = allSignals.slice(0, previewCount).map(s => ({
+      const nonDiamondSignals = allSignals.filter(s => !s.isDiamondSignal)
+      const previewSignals = nonDiamondSignals.slice(0, previewCount).map(s => ({
         ...s,
         whaleWallets: usingDemoSignals ? s.whaleWallets : [],
         twitterMentions: s.twitterMentions ?? 0,
@@ -325,8 +327,12 @@ export const GET = auth(async (req) => {
             }))
         : []
 
-      // How many premium signals exist beyond what we show
+      // How many premium signals exist beyond what we show (includes diamond signals)
+      const allNonPreviewSignals = allSignals.filter(s => s.isDiamondSignal)
       const premiumCount = Math.max(0, (totalCount || DEMO_SIGNALS.length) - previewSignals.length)
+
+      // Count locked = total - (preview visible + purchased)
+      const lockedFromApi = (totalCount || DEMO_SIGNALS.length) - previewSignals.length - purchasedSignals.length
 
       allSignals = [...previewSignals, ...purchasedSignals]
     }
@@ -403,9 +409,10 @@ export const GET = auth(async (req) => {
           if (dbUser) purchasedIds = dbUser.alphaPurchases.map(p => p.signalId)
         } catch (e) { /* non-fatal */ }
       }
-      // Only return 3 preview + purchased unlock
+      // 🛡️ FREE TIER FALLBACK: Exclude diamond signals from preview
       const delayMs = 15 * 60 * 1000
-      const preview = demoSignals.slice(0, 3).map(s => ({ ...s, delayHours: 0.25, delayedTimestamp: new Date(new Date(s.createdAt).getTime() - delayMs).toISOString(), locked: false, isPreview: true, status: 'Free' }))
+      const nonDiamond = demoSignals.filter(s => !s.isDiamondSignal)
+      const preview = nonDiamond.slice(0, 3).map(s => ({ ...s, delayHours: 0.25, delayedTimestamp: new Date(new Date(s.createdAt).getTime() - delayMs).toISOString(), locked: false, isPreview: true, status: 'Free' }))
       const purchased = purchasedIds.length > 0
         ? demoSignals.filter(s => purchasedIds.includes(s.id)).map(s => ({ ...s, delayHours: 0.25, delayedTimestamp: new Date(new Date(s.createdAt).getTime() - delayMs).toISOString(), locked: false, isPreview: false, status: 'Free' }))
         : []
