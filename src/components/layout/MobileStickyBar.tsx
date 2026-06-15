@@ -42,7 +42,7 @@ export default function MobileStickyBar() {
     >
       <div className="bg-background-card/95 backdrop-blur-lg border-t border-border/70 px-4 py-3 flex items-center justify-between gap-3">
         <span className="text-xs text-text-muted leading-tight">
-          <span className="text-warning-400 font-medium">47 spots left</span>
+          <span className="text-warning-400 font-medium">Limited spots</span>
           <br />
           this month
         </span>

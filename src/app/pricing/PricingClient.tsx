@@ -276,7 +276,7 @@ export default function PricingClient() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-warning-500"></span>
                 </span>
-                <span className="text-xs text-warning-400 font-medium">47 early spots left this month</span>
+                <span className="text-xs text-warning-400 font-medium">Limited early spots remaining this month</span>
               </div>
               <div className="inline-flex items-center gap-2 p-1 rounded-xl bg-background-card border border-border">
               <button

@@ -124,7 +124,7 @@ export default function CTA() {
             </form>
             
             <p className="text-sm text-text-muted">
-              Free alerts • No credit card required • <span className="text-warning-400 font-medium">Only 47 spots left this month</span>
+              Free alerts • No credit card required • <span className="text-warning-400 font-medium">Limited time early access</span>
             </p>
           </div>
         </FadeIn>
