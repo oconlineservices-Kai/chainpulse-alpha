@@ -92,7 +92,7 @@ export default function Hero() {
           {/* Reassurance Text */}
           <FadeIn delay={0.5}>
             <p className="text-sm text-text-muted">
-              Free alerts • No credit card required • <span className="text-warning-400 font-medium">Only 47 spots left this month</span>
+              Free alerts • No credit card required • <span className="text-warning-400 font-medium">Early access — limited spots remaining</span>
             </p>
           </FadeIn>
           
@@ -115,7 +115,7 @@ export default function Hero() {
               </div>
               <div className="w-px h-8 bg-border" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-warning-400">1,247</div>
+                <div className="text-2xl font-bold text-warning-400">1,000+</div>
                 <div className="text-text-muted">Whale Wallets</div>
               </div>
             </div>

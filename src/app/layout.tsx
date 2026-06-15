@@ -149,7 +149,7 @@ const jsonLd = [
         name: 'Free Tier',
         price: '0',
         priceCurrency: 'USD',
-        description: 'Top 5 daily signals with 24-hour delay',
+        description: 'First 3 signals with 15-minute delay',
       },
       {
         '@type': 'Offer',

@@ -68,7 +68,7 @@ export default function FeaturesPage() {
           name: 'What is the difference between Free and Premium signals?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Free users receive the top 5 daily signals with a 24-hour delay. Premium members ($49/mo or $39/mo yearly) get all signals in real-time including Diamond Signals, custom alerts, and full historical data access. We also offer Pay-Per-Alpha credits at $1 per signal for flexible access.',
+            text: 'Free users receive the first 3 signals with a 15-minute delay. Premium members ($49/mo or $39/mo yearly) get all signals in real-time including Diamond Signals, custom alerts, and full historical data access. We also offer Pay-Per-Alpha credits at $1 per signal for flexible access.',
           },
         },
         {

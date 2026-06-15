@@ -370,7 +370,7 @@ export default function ProfileClient() {
                   <div className="flex items-center gap-3">
                     <span className={profile?.premiumStatus === 'free' ? '❌' : '✅'}>Signal Access</span>
                     <span className="text-slate-400">
-                      {profile?.premiumStatus === 'free' ? '5 daily signals (24hr delay)' : 'All signals (real-time)'}
+                      {profile?.premiumStatus === 'free' ? '3 preview signals (15-min delay)' : 'All signals (real-time)'}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">

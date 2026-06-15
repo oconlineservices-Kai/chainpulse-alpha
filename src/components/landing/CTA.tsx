@@ -129,6 +129,34 @@ export default function CTA() {
           </div>
         </FadeIn>
         
+        {/* Telegram Channel Promo */}
+        <FadeIn delay={0.1}>
+          <div className="max-w-lg mx-auto text-center mb-8 p-6 rounded-2xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-blue-400" fill="currentColor">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              <span className="font-semibold text-lg">Free Telegram Channel</span>
+            </div>
+            <p className="text-text-secondary mb-4">
+              Get crypto signals directly on your phone. No need to check Twitter — we post 
+              daily whale tracking, sentiment analysis, and market insights to 
+              <span className="text-blue-400 font-medium"> @chainpulse_alpha</span>.
+            </p>
+            <a
+              href="https://t.me/chainpulse_alpha"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-medium transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              Join @chainpulse_alpha on Telegram
+            </a>
+          </div>
+        </FadeIn>
+        
         {/* Footer Links */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t border-border">
           {/* Logo & Social */}
@@ -141,18 +169,21 @@ export default function CTA() {
                 <span className="font-bold text-xl">ChainPulse Alpha</span>
               </div>
               
-              {/* Active Channels — verified live accounts only */}
-              <div className="flex items-center gap-4">
+              {/* Active Channels — with visible Telegram CTA */}
+              <div className="flex items-center gap-6">
                 <a
                   href="https://t.me/chainpulse_alpha"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-background-card border border-border flex items-center justify-center hover:border-primary-500 hover:bg-primary-500/10 transition-all group"
+                  className="flex items-center gap-3 px-5 py-3 rounded-xl bg-background-card border border-border hover:border-primary-500 hover:bg-primary-500/10 transition-all group"
                   title="Join our Telegram channel for live signals"
                 >
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 group-hover:text-primary-400 transition-colors" fill="currentColor">
+                  <svg viewBox="0 0 24 24" className="w-6 h-6 group-hover:text-primary-400 transition-colors" fill="currentColor">
                     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                   </svg>
+                  <span className="text-sm font-medium text-text-secondary group-hover:text-primary-400 transition-colors">
+                    Join 2,000+ traders on Telegram →
+                  </span>
                 </a>
               </div>
             </div>

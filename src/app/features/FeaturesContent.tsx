@@ -157,12 +157,12 @@ const methodologySteps = [
   {
     icon: Filter,
     title: '4. Validation & Signal Delivery',
-    description: 'Each potential signal passes through validation checks: historical backtesting, false-positive filters, and market condition context. Validated signals are pushed in real-time to Premium users via push alerts and the dashboard, with 24hr delay on the Free tier.',
+    description: 'Each potential signal passes through validation checks: historical backtesting, false-positive filters, and market condition context. Validated signals are pushed in real-time to Premium users via push alerts and the dashboard, with 15-minute delay on the Free tier.',
     details: [
       'Multi-stage validation pipeline',
       'False-positive filtering',
       'Real-time push to Premium users',
-      '24hr delay for Free tier signals',
+      '15-minute delay for Free tier signals',
     ]
   },
 ]
@@ -203,7 +203,7 @@ export default function FeaturesContent() {
             name: 'Free Tier',
             price: '0',
             priceCurrency: 'USD',
-            description: 'Daily signals with 24hr delay'
+            description: 'Signals with 15-minute delay'
           },
           {
             '@type': 'Offer',

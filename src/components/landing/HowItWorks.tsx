@@ -25,7 +25,7 @@ const steps = [
     icon: Wallet,
     color: 'from-purple-500 to-pink-500',
     details: [
-      '1,247+ whale wallets tracked',
+      '1,000+ whale wallets tracked',
       'Multi-chain monitoring',
       'Pattern recognition AI',
       'Flow correlation analysis'

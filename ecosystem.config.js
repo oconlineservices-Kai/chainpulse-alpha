@@ -2,7 +2,6 @@ module.exports = {
   apps: [
   // Signal generator — calls the server API every 6 hours
   // Uses curl to POST /api/signals/refresh (the authoritative generator)
-  // replacing the legacy standalone engine/signal-generator.js
   {
     name: 'signal-generator',
     script: '/opt/chainpulse/app/scripts/generate-signals.sh',
@@ -23,18 +22,14 @@ module.exports = {
       NODE_ENV: 'production',
       PORT: '3000',
       HOSTNAME: '0.0.0.0',
-      AUTH_SECRET: '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
-      AUTH_URL: 'https://chainpulsealpha.com',
-      NEXTAUTH_SECRET: '/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw',
-      NEXTAUTH_URL: 'https://chainpulsealpha.com',
-      NEON_DATABASE_URL: 'postgresql://neondb_owner:npg_Va8kFWCvJ3EG@ep-dark-mouse-amw770sl-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-      DATABASE_URL: 'postgresql://neondb_owner:npg_Va8kFWCvJ3EG@ep-dark-mouse-amw770sl-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-      RAZORPAY_KEY_ID: 'rzp_test_xxxxxxxxxxxx',  # REPLACE with actual test key from Razorpay dashboard
-      RAZORPAY_KEY_SECRET: 'replace_with_your_secret',  # REPLACE with actual secret
-      ADMIN_EMAIL: 'admin@chainpulsealpha.com',
-      ADMIN_PASSWORD: 'CHANGE-ME'
+      // ──────────────────────────────────────────────────────────────
+      // CRITICAL: DO NOT HARDCODE CREDENTIALS IN THIS FILE.
+      // This config is in the public GitHub repo.
+      // Secrets are loaded from /opt/chainpulse/app/.env at PM2 start
+      // via the wrapper: source .env && pm2 start ecosystem.config.js
+      // ──────────────────────────────────────────────────────────────
     },
     max_memory_restart: '512M',
-    restart_delay: 3000
+    restart_delay: 3000,
   }]
 }

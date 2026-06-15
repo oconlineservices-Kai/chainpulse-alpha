@@ -269,8 +269,8 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
               {meta?.isRealTime
                 ? 'Real-time AI-generated signals from on-chain data and market momentum analysis.'
                 : meta?.authenticated
-                  ? `You are on the Free plan. See ${visibleSignals.length} preview signals — unlock the rest for real-time access.`
-                  : 'A preview of signals our system generates. Login and upgrade for real-time access.'}
+                  ? `You are on the Free plan. See ${visibleSignals.length} preview signals. 💎 Diamond signals are Premium-only — unlock for real-time access.`
+                  : 'A preview of signals our system generates. 💎 Diamond signals are exclusive to Premium subscribers.'}
             </p>
             {/* Credits Banner — show for logged-in free users with credits */}
             {isLoggedIn && !isPremium && userCredits > 0 && (
@@ -314,7 +314,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
           <div className="flex items-center gap-3 mb-6 flex-wrap" role="group" aria-label="Filter signals by type">
             <Filter className="w-4 h-4 text-text-muted" />
             <span className="text-sm text-text-muted">Filter:</span>
-            {(['all', 'diamond', 'whale', 'sentiment'] as const).map((f) => (
+            {(isDefinitelyPremium ? (['all', 'diamond', 'whale', 'sentiment'] as const) : (['all', 'whale', 'sentiment'] as const)).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -392,7 +392,6 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                 const style = typeStyles[type]
                 const confidence = getConfidence(signal)
                 const recommendation = getRecommendation(signal)
-                const isDiamondOrHighConf = type === 'diamond' || confidence >= 80
 
                 return (
                   <HoverScale key={signal.id}>
@@ -462,8 +461,9 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                             </div>
                           </div>
 
-                          {/* Buy / Unlock button — for Diamond/High-Conf signals that user might want */}
-                          {(isDiamondOrHighConf || userCredits > 0) && meta?.authenticated && !meta?.isRealTime && (
+                          {/* Buy / Unlock button — ALL signals get a Buy button for free users */}
+                          {/* 🔓 Any preview signal can be unlocked via Pay-Per-Alpha, not just high-confidence ones */}
+                          {meta?.authenticated && !meta?.isRealTime && (
                             <div className="flex items-center gap-2">
                               <BuySignalButton
                                 signalId={signal.id}
@@ -525,10 +525,11 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                 <div className="space-y-4">
                   {[...Array(Math.min(effectiveLockedCount, 3))].map((_, i) => {
                     // SSR-safe locked placeholder — renders server side
+                    // 🚫 Diamond badges are NEVER shown here — diamonds are Premium-only
                     const ghostSymbols = ['BTC', 'LINK', 'AAVE', 'UNI', 'DOT', 'ADA', 'ATOM', 'FTM', 'NEAR', 'ALGO']
                     const gType = ghostSymbols[(i * 7 + 3) % ghostSymbols.length]
                     const gScore = 70 + (i * 13) % 30
-                    const gTypeStyle = i % 3 === 0 ? typeStyles.diamond : i % 3 === 1 ? typeStyles.whale : typeStyles.sentiment
+                    const gTypeStyle = i % 2 === 0 ? typeStyles.whale : typeStyles.sentiment
                     return (
                       <HoverScale key={`locked-${i}`}>
                         <div
@@ -573,13 +574,16 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                                 Premium Signal — Locked
                               </p>
                               <p className="text-xs text-gray-400 mt-1">
+                                💎 Diamond signals are exclusively for Premium users.
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
                                 Unlock with Pay-Per-Alpha or upgrade for full access.
                               </p>
                             </div>
                             <div className="flex items-center gap-3 flex-wrap justify-center mt-1">
                               <BuySignalButton
                                 signalId={`locked-${i}`}
-                                signalType={gTypeStyle === typeStyles.diamond ? 'diamond' : gTypeStyle === typeStyles.whale ? 'whale' : 'default'}
+                                signalType={gTypeStyle === typeStyles.whale ? 'whale' : 'default'}
                                 compact
                                 onUnlocked={() => fetchSignals()}
                               />
@@ -614,7 +618,7 @@ export default function SignalsContent({ serverIsGated, serverLockedCount }: { s
                           <p className="text-xs text-text-muted">
                             {userCredits > 0
                               ? `You have ${userCredits} credit${userCredits !== 1 ? 's' : ''}. Use Pay-Per-Alpha or upgrade to Premium.`
-                              : `Get credits to unlock individual signals, or upgrade for full Premium access.`}
+                              : `💎 Diamond signals are Premium-only. Get credits or subscribe for full access.`}
                           </p>
                         </div>
                       </div>

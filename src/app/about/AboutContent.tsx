@@ -79,7 +79,7 @@ const methodologySteps = [
   {
     step: '4',
     title: 'Validation & Delivery',
-    description: 'Each signal passes through a multi-stage validation pipeline. Confirmed signals are pushed in real-time to Premium users and made available with 24hr delay on the Free tier.',
+    description: 'Each signal passes through a multi-stage validation pipeline. Confirmed signals are pushed in real-time to Premium users and made available with 15-minute delay on the Free tier.',
   },
 ]
 
