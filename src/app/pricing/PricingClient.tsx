@@ -424,6 +424,14 @@ export default function PricingClient() {
                         plan.popular ? 'button-primary' : 'button-secondary',
                       )}
                     />
+                  ) : plan.id === 'premium' && !isLoggedIn ? (
+                    <Link
+                      href="/signup"
+                      className="w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center button-primary"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Get Started — {billingPeriod === 'yearly' ? '$39' : '$49'}/mo
+                    </Link>
                   ) : plan.id === 'payper' && (
                     <div className="space-y-3">
                       {/* Credit pack selection */}
