@@ -89,25 +89,25 @@ export default function DashboardPreview() {
           <div 
             className="bg-primary-500/10 border border-primary-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
           >
-            <div className="text-primary-400 text-lg font-bold mb-1">47</div>
+            <div className="text-primary-400 text-lg font-bold mb-1">—</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Active Signals</div>
           </div>
           <div 
             className="bg-success-500/10 border border-success-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
           >
-            <div className="text-success-400 text-lg font-bold mb-1">82.4%</div>
+            <div className="text-success-400 text-lg font-bold mb-1">—</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Success Rate</div>
           </div>
           <div 
             className="bg-warning-500/10 border border-warning-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
           >
-            <div className="text-warning-400 text-lg font-bold mb-1">1,247</div>
+            <div className="text-warning-400 text-lg font-bold mb-1">1,000+</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Whale Wallets</div>
           </div>
           <div 
             className="bg-secondary-500/10 border border-secondary-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
           >
-            <div className="text-secondary-400 text-lg font-bold mb-1">12.3K</div>
+            <div className="text-secondary-400 text-lg font-bold mb-1">—</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Twitter Mentions</div>
           </div>
         </div>
@@ -167,16 +167,8 @@ export default function DashboardPreview() {
                     </div>
                     
                     <Link href="/signup">
-                      <button
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] flex items-center justify-center ${
-                          signal.recommendation === 'Strong Buy' 
-                            ? 'bg-success-500 text-white hover:bg-success-600'
-                            : signal.recommendation === 'Buy'
-                            ? 'bg-primary-500 text-white hover:bg-primary-600'
-                            : 'bg-background-hover text-text-secondary hover:bg-background-card'
-                        }`}
-                      >
-                        {signal.recommendation}
+                      <button className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors h-[28px] flex items-center justify-center bg-primary-500 text-white hover:bg-primary-600">
+                        View
                       </button>
                     </Link>
                   </div>
