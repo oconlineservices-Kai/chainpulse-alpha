@@ -72,7 +72,7 @@ const faqSchema = {
       name: 'Is ChainPulse Alpha free to use?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes, ChainPulse Alpha offers a free tier that includes top 5 daily crypto signals with a 15-minute delay. For real-time alerts, push notifications, and priority Diamond Signals, you can upgrade to Premium starting at $49 per month or use Pay-Per-Alpha for $1 per signal.',
+        text: 'Yes, ChainPulse Alpha offers a free tier that includes the first 3 daily crypto signals with a 15-minute delay. For real-time alerts, push notifications, and priority Diamond Signals, you can upgrade to Premium starting at $49 per month or use Pay-Per-Alpha for $1 per signal.',
       },
     },
     {

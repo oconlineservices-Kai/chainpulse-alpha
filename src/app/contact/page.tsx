@@ -148,7 +148,7 @@ export default function ContactPage() {
                     Is there a free trial?
                   </h3>
                   <p className="text-slate-400">
-                    Yes! Our free tier includes top 5 daily signals with a 15-minute delay. No credit card required.
+                    Yes! Our free tier includes the first 3 daily signals with a 15-minute delay. No credit card required.
                   </p>
                 </div>
               </FadeIn>

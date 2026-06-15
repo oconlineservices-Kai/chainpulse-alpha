@@ -190,7 +190,7 @@ function WelcomeTour() {
               icon: Zap,
               color: 'from-primary-500 to-secondary-500',
               title: 'Real-Time Signal Feed',
-              desc: 'See the top 5 daily crypto signals with AI-powered sentiment and whale confidence scores.',
+              desc: 'See the first 3 daily crypto signals with AI-powered sentiment and whale confidence scores.',
             },
             {
               icon: Sparkles,

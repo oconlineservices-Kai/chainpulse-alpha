@@ -53,11 +53,11 @@ const plans = [
     icon: Unlock,
     color: 'from-success-500 to-emerald-500',
     features: [
-      'Top 5 daily signals',
+      'First 3 daily signals',
       '15-minute delay',
       'Basic sentiment scores',
       'Web dashboard access',
-      'Community Discord',
+      'Early access pricing',
     ],
     limitations: [
       'Limited historical data',

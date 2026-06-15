@@ -520,7 +520,7 @@ export default function PricingClient() {
                   <div className="grid sm:grid-cols-2 gap-2 text-sm text-text-muted">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-success-400" />
-                      Top 5 daily signals
+                      First 3 daily signals
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-success-400" />
@@ -536,7 +536,7 @@ export default function PricingClient() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4 text-success-400" />
-                      Community Discord
+                      Early access pricing
                     </div>
                   </div>
                 </div>
