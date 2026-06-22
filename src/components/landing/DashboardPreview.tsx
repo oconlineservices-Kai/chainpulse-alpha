@@ -77,7 +77,7 @@ export default function DashboardPreview() {
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
               <div className="text-right">
                 <div className="text-sm text-text-muted mb-0.5">Portfolio Value</div>
-                <div className="text-lg font-bold text-success-400">$47,329</div>
+                <div className="text-lg font-bold text-success-400">—</div>
               </div>
               <div className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
             </div>
@@ -101,7 +101,7 @@ export default function DashboardPreview() {
           <div 
             className="bg-warning-500/10 border border-warning-500/20 rounded-lg p-3 text-center flex flex-col items-center justify-center min-w-[90px] sm:min-w-[120px]"
           >
-            <div className="text-warning-400 text-lg font-bold mb-1">1,000+</div>
+            <div className="text-warning-400 text-lg font-bold mb-1">—</div>
             <div className="text-text-muted text-xs truncate px-1 overflow-hidden text-ellipsis whitespace-nowrap w-full">Whale Wallets</div>
           </div>
           <div 

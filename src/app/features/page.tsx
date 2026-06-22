@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'Explore ChainPulse Alpha features: whale wallet tracking, Twitter sentiment analysis, AI-powered signals, correlation scoring, and real-time alerts for crypto traders.',
   openGraph: {
     title: 'Features | ChainPulse Alpha - AI Crypto Signal Platform',
-    description: 'Real-time whale tracking, sentiment analysis, and AI-powered crypto signals. Features include 500+ wallet monitoring, 250K+ daily tweets analyzed, and multi-exchange correlation scoring.',
+    description: 'Real-time whale tracking, sentiment analysis, and AI-powered crypto signals. Features include wallet monitoring, sentiment analysis, and multi-exchange correlation scoring.',
     url: 'https://chainpulsealpha.com/features',
   },
   alternates: {
@@ -36,7 +36,7 @@ export default function FeaturesPage() {
           name: "How does ChainPulse Alpha's whale wallet tracking work?",
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Our system monitors 500+ known elite crypto wallets across Ethereum, BSC, and Solana in real-time. Each wallet is categorized by behavior profile (accumulator, trader, institutional). When a significant transaction is detected, it is flagged and scored for conviction signal generation.',
+            text: 'Our system monitors known elite crypto wallets across Ethereum, BSC, and Solana in real-time. Each wallet is categorized by behavior profile (accumulator, trader, institutional). When a significant transaction is detected, it is flagged and scored for conviction signal generation.',
           },
         },
         {
@@ -44,7 +44,7 @@ export default function FeaturesPage() {
           name: 'What is Twitter/X sentiment analysis and how accurate is it?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'We analyze 10,000+ crypto Twitter accounts using a proprietary NLP pipeline. Accounts are weighted by influence score. Sentiment is scored 0-100 and updated in near real-time. Combined with whale data, our Diamond Signals use a high correlation threshold.',
+            text: 'We analyze crypto Twitter accounts using a proprietary NLP pipeline. Accounts are weighted by influence score. Sentiment is scored 0-100 and updated in near real-time. Combined with whale data, our Diamond Signals use a high correlation threshold.',
           },
         },
         {

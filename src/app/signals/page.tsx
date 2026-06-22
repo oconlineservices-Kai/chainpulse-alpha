@@ -87,7 +87,7 @@ export default async function SignalsPage() {
                 {
                   '@type': 'Question',
                   name: 'How are crypto signals generated?',
-                  acceptedAnswer: { '@type': 'Answer', text: 'Each signal is generated through a multi-stage pipeline: (1) On-chain whale wallet tracking monitors 500+ elite wallets across ETH, BSC, and SOL; (2) Social sentiment analysis scans 10,000+ crypto Twitter accounts; (3) The correlation engine cross-references both data sources; (4) Signals pass through validation before delivery.' },
+                  acceptedAnswer: { '@type': 'Answer', text: 'Each signal is generated through a multi-stage pipeline: (1) On-chain whale wallet tracking across ETH, BSC, and SOL; (2) Social sentiment analysis of crypto Twitter accounts; (3) The correlation engine cross-references both data sources; (4) Signals pass through validation before delivery.' },
                 },
                 {
                   '@type': 'Question',

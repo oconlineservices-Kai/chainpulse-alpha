@@ -12,7 +12,7 @@ const features = [
     description: 'Monitor wallets with $1M+ holdings. Get alerted when whales accumulate before pumps.',
     gradient: 'from-primary-500 to-cyan-500',
     benefits: [
-      'Track 1,000+ whale wallets',
+      'Track whale wallets in real-time',
       'Real-time accumulation alerts', 
       'Historical pattern analysis',
       'Smart money flow mapping'

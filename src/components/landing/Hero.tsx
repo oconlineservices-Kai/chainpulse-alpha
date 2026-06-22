@@ -103,7 +103,7 @@ export default function Hero() {
           <FadeIn delay={0.9}>
             <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mt-16 text-sm">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary-400">47,329</div>
+                <div className="text-2xl font-bold text-primary-400">Real-time</div>
                 <div className="text-text-muted">Signals Generated</div>
               </div>
               <div className="w-px h-8 bg-border" />
@@ -113,7 +113,7 @@ export default function Hero() {
               </div>
               <div className="w-px h-8 bg-border" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-warning-400">1,000+</div>
+                <div className="text-2xl font-bold text-warning-400">Multiple</div>
                 <div className="text-text-muted">Whale Wallets</div>
               </div>
             </div>
