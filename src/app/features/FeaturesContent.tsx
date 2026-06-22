@@ -30,19 +30,19 @@ const features = [
   {
     icon: Eye,
     title: 'Whale Wallet Tracking',
-    description: 'Monitor on-chain activity of 500+ elite crypto wallets. Know exactly when the big players are accumulating or dumping before it hits the price.',
+    description: 'Monitor on-chain activity of key crypto wallets. Know exactly when the big players are accumulating or dumping before it hits the price.',
     color: 'from-blue-500 to-cyan-500',
     details: [
       'Real-time transaction monitoring',
       'Smart money wallet alerts',
-      'Wallet label database (500+ known wallets)',
+      'Wallet label database (actively maintained)',
       'Cross-chain tracking (ETH, BSC, SOL)',
     ]
   },
   {
     icon: MessageSquare,
     title: 'Twitter/X Sentiment Analysis',
-    description: 'AI-powered sentiment scoring across 10,000+ crypto Twitter accounts. Detect sentiment shifts hours before they move the market.',
+    description: 'AI-powered sentiment scoring across crypto Twitter accounts. Detect sentiment shifts hours before they move the market.',
     color: 'from-purple-500 to-pink-500',
     details: [
       'Real-time sentiment scoring (0-100)',
@@ -114,8 +114,8 @@ const features = [
 ]
 
 const stats = [
-  { value: '500+', label: 'Wallets Tracked' },
-  { value: '10K+', label: 'Twitter Accounts' },
+  { value: 'Multiple', label: 'Wallets Tracked' },
+  { value: 'High', label: 'Twitter Sentiment Analyzed' },
   { value: 'High', label: 'Correlation Threshold' },
   { value: '0s', label: 'Alert Delay (Premium)' },
 ]
@@ -124,9 +124,9 @@ const methodologySteps = [
   {
     icon: Cpu,
     title: '1. On-Chain Whale Tracking',
-    description: 'Our system monitors 500+ known elite crypto wallets across Ethereum, BSC, and Solana in real-time. Each wallet is categorized by behavior profile (accumulator, trader, institutional, etc.). When a wallet initiates a significant transaction, it is flagged and scored for conviction.',
+    description: 'Our system monitors known elite crypto wallets across Ethereum, BSC, and Solana in real-time. Each wallet is categorized by behavior profile (accumulator, trader, institutional, etc.). When a wallet initiates a significant transaction, it is flagged and scored for conviction.',
     details: [
-      '500+ labeled whale wallets monitored 24/7',
+      'Labeled whale wallets monitored 24/7',
       'Cross-chain coverage (ETH, BSC, SOL)',
       'Behavioral profiling per wallet address',
       'Transaction size and pattern analysis',
@@ -135,9 +135,9 @@ const methodologySteps = [
   {
     icon: Database,
     title: '2. Social Sentiment Analysis',
-    description: 'We analyze 10,000+ crypto Twitter accounts using a proprietary NLP pipeline. Each account is weighted by influence score (follower count, engagement rate, historical accuracy). Sentiment is scored from 0-100 and updated in near real-time.',
+    description: 'We analyze crypto Twitter accounts using a proprietary NLP pipeline. Each account is weighted by influence score (follower count, engagement rate, historical accuracy). Sentiment is scored from 0-100 and updated in near real-time.',
     details: [
-      '10K+ Twitter accounts continuously analyzed',
+      'Twitter accounts continuously analyzed',
       'Influence-weighted sentiment scoring',
       'Real-time sentiment shifts detection',
       'Trending token identification',
@@ -172,7 +172,7 @@ export default function FeaturesContent() {
     title: 'Features - AI-Powered Crypto Signals | ChainPulse Alpha',
     description: 'Explore ChainPulse Alpha features: whale wallet tracking, Twitter sentiment analysis, AI-powered signals, correlation scoring, and real-time alerts for crypto traders.',
     ogTitle: 'Features | ChainPulse Alpha - AI Crypto Signal Platform',
-    ogDescription: 'Real-time whale tracking, sentiment analysis, and AI-powered crypto signals. Features include 500+ wallet monitoring, 250K+ daily tweets analyzed, and multi-exchange correlation scoring.',
+    ogDescription: 'Real-time whale tracking, sentiment analysis, and AI-powered crypto signals. Features include wallet monitoring, sentiment analysis, and multi-exchange correlation scoring.',
     ogUrl: 'https://chainpulsealpha.com/features',
     canonical: 'https://chainpulsealpha.com/features',
     keywords: 'crypto signals features, whale tracking, sentiment analysis crypto, AI trading signals, crypto alert system, blockchain analytics features'
@@ -216,8 +216,8 @@ export default function FeaturesContent() {
       },
       description: 'AI-powered crypto signal platform combining on-chain whale wallet tracking with Twitter sentiment analysis. Generates high-conviction trading signals using a proprietary correlation engine.',
       featureList: [
-        'Whale Wallet Tracking (500+ wallets)',
-        'Twitter/X Sentiment Analysis (10K+ accounts)',
+        'Whale Wallet Tracking',
+        'Twitter/X Sentiment Analysis',
         'Correlation Score Engine',
         'Diamond Signals (high confidence)',
         'Real-Time Push Alerts',

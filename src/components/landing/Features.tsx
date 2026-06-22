@@ -21,10 +21,9 @@ const features = [
   {
     icon: Brain,
     title: 'Read the Market Mood',
-    description: 'AI scans 10,000+ tweets daily. Spot trending tokens before they hit CoinMarketCap.',
+    description: 'AI analyzes crypto Twitter sentiment. Spot trending tokens before they hit CoinMarketCap.',
     gradient: 'from-secondary-500 to-pink-500',
     benefits: [
-      '10K+ tweets analyzed daily',
       'Sentiment trend prediction',
       'Influencer impact scoring',
       'Narrative tracking system'

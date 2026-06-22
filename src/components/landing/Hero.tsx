@@ -52,9 +52,7 @@ export default function Hero() {
           {/* Subheading */}
           <FadeIn delay={0.3}>
             <p className="text-xl md:text-2xl text-text-secondary mb-10 max-w-3xl mx-auto leading-relaxed">
-              Our AI monitors <span className="text-warning-400 font-semibold">10,000+ tweets</span> and{' '}
-              <span className="text-primary-400 font-semibold">1,000+ whale wallets</span> daily. 
-              When smart money meets social buzz, you get alerted.
+              Our AI monitors tweets and whale wallets daily. When smart money meets social buzz, you get alerted.
             </p>
           </FadeIn>
           

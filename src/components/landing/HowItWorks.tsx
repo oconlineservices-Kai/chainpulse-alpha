@@ -8,7 +8,7 @@ const steps = [
   {
     number: 1,
     title: 'Scan Twitter',
-    description: 'Our AI monitors millions of tweets to identify trending tokens and emerging narratives.',
+    description: 'Our AI monitors crypto Twitter to identify trending tokens and emerging narratives.',
     icon: MessageCircle,
     color: 'from-blue-500 to-cyan-500',
     details: [
@@ -21,11 +21,10 @@ const steps = [
   {
     number: 2,
     title: 'Track Whales',
-    description: 'We monitor 1,000+ whale wallets across Ethereum, BSC, and Solana for accumulation patterns.',
+    description: 'We monitor whale wallets across Ethereum, BSC, and Solana for accumulation patterns.',
     icon: Wallet,
     color: 'from-purple-500 to-pink-500',
     details: [
-      '1,000+ whale wallets tracked',
       'Multi-chain monitoring',
       'Pattern recognition AI',
       'Flow correlation analysis'

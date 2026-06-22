@@ -25,12 +25,12 @@ import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
 
 const stats = [
-  { value: '10,000+', label: 'Wallets Monitored', icon: Wallet, color: 'from-blue-500 to-cyan-500' },
-  { value: '250,000+', label: 'Tweets Analyzed Daily', icon: MessageCircle, color: 'from-sky-500 to-blue-600' },
-  { value: '1,200+', label: 'Signals Generated/Month', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
-  { value: '500+', label: 'Elite Wallets Tracked', icon: Activity, color: 'from-purple-500 to-pink-500' },
+  { value: 'Multiple', label: 'Wallets Monitored', icon: Wallet, color: 'from-blue-500 to-cyan-500' },
+  { value: 'Market', label: 'Sentiment Analyzed', icon: MessageCircle, color: 'from-sky-500 to-blue-600' },
+  { value: 'Multiple', label: 'Signals Generated Daily', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+  { value: 'Multiple', label: 'Elite Wallets Tracked', icon: Activity, color: 'from-purple-500 to-pink-500' },
   { value: 'High', label: 'Correlation Threshold', icon: BarChart3, color: 'from-orange-500 to-yellow-500' },
-  { value: '10K+', label: 'Twitter Accounts Analyzed', icon: MessageSquare, color: 'from-violet-500 to-indigo-500' },
+  { value: 'Many', label: 'Twitter Accounts Analyzed', icon: MessageSquare, color: 'from-violet-500 to-indigo-500' },
 ]
 
 const values = [
@@ -64,7 +64,7 @@ const methodologySteps = [
   {
     step: '1',
     title: 'Data Collection',
-    description: 'Our system continuously monitors 500+ known whale wallets across Ethereum, BSC, and Solana. Simultaneously, we scrape and score 10,000+ crypto Twitter accounts for sentiment signals.',
+    description: 'Our system monitors known whale wallets across Ethereum, BSC, and Solana for on-chain activity signals.',
   },
   {
     step: '2',
@@ -79,7 +79,7 @@ const methodologySteps = [
   {
     step: '4',
     title: 'Validation & Delivery',
-    description: 'Each signal passes through a multi-stage validation pipeline. Confirmed signals are pushed in real-time to Premium users and made available with 15-minute delay on the Free tier.',
+    description: 'Each signal passes through a multi-stage validation pipeline. Confirmed signals are pushed in real-time to Premium users and made available with 24hr delay on the Free tier.',
   },
 ]
 
@@ -88,7 +88,7 @@ export default function AboutContent() {
     title: 'About ChainPulse Alpha | AI-Powered Crypto Signal Platform',
     description: 'Learn about ChainPulse Alpha - the AI-powered crypto signal platform combining on-chain whale wallet tracking with social sentiment analysis for retail traders.',
     ogTitle: 'About Us | ChainPulse Alpha',
-    ogDescription: 'Discover how ChainPulse Alpha democratizes professional-grade crypto trading signals through AI-powered whale tracking and sentiment analysis. 10,000+ wallets monitored, 250,000+ tweets analyzed daily.',
+    ogDescription: 'Discover how ChainPulse Alpha democratizes professional-grade crypto trading signals through AI-powered whale tracking and sentiment analysis. Multiple wallets monitored, market data analyzed daily.',
     ogUrl: 'https://chainpulsealpha.com/about',
     canonical: 'https://chainpulsealpha.com/about',
     keywords: 'about chainpulse alpha, crypto signal platform, AI trading signals, whale tracking, crypto market intelligence'
@@ -193,8 +193,8 @@ export default function AboutContent() {
             <p className="text-text-secondary max-w-3xl mx-auto leading-relaxed">
               Crypto markets move 24/7, driven by whales and sentiment shifts that most traders 
               can&apos;t track. We built ChainPulse Alpha to level the playing field. By monitoring 
-              <strong className="text-text-primary"> 500+ elite wallets</strong> and analyzing{' '}
-              <strong className="text-text-primary"> 250,000+ tweets daily</strong>, our system 
+              <strong className="text-text-primary"> elite wallets</strong> and analyzing{' '}
+              <strong className="text-text-primary"> market data daily</strong>, our system 
               identifies high-conviction trading opportunities before they hit the mainstream.
             </p>
           </div>
