@@ -276,49 +276,136 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
         />
       </div>
 
-      {/* Recent movements */}
+      {/* Recent movements — redesigned as compact, scannable rows */}
       {recent.length > 0 && (
         <div className="p-5">
-          <h3 className="text-sm font-semibold text-text-primary mb-3 flex items-center gap-2">
-            Recent Movements
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+              Recent Movements
+            </h3>
             {s.highSeverityCount6h > 0 && (
-              <span className="text-xs text-red-400 flex items-center gap-1">
-                <AlertTriangleIcon className="w-3 h-3" />
-                {s.highSeverityCount6h} high severity
+              <span className="text-xs text-red-400 flex items-center gap-1 font-medium">
+                <AlertTriangleIcon className="w-3.5 h-3.5" />
+                {s.highSeverityCount6h} high-severity
               </span>
             )}
-          </h3>
-          <div className="space-y-2">
+          </div>
+
+          {/* Mobile: stacked cards */}
+          <div className="sm:hidden space-y-2.5">
             {recent.map((m) => (
-              <div
-                key={m.id}
-                className="flex items-center justify-between py-2 px-3 rounded-lg bg-background/50 text-sm"
-              >
-                <div className="flex items-center gap-2 min-w-0">
+              <div key={m.id} className="rounded-xl border border-border bg-background/40 p-3.5 space-y-2.5">
+                {/* Wallet row */}
+                <div className="flex items-center gap-3">
                   <span className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                    m.direction === 'accumulating' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    'flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shrink-0',
+                    m.direction === 'accumulating'
+                      ? 'bg-green-500/15 text-green-400'
+                      : 'bg-red-500/15 text-red-400'
                   )}>
-                    {m.direction === 'accumulating' ? '+' : '−'}
+                    {m.direction === 'accumulating' ? '↑' : '↓'}
                   </span>
                   <div className="min-w-0">
-                    <p className="font-medium text-text-primary truncate">
-                      {m.walletLabel || 'Unlabeled'}
+                    <p className="font-semibold text-text-primary text-sm leading-tight truncate">
+                      {m.walletLabel || 'Unlabeled Wallet'}
                     </p>
-                    <p className="text-xs text-text-muted truncate font-mono">
+                    <p className="text-xs text-text-muted font-mono truncate mt-0.5">
                       {m.walletAddress}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className={cn('font-semibold text-sm', directionColor(m.direction))}>
+                {/* Stats row */}
+                <div className="flex items-center justify-between">
+                  <span className={cn(
+                    'text-sm font-bold',
+                    m.direction === 'accumulating' ? 'text-green-400' : 'text-red-400'
+                  )}>
                     {m.direction === 'accumulating' ? '+' : '−'}{formatEth(m.amountEth)} ETH
                   </span>
-                  <span className={cn('text-xs', severityColor(m.severity))}>{m.severity}</span>
-                  <span className="text-xs text-text-muted">{timeAgo(m.createdAt)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      'text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded',
+                      m.severity === 'HIGH' ? 'bg-red-500/15 text-red-400' :
+                      m.severity === 'MEDIUM' ? 'bg-yellow-500/15 text-yellow-400' :
+                      'bg-green-500/15 text-green-400'
+                    )}>{m.severity}</span>
+                    <span className="text-xs text-text-muted">{timeAgo(m.createdAt)}</span>
+                  </div>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Desktop: compact table-like rows with visual bars */}
+          <div className="hidden sm:block">
+            <div className="text-[11px] uppercase tracking-widest text-text-muted font-semibold grid grid-cols-[40px_1fr_120px_80px_70px] gap-3 px-3 pb-2 border-b border-border/50 mb-1">
+              <span></span>
+              <span>Wallet</span>
+              <span className="text-right">Amount</span>
+              <span>Severity</span>
+              <span className="text-right">When</span>
+            </div>
+            <div className="divide-y divide-border/30">
+              {recent.map((m) => {
+                const maxAmount = Math.max(...recent.map(r => Math.abs(r.amountEth)), 1)
+                const barWidth = (Math.abs(m.amountEth) / maxAmount) * 100
+                const isOut = m.direction === 'distributing'
+
+                return (
+                  <div key={m.id} className="grid grid-cols-[40px_1fr_120px_80px_70px] gap-3 items-center py-2.5 px-3 rounded-lg hover:bg-background/40 transition-colors text-sm">
+                    {/* Direction arrow */}
+                    <div className={cn(
+                      'flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold',
+                      isOut ? 'bg-red-500/15 text-red-400' : 'bg-green-500/15 text-green-400'
+                    )}>
+                      {isOut ? '↓' : '↑'}
+                    </div>
+
+                    {/* Wallet */}
+                    <div className="min-w-0">
+                      <p className="font-medium text-text-primary truncate leading-tight">
+                        {m.walletLabel || 'Unlabeled'}
+                      </p>
+                      <p className="text-[11px] text-text-muted font-mono truncate">
+                        {m.walletAddress.slice(0, 6)}...{m.walletAddress.slice(-4)}
+                      </p>
+                    </div>
+
+                    {/* Amount with bar */}
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={cn(
+                        'font-bold text-sm',
+                        isOut ? 'text-red-400' : 'text-green-400'
+                      )}>
+                        {isOut ? '−' : '+'}{formatEth(m.amountEth)}
+                      </span>
+                      <div className="w-full h-1 bg-background rounded-full overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all',
+                            isOut ? 'bg-red-400/60' : 'bg-green-400/60'
+                          )}
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Severity badge */}
+                    <span className={cn(
+                      'text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded inline-block w-fit',
+                      m.severity === 'HIGH' ? 'bg-red-500/15 text-red-400' :
+                      m.severity === 'MEDIUM' ? 'bg-yellow-500/15 text-yellow-400' :
+                      'bg-green-500/15 text-green-400'
+                    )}>{m.severity}</span>
+
+                    {/* Timestamp */}
+                    <span className="text-xs text-text-muted text-right tabular-nums">
+                      {timeAgo(m.createdAt)}
+                    </span>
+                  </div>
+                )}
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -339,26 +426,62 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
             <CrownIcon className="w-4 h-4 text-yellow-400" />
             Wallet Breakdown
           </h3>
-          <div className="space-y-2">
-            {data.walletBreakdown.slice(0, 8).map((w) => (
-              <div key={`${w.chain}:${w.address}`} className="flex items-center justify-between py-2 px-3 rounded-lg bg-background/50 text-sm">
-                <div className="min-w-0">
-                  <p className="font-medium text-text-primary">{w.label}</p>
-                  <p className="text-xs text-text-muted font-mono truncate">
-                    {w.address.slice(0, 8)}...{w.address.slice(-6)}
-                  </p>
+          <div className="hidden sm:block">
+            <div className="text-[11px] uppercase tracking-widest text-text-muted font-semibold grid grid-cols-[1fr_100px_60px] gap-3 px-3 pb-2 border-b border-border/50 mb-1">
+              <span>Wallet</span>
+              <span className="text-right">Net Flow (24h)</span>
+              <span className="text-right">Tx</span>
+            </div>
+            <div className="divide-y divide-border/30">
+              {data.walletBreakdown.slice(0, 8).map((w) => {
+                const isAccum = w.netFlow24h > 0
+                const isDist = w.netFlow24h < 0
+                return (
+                  <div key={`${w.chain}:${w.address}`} className="grid grid-cols-[1fr_100px_60px] gap-3 items-center py-2.5 px-3 rounded-lg hover:bg-background/40 transition-colors text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium text-text-primary truncate flex items-center gap-1.5">
+                        {w.label}
+                        {isAccum && <span className="text-[10px] text-green-400 bg-green-500/10 px-1 py-0.5 rounded">BUYING</span>}
+                        {isDist && <span className="text-[10px] text-red-400 bg-red-500/10 px-1 py-0.5 rounded">SELLING</span>}
+                      </p>
+                      <p className="text-[11px] text-text-muted font-mono truncate mt-0.5">
+                        {w.address.slice(0, 6)}...{w.address.slice(-4)}
+                      </p>
+                    </div>
+                    <span className={cn(
+                      'text-sm font-bold text-right tabular-nums',
+                      isAccum ? 'text-green-400' : isDist ? 'text-red-400' : 'text-text-muted'
+                    )}>
+                      {isAccum ? '+' : ''}{formatEth(w.netFlow24h)} ETH
+                    </span>
+                    <span className="text-sm text-text-muted text-right tabular-nums">{w.movementCount}</span>
+                  </div>
+                )}
+              })}
+            </div>
+          </div>
+          {/* Mobile wallet cards */}
+          <div className="sm:hidden space-y-2">
+            {data.walletBreakdown.slice(0, 8).map((w) => {
+              const isAccum = w.netFlow24h > 0
+              const isDist = w.netFlow24h < 0
+              return (
+                <div key={`${w.chain}:${w.address}`} className="rounded-xl border border-border bg-background/40 p-3.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="font-semibold text-text-primary text-sm truncate">{w.label}</p>
+                    {isAccum && <span className="text-[10px] text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded font-semibold">BUYING</span>}
+                    {isDist && <span className="text-[10px] text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded font-semibold">SELLING</span>}
+                  </div>
+                  <p className="text-[11px] text-text-muted font-mono mb-2">{w.address.slice(0, 6)}...{w.address.slice(-4)}</p>
+                  <div className="flex items-center justify-between">
+                    <span className={cn('text-sm font-bold', isAccum ? 'text-green-400' : isDist ? 'text-red-400' : 'text-text-muted')}>
+                      {isAccum ? '+' : ''}{formatEth(w.netFlow24h)} ETH
+                    </span>
+                    <span className="text-xs text-text-muted">{w.movementCount} tx</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <span className={cn(
-                    'text-xs font-medium',
-                    w.netFlow24h > 0 ? 'text-green-400' : w.netFlow24h < 0 ? 'text-red-400' : 'text-text-muted'
-                  )}>
-                    {w.netFlow24h > 0 ? '+' : ''}{formatEth(w.netFlow24h)} ETH
-                  </span>
-                  <span className="text-xs text-text-muted">{w.movementCount} tx</span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
