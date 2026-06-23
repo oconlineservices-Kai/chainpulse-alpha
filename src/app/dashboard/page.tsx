@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary'
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
 import { fetchTopCoins, mockSignals, Signal } from '@/lib/api/crypto'
 import Link from 'next/link'
+import WhaleActivityWidget from '@/components/whale/WhaleActivityWidget'
 
 const BUILD_VERSION = '2026-05-30-v2'
 
@@ -286,6 +287,11 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          {/* 🐋 Live Whale Activity — aggregated on-chain stats from engine/whale-tracker.js */}
+          <div className="mb-8">
+            <WhaleActivityWidget />
+          </div>
 
           {error && (
             <div className="mb-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-400 text-sm flex items-center gap-2">

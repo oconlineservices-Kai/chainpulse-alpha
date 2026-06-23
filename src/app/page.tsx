@@ -10,6 +10,7 @@ import Pricing from '@/components/landing/Pricing'
 import FAQ from '@/components/landing/FAQ'
 import CTA from '@/components/landing/CTA'
 import Footer from '@/components/landing/Footer'
+import WhaleActivityWidget from '@/components/whale/WhaleActivityWidget'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://chainpulsealpha.com'
 
@@ -145,6 +146,13 @@ export default function HomePage() {
         >
           {/* Hero Section */}
           <Hero />
+
+          {/* 🐋 Live On-Chain Whale Activity — aggregated stats from real whale tracker */}
+          <section className="py-8 -mt-4 relative z-10">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <WhaleActivityWidget compact />
+            </div>
+          </section>
           
           {/* Social Proof */}
           <SocialProof />
