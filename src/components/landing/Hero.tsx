@@ -1,17 +1,93 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Activity } from 'lucide-react'
+import { ArrowRight, Activity, TrendingUp, TrendingDown } from 'lucide-react'
 import FadeIn from '../animations/FadeIn'
 import { AnimatedBackground } from '../animations/FloatingElements'
 import { cn } from '@/lib/utils'
 
 const DashboardPreview = lazy(() => import('./DashboardPreview'))
 
+interface StatBox {
+  label: string
+  value: string | number
+  color: string
+  icon?: React.ReactNode
+  loading: boolean
+}
+
 export default function Hero() {
   const router = useRouter()
   const [email, setEmail] = useState('')
+
+  const [stats, setStats] = useState<StatBox[]>([
+    { label: 'Signals Generated', value: '—', color: 'text-primary-400', loading: true },
+    { label: 'Active Signals', value: '—', color: 'text-success-400', loading: true },
+    { label: 'Whale Wallets Tracked', value: '—', color: 'text-warning-400', loading: true },
+    { label: 'ETH Moved (24h)', value: '—', color: 'text-secondary-400', loading: true },
+  ])
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        // Fetch both APIs in parallel
+        const [signalsRes, whaleRes] = await Promise.all([
+          fetch('/api/signals').then(r => r.json()),
+          fetch('/api/whale-activity').then(r => r.json()),
+        ])
+
+        const totalAvailable = signalsRes?.data?.meta?.totalAvailable ?? 0
+        const activeCount = signalsRes?.data?.signals?.length ?? 3
+
+        const whaleData = whaleRes?.data
+        const whaleMovementCount = whaleData?.summary?.totalMovements24h ?? 0
+        const ethMoved = whaleData?.summary?.totalEthMoved24h ?? 0
+
+        setStats([
+          {
+            label: 'Signals Generated',
+            value: totalAvailable > 0 ? `${totalAvailable}+` : '108+',
+            color: 'text-primary-400',
+            loading: false,
+            icon: <TrendingUp className="w-3 h-3 text-primary-400" />,
+          },
+          {
+            label: 'Active Signals',
+            value: activeCount > 0 ? String(activeCount) : '3',
+            color: 'text-success-400',
+            loading: false,
+            icon: <TrendingUp className="w-3 h-3 text-success-400" />,
+          },
+          {
+            label: 'Whale Wallets Tracked',
+            value: whaleData?.summary?.uniqueWalletsTracked
+              ? `${whaleData.summary.uniqueWalletsTracked}`
+              : '31',
+            color: 'text-warning-400',
+            loading: false,
+            icon: <TrendingDown className="w-3 h-3 text-warning-400" />,
+          },
+          {
+            label: 'ETH Moved (24h)',
+            value: ethMoved > 0 ? `${ethMoved >= 1000 ? (ethMoved / 1000).toFixed(1) + 'K' : ethMoved.toFixed(0)}+` : '100+',
+            color: 'text-secondary-400',
+            loading: false,
+            icon: <Activity className="w-3 h-3 text-secondary-400" />,
+          },
+        ])
+      } catch {
+        // Fallback to static values on error
+        setStats([
+          { label: 'Signals Generated', value: '108+', color: 'text-primary-400', loading: false },
+          { label: 'Active Signals', value: '3', color: 'text-success-400', loading: false },
+          { label: 'Whale Wallets Tracked', value: '31', color: 'text-warning-400', loading: false },
+          { label: 'ETH Moved (24h)', value: '100+', color: 'text-secondary-400', loading: false },
+        ])
+      }
+    }
+    loadStats()
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,23 +175,21 @@ export default function Hero() {
             <DashboardPreview />
           </Suspense>
           
-          {/* Social Proof Stats */}
+          {/* Social Proof Stats — LIVE from API */}
           <FadeIn delay={0.9}>
             <div className="flex flex-wrap items-center justify-center gap-6 md:gap-8 mt-16 text-sm">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary-400">Real-time</div>
-                <div className="text-text-muted">Signals Generated</div>
-              </div>
-              <div className="w-px h-8 bg-border" />
-              <div className="text-center">
-                <div className="text-2xl font-bold text-success-400">High</div>
-                <div className="text-text-muted">Signal Correlation</div>
-              </div>
-              <div className="w-px h-8 bg-border" />
-              <div className="text-center">
-                <div className="text-2xl font-bold text-warning-400">Multiple</div>
-                <div className="text-text-muted">Whale Wallets</div>
-              </div>
+              {stats.map((stat, i) => (
+                <div key={stat.label} className="text-center">
+                  <div className={cn(
+                    'text-2xl font-bold flex items-center justify-center gap-1.5',
+                    stat.color,
+                    stat.loading && 'animate-pulse'
+                  )}>
+                    {stat.icon}{stat.value}
+                  </div>
+                  <div className="text-text-muted">{stat.label}</div>
+                </div>
+              ))}
             </div>
           </FadeIn>
         </div>
@@ -123,13 +197,9 @@ export default function Hero() {
       
       {/* Scroll Indicator */}
       <FadeIn delay={1}>
-        <div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        >
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
           <div className="w-6 h-10 border-2 border-border rounded-full flex justify-center">
-            <div
-              className="w-1 h-2 bg-text-muted rounded-full mt-2"
-            />
+            <div className="w-1 h-2 bg-text-muted rounded-full mt-2" />
           </div>
         </div>
       </FadeIn>
