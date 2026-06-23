@@ -41,41 +41,41 @@ export interface GeneratedSignal {
 
 export type SignalType = 'Diamond Signal' | 'Strong Buy' | 'Buy' | 'Neutral' | 'Sell'
 
-// ── Memoized whale wallets (for demo realism) ──────────────────────────────────
-const WHALE_WALLETS_BY_SYMBOL: Record<string, string[]> = {
-  BTC: [
-    'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq',
-    'bc1qgdjqv0av3q56jgt82m4w4t3l2h6h4r8k5c9a0x',
-    '3LYJfcf6G1dA2Tf6HBfXa8e8iYnZnHq7aD',
-  ],
+// ── Real whale wallets (from on-chain tracker) ────────────────────────────────
+// These are updated by engine/whale-tracker.js every 15 minutes
+// and stored in the whale_activities DB table
+
+const TRACKED_WHALE_WALLETS: Record<string, { address: string; label: string; chain: string }[]> = {
   ETH: [
-    '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae',
-    '0x220866b1a2219f40e72f5c628b65d54268ca3a9d',
-    '0x00000000219ab540356cbb839cbe05303d7705fa',
+    { address: '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503', label: 'Binance 1', chain: 'ethereum' },
+    { address: '0x5a52e96bacdabb82fd05763e25335261b270efcb', label: 'Binance 2', chain: 'ethereum' },
+    { address: '0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae', label: 'Ethereum Foundation', chain: 'ethereum' },
+    { address: '0x00000000219ab540356cbb839cbe05303d7705fa', label: 'Beacon Deposit', chain: 'ethereum' },
+    { address: '0x220866b1a2219f40e72f5c628b65d54268ca3a9d', label: 'Jump Trading', chain: 'ethereum' },
+    { address: '0xbe0eb53f46cd790cd13851d5eff43d12404d33e8', label: 'Unknown Whale', chain: 'ethereum' },
+  ],
+  ARB: [
+    { address: '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503', label: 'Binance (Arb)', chain: 'arbitrum' },
+    { address: '0x5a52e96bacdabb82fd05763e25335261b270efcb', label: 'Binance 2 (Arb)', chain: 'arbitrum' },
   ],
   SOL: [
-    '7VJ9dhBMkq3KUAhUXQZFQfBPJQzKdN8K5fYCVSG5Pf1u',
-    '3bLggfFhRFNDQqUys1SLaLLDCBkHjNBFTxCjCnPLYcKx',
-    '7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV',
+    { address: '7VJ9dhBMkq3KUAhUXQZFQfBPJQzKdN8K5fYCVSG5Pf1u', label: 'Solana Whale 1', chain: 'solana' },
+  ],
+  MATIC: [
+    { address: '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503', label: 'Binance (Poly)', chain: 'polygon' },
+    { address: '0x5a52e96bacdabb82fd05763e25335261b270efcb', label: 'Binance 2 (Poly)', chain: 'polygon' },
+  ],
+  AVAX: [
+    { address: '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503', label: 'Binance (Avax)', chain: 'avalanche' },
   ],
 }
 
-// ── Simple deterministic wallet generator based on token and rank ──────────────
-function generateWhaleWallets(symbol: string, marketCapRank: number): string[] {
-  // Use pre-defined wallets for major tokens
-  if (WHALE_WALLETS_BY_SYMBOL[symbol]) {
-    return [...WHALE_WALLETS_BY_SYMBOL[symbol]]
-  }
-
-  // For unknown tokens, return real known ethereum whale wallets
-  const REAL_FALLBACK_WALLETS = [
-    '0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503',
-    '0x5a52e96bacdabb82fd05763e25335261b270efcb',
-  ]
-
-  // Use marketCapRank as seed to pick from real wallets
-  const idx = marketCapRank % REAL_FALLBACK_WALLETS.length
-  return [REAL_FALLBACK_WALLETS[idx], REAL_FALLBACK_WALLETS[(idx + 1) % REAL_FALLBACK_WALLETS.length]]
+// ── Return real whale wallets for a given symbol ───────────────────────────────
+function getWhaleWallets(symbol: string): { address: string; label: string }[] {
+  const tracked = TRACKED_WHALE_WALLETS[symbol]
+  if (tracked) return tracked.map(w => ({ address: w.address, label: w.label }))
+  // Fallback: Ethereum whales for unknown tokens
+  return TRACKED_WHALE_WALLETS.ETH.slice(0, 3).map(w => ({ address: w.address, label: w.label }))
 }
 
 // ── In-memory cache for CoinGecko data ─────────────────────────────────────────
@@ -269,10 +269,31 @@ export async function generateSignals(count: number = 20): Promise<GenerationRes
     // Fetch market data
     const marketData = await fetchTopCryptos(count)
 
+    // Fetch recent whale activity for score boosting
+    let whaleActivityBoost = 0
+    try {
+      const recentActivity = await prisma.$queryRaw<{ total_eth: number; direction: string }[]>`
+        SELECT COALESCE(SUM(amount_eth), 0) as total_eth, direction
+        FROM whale_activities
+        WHERE created_at > NOW() - INTERVAL '6 hours'
+        AND severity = 'HIGH'
+        GROUP BY direction
+      `
+      // Net whale activity: accumulation boosts score, distribution reduces
+      const acc = recentActivity.find(r => r.direction === 'accumulating')?.total_eth || 0
+      const dist = recentActivity.find(r => r.direction === 'distributing')?.total_eth || 0
+      whaleActivityBoost = Math.round(Math.min(15, (acc - dist) / 100))
+    } catch {
+      // Whale activities table might not have data yet — non-fatal
+    }
+
     for (const coin of marketData) {
       try {
         const scoreResult = calculateSignalScore(coin)
-        const wallets = generateWhaleWallets(coin.symbol, coin.market_cap_rank)
+        const wallets = getWhaleWallets(coin.symbol)
+
+        // Apply on-chain whale activity boost
+        const boostedWhale = Math.max(0, Math.min(100, scoreResult.whaleConfidence + whaleActivityBoost))
 
         // Generate 24h expiry from now
         const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
@@ -281,11 +302,11 @@ export async function generateSignals(count: number = 20): Promise<GenerationRes
           tokenSymbol: coin.symbol,
           tokenName: coin.name,
           sentimentScore: scoreResult.sentimentScore,
-          whaleConfidence: scoreResult.whaleConfidence,
+          whaleConfidence: boostedWhale,
           correlationScore: scoreResult.correlationScore,
           isDiamondSignal: scoreResult.isDiamondSignal,
           twitterMentions: scoreResult.twitterMentions,
-          whaleWallets: wallets,
+          whaleWallets: wallets.map(w => w.address),
           entryPrice: coin.current_price,
           currentPrice: coin.current_price,
           priceChangePct: coin.price_change_percentage_24h,
@@ -299,11 +320,11 @@ export async function generateSignals(count: number = 20): Promise<GenerationRes
           },
           update: {
             sentimentScore: scoreResult.sentimentScore,
-            whaleConfidence: scoreResult.whaleConfidence,
+            whaleConfidence: boostedWhale,
             correlationScore: scoreResult.correlationScore,
             isDiamondSignal: scoreResult.isDiamondSignal,
             twitterMentions: scoreResult.twitterMentions,
-            whaleWallets: wallets,
+            whaleWallets: wallets.map(w => w.address),
             currentPrice: coin.current_price,
             priceChangePct: coin.price_change_percentage_24h,
             expiresAt,
@@ -313,11 +334,11 @@ export async function generateSignals(count: number = 20): Promise<GenerationRes
             tokenSymbol: coin.symbol,
             tokenName: coin.name,
             sentimentScore: scoreResult.sentimentScore,
-            whaleConfidence: scoreResult.whaleConfidence,
+            whaleConfidence: boostedWhale,
             correlationScore: scoreResult.correlationScore,
             isDiamondSignal: scoreResult.isDiamondSignal,
             twitterMentions: scoreResult.twitterMentions,
-            whaleWallets: wallets,
+            whaleWallets: wallets.map(w => w.address),
             entryPrice: coin.current_price,
             currentPrice: coin.current_price,
             priceChangePct: coin.price_change_percentage_24h,

@@ -107,6 +107,28 @@ model WebhookEvent {
   @@map("webhook_events")
 }
 
+model WhaleActivity {
+  id            String   @id @default(uuid())
+  walletAddress String   @map("wallet_address")
+  walletLabel   String?  @map("wallet_label")
+  walletType    String?  @map("wallet_type")
+  chain         String
+  direction     String   // accumulating | distributing
+  amountEth     Float    @map("amount_eth")
+  severity      String   // LOW | MEDIUM | HIGH
+  flowType      String?  @map("flow_type")  // deposit_to_binance | deposit_to_coinbase | accumulating | distributing
+  cexDestination String? @map("cex_destination")
+  balanceBefore Float?   @map("balance_before")
+  balanceAfter  Float?   @map("balance_after")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([chain])
+  @@index([walletAddress])
+  @@index([createdAt])
+  @@index([severity])
+  @@map("whale_activities")
+}
+
 model PasswordReset {
   id      String   @id @default(uuid())
   email   String
