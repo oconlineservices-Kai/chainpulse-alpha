@@ -360,7 +360,6 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
                     )}>
                       {isOut ? '↓' : '↑'}
                     </div>
-
                     {/* Wallet */}
                     <div className="min-w-0">
                       <p className="font-medium text-text-primary truncate leading-tight">
@@ -370,7 +369,6 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
                         {m.walletAddress.slice(0, 6)}...{m.walletAddress.slice(-4)}
                       </p>
                     </div>
-
                     {/* Amount with bar */}
                     <div className="flex flex-col items-end gap-1">
                       <span className={cn(
@@ -389,7 +387,6 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
                         />
                       </div>
                     </div>
-
                     {/* Severity badge */}
                     <span className={cn(
                       'text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded inline-block w-fit',
@@ -397,13 +394,12 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
                       m.severity === 'MEDIUM' ? 'bg-yellow-500/15 text-yellow-400' :
                       'bg-green-500/15 text-green-400'
                     )}>{m.severity}</span>
-
                     {/* Timestamp */}
                     <span className="text-xs text-text-muted text-right tabular-nums">
                       {timeAgo(m.createdAt)}
                     </span>
                   </div>
-                )}
+                )
               })}
             </div>
           </div>
@@ -456,7 +452,7 @@ export default function WhaleActivityWidget({ compact = false, standalone = fals
                     </span>
                     <span className="text-sm text-text-muted text-right tabular-nums">{w.movementCount}</span>
                   </div>
-                )}
+                )
               })}
             </div>
           </div>
