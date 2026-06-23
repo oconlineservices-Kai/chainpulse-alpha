@@ -120,11 +120,11 @@ export const GET = auth(async (req) => {
         _count: true,
       }),
 
-      // Last wallet state check timestamp
-      prisma.whaleWalletState.findFirst({
-        orderBy: { updatedAt: 'desc' },
-        select: { updatedAt: true },
-      }),
+      // Last wallet state check timestamp (raw table, no Prisma model)
+      prisma.$queryRaw<{ updated_at: Date }[]>`
+        SELECT updated_at FROM whale_wallet_states
+        ORDER BY updated_at DESC LIMIT 1
+      `.then(r => r[0] || null),
     ])
 
     // Compute net flow
@@ -163,10 +163,10 @@ export const GET = auth(async (req) => {
         _max: { createdAt: true },
       })
 
-      const walletStates = await prisma.whaleWalletState.findMany({
-        select: { address: true, label: true, chain: true, lastBalance: true },
-      })
-      const stateMap = new Map(walletStates.map(s => [`${s.chain}:${s.address}`, s.lastBalance]))
+      const walletStates = await prisma.$queryRaw<{ address: string; label: string; chain: string; last_balance: number }[]>`
+        SELECT address, label, chain, last_balance FROM whale_wallet_states
+      `
+      const stateMap = new Map(walletStates.map(s => [`${s.chain}:${s.address}`, s.last_balance]))
 
       walletBreakdown = walletActivity24h.map(w => ({
         label: w.walletLabel,
@@ -194,7 +194,7 @@ export const GET = auth(async (req) => {
           highSeverityCount6h: highSev6h,
           uniqueWalletsTracked: 31,
           chainsTracked: 7,
-          lastCheckTimestamp: lastCheck?.updatedAt?.toISOString() ?? null,
+          lastCheckTimestamp: lastCheck?.updated_at?.toISOString() ?? null,
         },
         recentMovements: mappedMovements,
         ...(walletBreakdown ? { walletBreakdown } : {}),
