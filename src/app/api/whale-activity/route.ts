@@ -38,7 +38,6 @@ export interface WhaleActivityResponse {
       walletAddress: string
       direction: string
       amountEth: number
-      tokenSymbol: string
       chain: string
       severity: string
       flowType: string | null
@@ -145,7 +144,6 @@ export const GET = auth(async (req) => {
       walletAddress: showFullData ? m.walletAddress : m.walletAddress.slice(0, 6) + '...' + m.walletAddress.slice(-4),
       direction: m.direction,
       amountEth: Number(m.amountEth),
-      tokenSymbol: m.tokenSymbol || 'ETH',
       chain: m.chain,
       severity: m.severity,
       flowType: m.flowType,
