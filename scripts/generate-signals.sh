@@ -3,12 +3,19 @@
 # Calls the local Next.js API to generate live signals from CoinGecko
 set -euo pipefail
 
-AUTH_SECRET="/XbdkCfd8UvLHCdJEXswHnhjX0oPuwfvCULh0Th4XZ9zODg2bAtB/RyUdIG+KIYw"
+# Read secret from environment — NEVER hardcoded in this file
+# Set via Fly.io secrets or /opt/chainpulse/app/.env
+AUTH_SECRET="${AUTH_SECRET:-}"
 LOG_FILE="/var/log/chainpulse/signals.log"
 ERROR_LOG="/var/log/chainpulse/signals-error.log"
 TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S %Z')
 
 mkdir -p /var/log/chainpulse
+
+if [ -z "${AUTH_SECRET}" ]; then
+  echo "[${TIMESTAMP}] FATAL: AUTH_SECRET environment variable is not set" >> "${ERROR_LOG}"
+  exit 1
+fi
 
 echo "[${TIMESTAMP}] Starting signal generation..." >> "${LOG_FILE}"
 
